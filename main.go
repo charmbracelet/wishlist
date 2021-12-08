@@ -122,6 +122,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Println(m.list.Index())
 			end := m.endpoints[m.list.Index()]
 			log.Println(end.Address)
+			// TODO: actually do something here
 			return m, nil
 		}
 	case tea.WindowSizeMsg:
