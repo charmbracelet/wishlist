@@ -1,7 +1,6 @@
 package wishlist
 
 import (
-	"bufio"
 	"crypto/ed25519"
 	"crypto/rand"
 	"fmt"
@@ -220,83 +219,9 @@ func connect(e *Endpoint, prev ssh.Session) error {
 	}
 	defer session.Close()
 
-	stdin, err := session.StdinPipe()
-	if err != nil {
-		return err
-	}
+	session.Stdout = prev
+	session.Stderr = prev.Stderr()
+	session.Stdin = prev
 
-	stdout, err := session.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	stderr, err := session.StderrPipe()
-	if err != nil {
-		return err
-	}
-
-	if err := session.Shell(); err != nil {
-		return err
-	}
-
-	done := make(chan struct{}, 1)
-	defer close(done)
-
-	// var closed int32
-
-	var outErr error
-
-	go func() {
-		scanner := bufio.NewScanner(stdout)
-		for {
-			if tkn := scanner.Scan(); tkn {
-				prev.Write(scanner.Bytes())
-				log.Println("wrote to stdout")
-			} else {
-				if err := scanner.Err(); err != nil {
-					prev.Stderr().Write([]byte(err.Error()))
-					outErr = multierror.Append(outErr, err)
-				} else {
-					log.Println("io.EOF")
-				}
-				done <- struct{}{}
-				return
-			}
-		}
-	}()
-
-	go func() {
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			prev.Stderr().Write(scanner.Bytes())
-			log.Println("wrote to stderr")
-		}
-	}()
-
-	log.Println("SHELL")
-
-	go func() {
-		for {
-
-			r := make([]byte, 10)
-			_, err := prev.Read(r)
-			if err != nil {
-				outErr = multierror.Append(outErr, err)
-				break
-			}
-
-			log.Println("writing to channel", string(r))
-			_, err = stdin.Write(r)
-			if err != nil {
-				done <- struct{}{}
-				outErr = multierror.Append(outErr, err)
-				return
-			}
-			log.Println("wrote to stdin")
-		}
-	}()
-
-	<-done
-
-	return outErr
+	return nil
 }
