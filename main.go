@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -131,7 +130,11 @@ func newListing(endpoints []*Endpoint, s ssh.Session) tea.Model {
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
 	}
-	return model{l, endpoints, s}
+	return model{
+		list:      l,
+		endpoints: endpoints,
+		session:   s,
+	}
 }
 
 type model struct {
@@ -148,29 +151,14 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-type signer struct {
-	piv ed25519.PrivateKey
-	pub ed25519.PublicKey
-}
-
-func (s signer) PublicKey() gossh.PublicKey {
-	out, _ := gossh.ParsePublicKey(s.pub)
-	return out
-}
-
-func (s signer) Sign(rand io.Reader, data []byte) (*gossh.Signature, error) {
-	out, _ := gossh.ParsePrivateKey(s.piv)
-	return out.Sign(rand, data)
-}
-
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
 			e := m.list.SelectedItem().(*Endpoint)
-			log.Println("Enter pressed", m.list.SelectedItem())
+			log.Println("connecting to", m.list.SelectedItem())
 			if err := connect(e, m.session); err != nil {
-				log.Println("Failed to connect:", err)
+				log.Println("ssh failed:", err)
 			}
 		}
 	case tea.WindowSizeMsg:
@@ -220,8 +208,17 @@ func connect(e *Endpoint, prev ssh.Session) error {
 	defer session.Close()
 
 	session.Stdout = prev
-	session.Stderr = prev.Stderr()
 	session.Stdin = prev
+	session.Stderr = prev.Stderr()
 
-	return nil
+	pty, _, _ := prev.Pty()
+	if err := session.RequestPty(pty.Term, pty.Window.Width, pty.Window.Height, nil); err != nil {
+		return err
+	}
+
+	if err := session.Shell(); err != nil {
+		return err
+	}
+
+	return session.Wait()
 }
