@@ -1,19 +1,25 @@
 package wishlist
 
 import (
+	"bufio"
+	"crypto/ed25519"
+	"crypto/rand"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
 	"sync/atomic"
 	"syscall"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 // Endpoint represents an endpoint to list.
@@ -50,12 +56,16 @@ func Serve(config *Config) error {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
+	if _, err := os.Create(".known_hosts"); err != nil {
+		return err
+	}
+
 	for _, endpoint := range append([]*Endpoint{
 		{
 			Name:    "listing",
 			Address: toAddress(config.Listen, config.Port),
 			Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-				return newListing(config.Endpoints), []tea.ProgramOption{tea.WithAltScreen()}
+				return newListing(config.Endpoints, s), []tea.ProgramOption{tea.WithAltScreen()}
 			},
 		},
 	}, config.Endpoints...) {
@@ -105,7 +115,12 @@ func closeAll(closes []func() error) error {
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
-func newListing(endpoints []*Endpoint) tea.Model {
+var enter = key.NewBinding(
+	key.WithKeys("enter"),
+	key.WithHelp("Enter", "SSH"),
+)
+
+func newListing(endpoints []*Endpoint, s ssh.Session) tea.Model {
 	var items []list.Item
 	for _, endpoint := range endpoints {
 		if endpoint.Valid() {
@@ -114,12 +129,16 @@ func newListing(endpoints []*Endpoint) tea.Model {
 	}
 	l := list.NewModel(items, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
-	return model{l, endpoints}
+	l.AdditionalShortHelpKeys = func() []key.Binding {
+		return []key.Binding{enter}
+	}
+	return model{l, endpoints, s}
 }
 
 type model struct {
 	list      list.Model
 	endpoints []*Endpoint
+	session   ssh.Session
 }
 
 func (i *Endpoint) Title() string       { return i.Name }
@@ -130,8 +149,31 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
+type signer struct {
+	piv ed25519.PrivateKey
+	pub ed25519.PublicKey
+}
+
+func (s signer) PublicKey() gossh.PublicKey {
+	out, _ := gossh.ParsePublicKey(s.pub)
+	return out
+}
+
+func (s signer) Sign(rand io.Reader, data []byte) (*gossh.Signature, error) {
+	out, _ := gossh.ParsePrivateKey(s.piv)
+	return out.Sign(rand, data)
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		if key.Matches(msg, enter) {
+			e := m.list.SelectedItem().(*Endpoint)
+			log.Println("Enter pressed", m.list.SelectedItem())
+			if err := connect(e, m.session); err != nil {
+				log.Println("Failed to connect:", err)
+			}
+		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
@@ -148,4 +190,113 @@ func (m model) View() string {
 
 func toAddress(listen string, port int64) string {
 	return fmt.Sprintf("%s:%d", listen, port)
+}
+
+func connect(e *Endpoint, prev ssh.Session) error {
+	_, piv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return err
+	}
+
+	signer, _ := gossh.ParsePrivateKey(piv)
+
+	conf := &gossh.ClientConfig{
+		User:            prev.User(),
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(), // TODO: hostkeyCallback,
+		Auth: []gossh.AuthMethod{
+			gossh.PublicKeys(signer),
+		},
+	}
+
+	conn, err := gossh.Dial("tcp", e.Address, conf)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	session, err := conn.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	stdin, err := session.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	stdout, err := session.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	stderr, err := session.StderrPipe()
+	if err != nil {
+		return err
+	}
+
+	if err := session.Shell(); err != nil {
+		return err
+	}
+
+	done := make(chan struct{}, 1)
+	defer close(done)
+
+	// var closed int32
+
+	var outErr error
+
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for {
+			if tkn := scanner.Scan(); tkn {
+				prev.Write(scanner.Bytes())
+				log.Println("wrote to stdout")
+			} else {
+				if err := scanner.Err(); err != nil {
+					prev.Stderr().Write([]byte(err.Error()))
+					outErr = multierror.Append(outErr, err)
+				} else {
+					log.Println("io.EOF")
+				}
+				done <- struct{}{}
+				return
+			}
+		}
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			prev.Stderr().Write(scanner.Bytes())
+			log.Println("wrote to stderr")
+		}
+	}()
+
+	log.Println("SHELL")
+
+	go func() {
+		for {
+
+			r := make([]byte, 10)
+			_, err := prev.Read(r)
+			if err != nil {
+				outErr = multierror.Append(outErr, err)
+				break
+			}
+
+			log.Println("writing to channel", string(r))
+			_, err = stdin.Write(r)
+			if err != nil {
+				done <- struct{}{}
+				outErr = multierror.Append(outErr, err)
+				return
+			}
+			log.Println("wrote to stdin")
+		}
+	}()
+
+	<-done
+
+	return outErr
 }
