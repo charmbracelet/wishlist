@@ -1,0 +1,16 @@
+{
+	"apps": [
+		{
+			"name": "confetti",
+			"address": "ssh.caarlos0.dev:2222"
+		},
+		{
+			"name": "fireworks",
+			"address": "ssh.caarlos0.dev:2223"
+		},
+		{
+			"name": "party parrot",
+			"address": "ssh.caarlos0.dev:2225"
+		}
+	]
+}

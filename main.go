@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync/atomic"
 	"syscall"
 
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -16,17 +16,29 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// Endpoint represents an endpoint to list.
+// If it has a Handler, wishlist will start an SSH server on the given address.
 type Endpoint struct {
 	Name    string
 	Address string
 	Handler bm.BubbleTeaHandler
 }
 
+func (e Endpoint) Valid() bool {
+	return e.Name != "" && (e.Handler != nil || e.Address != "")
+}
+
+func (e Endpoint) ShouldListen() bool {
+	return e.Handler != nil
+}
+
 type Config struct {
 	Listen    string
-	Port      int
+	Port      int64
 	Endpoints []*Endpoint
 	Factory   func(Endpoint) (*ssh.Server, error)
+
+	lastPort int64
 }
 
 func List(config *Config) error {
@@ -34,18 +46,23 @@ func List(config *Config) error {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	for i, endpoint := range append([]*Endpoint{
+	for _, endpoint := range append([]*Endpoint{
 		{
 			Name:    "listing",
-			Address: fmt.Sprintf("%s:%d", config.Listen, config.Port),
+			Address: toAddress(config.Listen, config.Port),
 			Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 				return newListing(config.Endpoints), []tea.ProgramOption{tea.WithAltScreen()}
 			},
 		},
 	}, config.Endpoints...) {
-		if endpoint.Address == "" {
-			endpoint.Address = fmt.Sprintf("%s:%d", config.Listen, config.Port+i)
+		if !endpoint.Valid() || !endpoint.ShouldListen() {
+			continue
 		}
+
+		if endpoint.Address == "" {
+			endpoint.Address = toAddress(config.Listen, atomic.AddInt64(&config.lastPort, 1))
+		}
+
 		close, err := listen(config, *endpoint)
 		if close != nil {
 			closes = append(closes, close)
@@ -84,21 +101,15 @@ func closeAll(closes []func() error) error {
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
-var keyEnter = key.NewBinding(
-	key.WithKeys("enter"),
-	key.WithHelp("enter", "connect server"),
-)
-
 func newListing(endpoints []*Endpoint) tea.Model {
 	var items []list.Item
 	for _, endpoint := range endpoints {
-		items = append(items, endpoint)
+		if endpoint.Valid() {
+			items = append(items, endpoint)
+		}
 	}
 	l := list.NewModel(items, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
-	l.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{keyEnter}
-	}
 	return model{l, endpoints}
 }
 
@@ -117,14 +128,6 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if key.Matches(msg, keyEnter) {
-			log.Println(m.list.Index())
-			end := m.endpoints[m.list.Index()]
-			log.Println(end.Address)
-			// TODO: actually do something here
-			return m, nil
-		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
@@ -137,4 +140,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	return docStyle.Render(m.list.View())
+}
+
+func toAddress(listen string, port int64) string {
+	return fmt.Sprintf("%s:%d", listen, port)
 }
