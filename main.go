@@ -1,8 +1,6 @@
 package wishlist
 
 import (
-	"crypto/ed25519"
-	"crypto/rand"
 	"fmt"
 	"log"
 	"os"
@@ -17,7 +15,6 @@ import (
 	bm "github.com/charmbracelet/wish/bubbletea"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
-	gossh "golang.org/x/crypto/ssh"
 )
 
 // Endpoint represents an endpoint to list.
@@ -54,10 +51,7 @@ func Serve(config *Config) error {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	if _, err := os.Create(".known_hosts"); err != nil {
-		return err
-	}
-
+	config.lastPort = config.Port
 	for _, endpoint := range append([]*Endpoint{
 		{
 			Name:    "listing",
@@ -151,15 +145,45 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
+type errMsg struct {
+	err error
+}
+
+func quitWithError(err error) tea.Cmd {
+	return func() tea.Msg {
+		return errMsg{err}
+	}
+}
+
+type connectMsg struct {
+	sess ssh.Session
+	addr string
+}
+
+func connectCmd(sess ssh.Session, addr string) tea.Cmd {
+	return func() tea.Msg {
+		return connectMsg{
+			sess: sess,
+			addr: addr,
+		}
+	}
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case connectMsg:
+		if err := connect(msg.sess, msg.addr); err != nil {
+			return m, quitWithError(err)
+		}
+		return m, tea.Quit
+	case errMsg:
+		m.session.Stderr().Write([]byte("ssh failed: " + msg.err.Error() + "\n"))
+		m.session.Exit(1)
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
 			e := m.list.SelectedItem().(*Endpoint)
 			log.Println("connecting to", m.list.SelectedItem())
-			if err := connect(e, m.session); err != nil {
-				log.Println("ssh failed:", err)
-			}
+			return m, tea.Sequentially(connectCmd(m.session, e.Address))
 		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
@@ -177,48 +201,4 @@ func (m model) View() string {
 
 func toAddress(listen string, port int64) string {
 	return fmt.Sprintf("%s:%d", listen, port)
-}
-
-func connect(e *Endpoint, prev ssh.Session) error {
-	_, piv, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		return err
-	}
-
-	signer, _ := gossh.ParsePrivateKey(piv)
-
-	conf := &gossh.ClientConfig{
-		User:            prev.User(),
-		HostKeyCallback: gossh.InsecureIgnoreHostKey(), // TODO: hostkeyCallback,
-		Auth: []gossh.AuthMethod{
-			gossh.PublicKeys(signer),
-		},
-	}
-
-	conn, err := gossh.Dial("tcp", e.Address, conf)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	session, err := conn.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	session.Stdout = prev
-	session.Stdin = prev
-	session.Stderr = prev.Stderr()
-
-	pty, _, _ := prev.Pty()
-	if err := session.RequestPty(pty.Term, pty.Window.Width, pty.Window.Height, nil); err != nil {
-		return err
-	}
-
-	if err := session.Shell(); err != nil {
-		return err
-	}
-
-	return session.Wait()
 }
