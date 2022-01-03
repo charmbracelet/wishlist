@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 	"os"
@@ -13,10 +12,11 @@ import (
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
 	"github.com/gliderlabs/ssh"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	file := flag.String("config", "wishlist.json", "path to config file")
+	file := flag.String("config", "wishlist.yaml", "path to config file")
 	flag.Parse()
 
 	bts, err := os.ReadFile(*file)
@@ -25,7 +25,7 @@ func main() {
 	}
 
 	var config wishlist.Config
-	if err := json.Unmarshal(bts, &config); err != nil {
+	if err := yaml.Unmarshal(bts, &config); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -41,7 +41,7 @@ func main() {
 		)
 	}
 
-	if err := wishlist.List(&config); err != nil {
+	if err := wishlist.Serve(&config); err != nil {
 		log.Fatalln(err)
 	}
 }

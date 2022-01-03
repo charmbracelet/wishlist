@@ -44,7 +44,8 @@ type Config struct {
 	lastPort int64
 }
 
-func List(config *Config) error {
+// Serve servers the list for the given config.
+func Serve(config *Config) error {
 	var closes []func() error
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

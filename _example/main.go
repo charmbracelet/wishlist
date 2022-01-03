@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	if err := wishlist.List(&wishlist.Config{
+	if err := wishlist.Serve(&wishlist.Config{
 		Listen: "127.0.0.1",
 		Port:   2222,
 		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
