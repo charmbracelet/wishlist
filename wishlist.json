@@ -1,5 +1,7 @@
 {
-	"apps": [
+	"listen": "127.0.0.1",
+	"port": 2222,
+	"endpoints": [
 		{
 			"name": "confetti",
 			"address": "ssh.caarlos0.dev:2222"
