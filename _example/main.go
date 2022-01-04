@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -48,13 +49,12 @@ func main() {
 			},
 		},
 	}); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 }
 
 type model struct {
-	spinner  spinner.Model
-	quitting bool
+	spinner spinner.Model
 }
 
 func initialModel() model {
@@ -72,22 +72,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
-			m.quitting = true
 			return m, tea.Quit
-		default:
-			return m, nil
 		}
-	default:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
 	}
+	var cmd tea.Cmd
+	m.spinner, cmd = m.spinner.Update(msg)
+	return m, cmd
 }
 
 func (m model) View() string {
 	str := fmt.Sprintf("\n\n   %s Loading forever...press q to quit\n\n", m.spinner.View())
-	if m.quitting {
-		return str + "\n"
-	}
 	return str
 }
