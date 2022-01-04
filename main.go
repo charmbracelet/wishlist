@@ -135,6 +135,8 @@ type model struct {
 	list      list.Model
 	endpoints []*Endpoint
 	session   ssh.Session
+
+	discardingInput bool
 }
 
 func (i *Endpoint) Title() string       { return i.Name }
@@ -172,24 +174,32 @@ func connectCmd(sess ssh.Session, addr string) tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case connectMsg:
+		m.discardingInput = true
+		log.Println("connecting to", msg.addr)
 		if err := connect(msg.sess, msg.addr); err != nil {
 			return m, quitWithError(err)
 		}
 		return m, tea.Quit
 	case errMsg:
-		m.session.Stderr().Write([]byte("ssh failed: " + msg.err.Error() + "\n"))
+		fmt.Fprintf(m.session, "\x1b[?1049l") // exit alt screen
+		fmt.Fprintln(m.session, msg.err.Error())
 		m.session.Exit(1)
 	case tea.KeyMsg:
+		if m.discardingInput {
+			break
+		}
 		if key.Matches(msg, enter) {
-			e := m.list.SelectedItem().(*Endpoint)
-			log.Println("connecting to", m.list.SelectedItem())
-			return m, tea.Sequentially(connectCmd(m.session, e.Address))
+			return m, connectCmd(
+				m.session,
+				m.list.SelectedItem().(*Endpoint).Address,
+			)
 		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
 	}
 
+	m.discardingInput = false
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
