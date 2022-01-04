@@ -7,5 +7,3 @@ endpoints:
   address: ssh.caarlos0.dev:2223
 - name: party parrot
   address: ssh.caarlos0.dev:2225
-- name: this listing
-  address: 127.0.0.1:2222

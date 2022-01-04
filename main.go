@@ -181,7 +181,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Quit
 	case errMsg:
-		fmt.Fprintf(m.session, "\x1b[?1049l") // exit alt screen
 		fmt.Fprintln(m.session, msg.err.Error())
 		m.session.Exit(1)
 	case tea.KeyMsg:
