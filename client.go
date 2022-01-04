@@ -43,7 +43,7 @@ func connect(prev ssh.Session, address string) error {
 
 	pty, _, _ := prev.Pty()
 	log.Println("requesting pty", pty)
-	if err := session.RequestPty(pty.Term, pty.Window.Width, pty.Window.Height, gossh.TerminalModes{}); err != nil {
+	if err := session.RequestPty(pty.Term, pty.Window.Height, pty.Window.Width, gossh.TerminalModes{}); err != nil {
 		return err
 	}
 
