@@ -157,29 +157,18 @@ func quitWithError(err error) tea.Cmd {
 	}
 }
 
-type connectMsg struct {
-	sess ssh.Session
-	addr string
-}
-
 func connectCmd(sess ssh.Session, addr string) tea.Cmd {
 	return func() tea.Msg {
-		return connectMsg{
-			sess: sess,
-			addr: addr,
+		log.Println("connecting to", addr)
+		if err := connect(sess, addr); err != nil {
+			return quitWithError(err)
 		}
+		return nil
 	}
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case connectMsg:
-		m.discardingInput = true
-		log.Println("connecting to", msg.addr)
-		if err := connect(msg.sess, msg.addr); err != nil {
-			return m, quitWithError(err)
-		}
-		return m, tea.Quit
 	case errMsg:
 		fmt.Fprintln(m.session, msg.err.Error())
 		m.session.Exit(1)
@@ -188,6 +177,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 		if key.Matches(msg, enter) {
+			m.discardingInput = true
 			return m, connectCmd(
 				m.session,
 				m.list.SelectedItem().(*Endpoint).Address,
