@@ -37,21 +37,24 @@ func connect(prev ssh.Session, address string) error {
 		},
 	}
 
+	var errors error
+
 	conn, err := gossh.Dial("tcp", address, conf)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			errors = multierror.Append(errors, err)
+		}
+	}()
 
 	session, err := conn.NewSession()
 	if err != nil {
 		return err
 	}
 
-	done := make(chan bool, 1)
-	var errors error
 	defer func() {
-		done <- true
 		if err := session.Close(); err != nil {
 			errors = multierror.Append(errors, err)
 		}
@@ -66,30 +69,37 @@ func connect(prev ssh.Session, address string) error {
 		return err
 	}
 
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case w := <-winch:
-				log.Println("winch on wishlist", w)
-				// For some reason, the first resize never gets notified to the channel...
-				if err := session.WindowChange(w.Height, w.Width); err != nil {
-					log.Println("failed to notify window change", err)
-					errors = multierror.Append(errors, err)
-					return
-				}
-			}
-		}
-	}()
+	done := make(chan bool, 1)
+	defer func() { done <- true }()
+
+	go notifyWindowChanges(session, done, winch)
 
 	if err := session.Shell(); err != nil {
 		return err
 	}
 
 	if err := session.Wait(); err != nil {
-		return err
+		return multierror.Append(errors, err)
 	}
 
 	return errors
+}
+
+func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan ssh.Window) {
+	for {
+		select {
+		case <-done:
+			log.Println("winch done")
+			return
+		case w := <-winch:
+			// if w.Height == 0 && w.Width == 0 {
+			// 	done <- true
+			// }
+			// log.Println("resize", w)
+			if err := session.WindowChange(w.Height, w.Width); err != nil {
+				log.Println("failed to notify window change", err)
+				return
+			}
+		}
+	}
 }
