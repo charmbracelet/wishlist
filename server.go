@@ -1,6 +1,7 @@
 package wishlist
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -63,7 +64,11 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	if err != nil {
 		return nil, err
 	}
-	go s.Serve(ln)
+	go func() {
+		if err := s.Serve(ln); err != nil {
+			log.Println("SSH server error:", err)
+		}
+	}()
 	return s.Close, nil
 }
 
@@ -75,4 +80,8 @@ func closeAll(closes []func() error) error {
 		}
 	}
 	return result
+}
+
+func toAddress(listen string, port int64) string {
+	return fmt.Sprintf("%s:%d", listen, port)
 }

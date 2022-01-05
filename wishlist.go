@@ -71,7 +71,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
 			e := m.list.SelectedItem().(*Endpoint)
-			return noopModel{}, connectCmd(m.session, e.Name, e.Address)
+			return connectedModel{}, connectCmd(m.session, e.Name, e.Address)
 		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
@@ -87,12 +87,11 @@ func (m model) View() string {
 	return docStyle.Render(m.list.View())
 }
 
-func toAddress(listen string, port int64) string {
-	return fmt.Sprintf("%s:%d", listen, port)
+type connectedModel struct{}
+
+func (connectedModel) Init() tea.Cmd { return nil }
+func (connectedModel) View() string  { return "" }
+func (m connectedModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Println("noop msg", msg)
+	return m, nil
 }
-
-type noopModel struct{}
-
-func (noopModel) Init() tea.Cmd                             { return nil }
-func (m noopModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { log.Println("msg", msg); return m, nil }
-func (noopModel) View() string                              { return "" }
