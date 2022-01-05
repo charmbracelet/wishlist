@@ -1,12 +1,11 @@
 package wishlist
 
 import (
-	"crypto/ed25519"
-	"crypto/rand"
 	"fmt"
 	"io"
 	"log"
 
+	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
@@ -21,19 +20,20 @@ func connect(prev ssh.Session, e *Endpoint) error {
 	resetPty(prev)
 	defer resetPty(prev)
 
-	_, piv, err := ed25519.GenerateKey(rand.Reader)
+	key, err := keygen.New("", "", nil, keygen.Ed25519)
 	if err != nil {
 		return err
 	}
 
-	signer, _ := gossh.ParsePrivateKey(piv)
+	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM)
+	if err != nil {
+		return err
+	}
 
 	conf := &gossh.ClientConfig{
 		User:            prev.User(),
-		HostKeyCallback: gossh.InsecureIgnoreHostKey(), // TODO: hostkeyCallback,
-		Auth: []gossh.AuthMethod{
-			gossh.PublicKeys(signer),
-		},
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
+		Auth:            []gossh.AuthMethod{gossh.PublicKeys(signer)},
 	}
 
 	conn, err := gossh.Dial("tcp", e.Address, conf)
