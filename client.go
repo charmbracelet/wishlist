@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 func resetPty(w io.Writer) {
@@ -30,12 +32,8 @@ func connect(prev ssh.Session, e *Endpoint) error {
 	resetPty(prev)
 	defer resetPty(prev)
 
-	key, err := keygen.New("", "", nil, keygen.Ed25519)
-	if err != nil {
-		return err
-	}
-
-	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM)
+	methods, closers, err := authMethods(prev)
+	defer closers.close()
 	if err != nil {
 		return err
 	}
@@ -43,7 +41,7 @@ func connect(prev ssh.Session, e *Endpoint) error {
 	conf := &gossh.ClientConfig{
 		User:            prev.User(),
 		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
-		Auth:            []gossh.AuthMethod{gossh.PublicKeys(signer)},
+		Auth:            methods,
 	}
 
 	conn, err := gossh.Dial("tcp", e.Address, conf)
@@ -117,4 +115,66 @@ func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan 
 			}
 		}
 	}
+}
+
+type closers []func() error
+
+func (c closers) close() {
+	for _, closer := range c {
+		closer()
+	}
+}
+
+func authMethods(s ssh.Session) ([]gossh.AuthMethod, closers, error) {
+	var authMethods []gossh.AuthMethod
+	methods, closers, err := tryAuthAgent(s)
+	if err != nil {
+		return methods, closers, err
+	}
+	if methods != nil {
+		authMethods = append(authMethods, methods...)
+	}
+
+	methods, err = tryNewKey()
+	if err != nil {
+		return methods, closers, err
+	}
+	return append(authMethods, methods...), closers, nil
+}
+
+func tryAuthAgent(s ssh.Session) ([]gossh.AuthMethod, closers, error) {
+	ok, err := s.SendRequest("auth-agent-req@openssh.com", true, nil)
+	log.Println("agent forward:", ok, err, ssh.AgentRequested(s))
+
+	if ssh.AgentRequested(s) {
+		l, err := ssh.NewAgentListener()
+		if err != nil {
+			return nil, nil, err
+		}
+		go ssh.ForwardAgentConnections(l, s)
+
+		conn, err := net.Dial(l.Addr().Network(), l.Addr().String())
+		if err != nil {
+			return nil, closers{l.Close}, err
+		}
+
+		return []gossh.AuthMethod{
+			gossh.PublicKeysCallback(agent.NewClient(conn).Signers),
+		}, closers{l.Close, conn.Close}, nil
+	}
+
+	return nil, nil, nil
+}
+
+func tryNewKey() ([]gossh.AuthMethod, error) {
+	key, err := keygen.New("", "", nil, keygen.Ed25519)
+	if err != nil {
+		return nil, err
+	}
+
+	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM)
+	if err != nil {
+		return nil, err
+	}
+	return []gossh.AuthMethod{gossh.PublicKeys(signer)}, nil
 }

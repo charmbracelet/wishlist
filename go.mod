@@ -16,3 +16,5 @@ require (
 )
 
 replace github.com/charmbracelet/wish => ../wish
+
+replace github.com/gliderlabs/ssh => ../../forks/ssh
