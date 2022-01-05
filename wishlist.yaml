@@ -9,3 +9,9 @@ endpoints:
   address: ssh.caarlos0.dev:2225
 - name: pc
   address: darkstar.local:22
+- name: pi3
+  address: pi3.local:22
+  user: ubuntu
+- name: pi4
+  address: pi4.local:22
+  user: ubuntu

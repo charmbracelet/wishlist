@@ -8,9 +8,10 @@ import (
 // Endpoint represents an endpoint to list.
 // If it has a Handler, wishlist will start an SSH server on the given address.
 type Endpoint struct {
-	Name    string                     `json:"name"`
-	Address string                     `json:"address"`
-	Handler bubbletea.BubbleTeaHandler `json:"-"`
+	Name    string                     `yaml:"name"`
+	Address string                     `yaml:"address"`
+	User    string                     `yaml:"user"`
+	Handler bubbletea.BubbleTeaHandler `yaml:"-"`
 }
 
 // Returns true if the endpoint is valid.
@@ -25,10 +26,10 @@ func (e Endpoint) ShouldListen() bool {
 
 // Config represents the wishlist configuration.
 type Config struct {
-	Listen    string                              `json:"listen"`
-	Port      int64                               `json:"port"`
-	Endpoints []*Endpoint                         `json:"endpoints"`
-	Factory   func(Endpoint) (*ssh.Server, error) `json:"-"`
+	Listen    string                              `yaml:"listen"`
+	Port      int64                               `yaml:"port"`
+	Endpoints []*Endpoint                         `yaml:"endpoints"`
+	Factory   func(Endpoint) (*ssh.Server, error) `yaml:"-"`
 
 	lastPort int64
 }

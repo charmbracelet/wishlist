@@ -39,7 +39,7 @@ func connect(prev ssh.Session, e *Endpoint) error {
 	}
 
 	conf := &gossh.ClientConfig{
-		User:            prev.User(),
+		User:            firstNonEmpty(e.User, prev.User()),
 		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 		Auth:            methods,
 	}
@@ -120,7 +120,9 @@ type closers []func() error
 
 func (c closers) close() {
 	for _, closer := range c {
-		closer()
+		if err := closer(); err != nil {
+			log.Println("failed to close:", err)
+		}
 	}
 }
 
@@ -176,4 +178,13 @@ func tryNewKey() ([]gossh.AuthMethod, error) {
 		return nil, err
 	}
 	return []gossh.AuthMethod{gossh.PublicKeys(signer)}, nil
+}
+
+func firstNonEmpty(ss ...string) string {
+	for _, s := range ss {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
 }
