@@ -51,16 +51,16 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-func connectCmd(sess ssh.Session, name, addr string) tea.Cmd {
+func connectCmd(sess ssh.Session, e *Endpoint) tea.Cmd {
 	return func() tea.Msg {
-		log.Println("connecting to", addr)
-		if err := connect(sess, addr); err != nil {
+		log.Printf("connecting to %q (%s)", e.Name, e.Address)
+		if err := connect(sess, e); err != nil {
 			fmt.Fprintln(sess, err.Error())
 			sess.Exit(1)
 			return nil // unreachable
 		}
-		log.Printf("finished connection to %q (%s)", name, addr)
-		fmt.Fprintf(sess, "Closed connection to %q (%s)\n", name, addr)
+		log.Printf("finished connection to %q (%s)", e.Name, e.Address)
+		fmt.Fprintf(sess, "Closed connection to %q (%s)\n", e.Name, e.Address)
 		sess.Exit(0)
 		return nil // unreachable
 	}
@@ -71,7 +71,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
 			e := m.list.SelectedItem().(*Endpoint)
-			return connectedModel{}, connectCmd(m.session, e.Name, e.Address)
+			return connectedModel{}, connectCmd(m.session, e)
 		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()

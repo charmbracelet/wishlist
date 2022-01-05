@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/gliderlabs/ssh"
-	"github.com/hashicorp/go-multierror"
 	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -18,7 +17,7 @@ func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
 }
 
-func connect(prev ssh.Session, address string) error {
+func connect(prev ssh.Session, e *Endpoint) error {
 	resetPty(prev)
 	defer resetPty(prev)
 
@@ -37,16 +36,13 @@ func connect(prev ssh.Session, address string) error {
 		},
 	}
 
-	var errors error
-
-	conn, err := gossh.Dial("tcp", address, conf)
+	conn, err := gossh.Dial("tcp", e.Address, conf)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		log.Println("closing conn")
 		if err := conn.Close(); err != nil {
-			errors = multierror.Append(errors, err)
+			log.Println("failed to close conn:", err)
 		}
 	}()
 
@@ -56,9 +52,8 @@ func connect(prev ssh.Session, address string) error {
 	}
 
 	defer func() {
-		log.Println("closing session")
 		if err := session.Close(); err != nil {
-			errors = multierror.Append(errors, err)
+			log.Println("failed to close session:", err)
 		}
 	}()
 
@@ -87,11 +82,11 @@ func connect(prev ssh.Session, address string) error {
 	// - session.CombinedOutput()
 	// - session.Wait()
 	//
-	if err := session.Run(""); err != nil {
+	if err := session.Shell(); err != nil {
 		return err
 	}
 
-	return errors
+	return session.Wait()
 }
 
 func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan ssh.Window) {
