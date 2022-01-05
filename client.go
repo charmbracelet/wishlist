@@ -108,7 +108,6 @@ func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan 
 				// this only happens if the session is already dead, make sure there are no leftovers
 				return
 			}
-			log.Println("resize", w)
 			if err := session.WindowChange(w.Height, w.Width); err != nil {
 				log.Println("failed to notify window change", err)
 				return
