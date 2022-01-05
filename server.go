@@ -39,8 +39,8 @@ func Serve(config *Config) error {
 							}
 						}
 					}
+					log.Println("command not found:", cmd)
 				}
-				log.Println("command not found:", cmd)
 				return newListing(config.Endpoints, s), nil
 			},
 		},
