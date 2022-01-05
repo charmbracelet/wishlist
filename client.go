@@ -74,13 +74,23 @@ func connect(prev ssh.Session, address string) error {
 
 	go notifyWindowChanges(session, done, winch)
 
-	if err := session.Shell(); err != nil {
+	// Non blocking:
+	// - session.Shell()
+	// - session.Start()
+	//
+	// Blocking:
+	// - session.Run()
+	// - session.Output()
+	// - session.CombinedOutput()
+	// - session.Wait()
+	//
+	if err := session.Run(""); err != nil {
 		return err
 	}
 
-	if err := session.Wait(); err != nil {
-		return multierror.Append(errors, err)
-	}
+	// if err := session.Wait(); err != nil {
+	// 	return multierror.Append(errors, err)
+	// }
 
 	return errors
 }
@@ -92,10 +102,11 @@ func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan 
 			log.Println("winch done")
 			return
 		case w := <-winch:
-			// if w.Height == 0 && w.Width == 0 {
-			// 	done <- true
-			// }
-			// log.Println("resize", w)
+			if w.Height == 0 && w.Width == 0 {
+				// this only happens if the session is already dead, make sure there are no leftovers
+				return
+			}
+			log.Println("resize", w)
 			if err := session.WindowChange(w.Height, w.Width); err != nil {
 				log.Println("failed to notify window change", err)
 				return
