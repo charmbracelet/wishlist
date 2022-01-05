@@ -73,6 +73,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
 		}
+	case tea.WindowSizeMsg:
+		log.Println("window size:", msg)
 	}
 	var cmd tea.Cmd
 	m.spinner, cmd = m.spinner.Update(msg)
