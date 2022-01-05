@@ -29,13 +29,18 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	names := []string{"list"}
+	for _, e := range config.Endpoints {
+		names = append(names, e.Name)
+	}
+
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
 		return wish.NewServer(
 			wish.WithAddress(e.Address),
 			wish.WithMiddleware(
 				bm.Middleware(e.Handler),
 				lm.Middleware(),
-				accesscontrol.Middleware(),
+				accesscontrol.Middleware(names...),
 				activeterm.Middleware(),
 			),
 		)

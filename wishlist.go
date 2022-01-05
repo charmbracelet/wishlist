@@ -88,14 +88,7 @@ func (m connectedModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func connectCmd(sess ssh.Session, e *Endpoint) tea.Cmd {
 	return func() tea.Msg {
 		log.Printf("connecting to %q (%s)", e.Name, e.Address)
-		if err := connect(sess, e); err != nil {
-			fmt.Fprintln(sess, err.Error())
-			sess.Exit(1)
-			return nil // unreachable
-		}
-		log.Printf("finished connection to %q (%s)", e.Name, e.Address)
-		fmt.Fprintf(sess, "Closed connection to %q (%s)\n", e.Name, e.Address)
-		sess.Exit(0)
+		mustConnect(sess, e)
 		return nil // unreachable
 	}
 }

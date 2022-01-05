@@ -23,9 +23,24 @@ func Serve(config *Config) error {
 	config.lastPort = config.Port
 	for _, endpoint := range append([]*Endpoint{
 		{
-			Name:    "listing",
+			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
 			Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+				cmd := s.Command()
+				if len(cmd) == 1 && cmd[0] != "list" {
+					for _, e := range config.Endpoints {
+						if e.Name == cmd[0] {
+							if e.Handler != nil {
+								return e.Handler(s)
+							}
+							if e.Address != "" {
+								mustConnect(s, e)
+								return nil, nil
+							}
+						}
+					}
+				}
+				log.Println("command not found:", cmd)
 				return newListing(config.Endpoints, s), nil
 			},
 		},

@@ -7,7 +7,6 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/accesscontrol"
 	"github.com/charmbracelet/wish/activeterm"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
@@ -25,20 +24,19 @@ func main() {
 				wish.WithMiddleware(
 					bm.Middleware(e.Handler),
 					lm.Middleware(),
-					accesscontrol.Middleware(),
 					activeterm.Middleware(),
 				),
 			)
 		},
 		Endpoints: []*wishlist.Endpoint{
 			{
-				Name: "example app",
+				Name: "example",
 				Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 					return initialModel(), nil
 				},
 			},
 			{
-				Name:    "foo bar",
+				Name:    "foobar",
 				Address: "some.other.server:2222",
 			},
 			{

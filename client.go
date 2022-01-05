@@ -16,6 +16,16 @@ func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
 }
 
+func mustConnect(s ssh.Session, e *Endpoint) {
+	if err := connect(s, e); err != nil {
+		fmt.Fprintln(s, err.Error())
+		s.Exit(1)
+		return //unreachable
+	}
+	fmt.Fprintf(s, "Closed connection to %q (%s)\n", e.Name, e.Address)
+	s.Exit(0)
+}
+
 func connect(prev ssh.Session, e *Endpoint) error {
 	resetPty(prev)
 	defer resetPty(prev)
