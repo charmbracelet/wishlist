@@ -3,6 +3,7 @@ package wishlist
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"sync/atomic"
@@ -91,7 +92,11 @@ func listen(config *Config, endpoint Endpoint) (func() error, error) {
 		return nil, err
 	}
 	log.Printf("Starting SSH server for %s on ssh://%s", endpoint.Name, endpoint.Address)
-	go s.ListenAndServe()
+	ln, err := net.Listen("tcp", endpoint.Address)
+	if err != nil {
+		return nil, err
+	}
+	go s.Serve(ln)
 	return s.Close, nil
 }
 
@@ -187,6 +192,6 @@ func toAddress(listen string, port int64) string {
 
 type noopModel struct{}
 
-func (noopModel) Init() tea.Cmd                         { return nil }
-func (m noopModel) Update(tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
-func (noopModel) View() string                          { return "" }
+func (noopModel) Init() tea.Cmd                             { return nil }
+func (m noopModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { log.Println("msg", msg); return m, nil }
+func (noopModel) View() string                              { return "" }
