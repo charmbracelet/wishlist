@@ -34,7 +34,7 @@ func main() {
 			{
 				Name: "example app",
 				Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-					return initialModel(), []tea.ProgramOption{}
+					return initialModel(), nil
 				},
 			},
 			{

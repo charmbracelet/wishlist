@@ -26,7 +26,7 @@ func Serve(config *Config) error {
 			Name:    "listing",
 			Address: toAddress(config.Listen, config.Port),
 			Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-				return newListing(config.Endpoints, s), []tea.ProgramOption{tea.WithAltScreen()}
+				return newListing(config.Endpoints, s), nil
 			},
 		},
 	}, config.Endpoints...) {
