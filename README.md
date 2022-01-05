@@ -12,3 +12,18 @@ You can also use the `wishlist` CLI to just start a listing of external SSH apps
 * if ssh agent forwarding is available, it will be used
 * otherwise, each session will create a new ed25519 key and use it, in which case your app will be to allow access to any public key
 * password auth is not supported
+
+### Example agent forwarding
+
+```sh
+eval (ssh-agent)
+ssh-add -k # adds all your pubkeys
+ssh-add -l # should list the added keys
+
+ssh \
+	-o 'ForwardAgent=yes' \ # forwards the agent
+	-o 'UserKnownHostsFile=/dev/null' \ # do not add to ~/.ssh/known_hosts, optional
+	-p 2222 \ # port
+	foo.bar \ # host
+	-t list # optional, app name
+```
