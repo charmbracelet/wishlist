@@ -135,8 +135,6 @@ type model struct {
 	list      list.Model
 	endpoints []*Endpoint
 	session   ssh.Session
-
-	discardingInput bool
 }
 
 func (i *Endpoint) Title() string       { return i.Name }
@@ -147,48 +145,33 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-type errMsg struct {
-	err error
-}
-
-func quitWithError(err error) tea.Cmd {
-	return func() tea.Msg {
-		return errMsg{err}
-	}
-}
-
-func connectCmd(sess ssh.Session, addr string) tea.Cmd {
+func connectCmd(sess ssh.Session, name, addr string) tea.Cmd {
 	return func() tea.Msg {
 		log.Println("connecting to", addr)
 		if err := connect(sess, addr); err != nil {
-			return quitWithError(err)
+			fmt.Fprintln(sess, err.Error())
+			sess.Exit(1)
+			return nil // unreachable
 		}
-		return nil
+		log.Printf("finished connection to %q (%s)", name, addr)
+		fmt.Fprintf(sess, "Closed connection to %q (%s)\n", name, addr)
+		sess.Exit(0)
+		return nil // unreachable
 	}
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case errMsg:
-		fmt.Fprintln(m.session, msg.err.Error())
-		m.session.Exit(1)
 	case tea.KeyMsg:
-		if m.discardingInput {
-			break
-		}
 		if key.Matches(msg, enter) {
-			m.discardingInput = true
-			return m, connectCmd(
-				m.session,
-				m.list.SelectedItem().(*Endpoint).Address,
-			)
+			e := m.list.SelectedItem().(*Endpoint)
+			return noopModel{}, connectCmd(m.session, e.Name, e.Address)
 		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
 	}
 
-	m.discardingInput = false
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
@@ -201,3 +184,9 @@ func (m model) View() string {
 func toAddress(listen string, port int64) string {
 	return fmt.Sprintf("%s:%d", listen, port)
 }
+
+type noopModel struct{}
+
+func (noopModel) Init() tea.Cmd                         { return nil }
+func (m noopModel) Update(tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
+func (noopModel) View() string                          { return "" }
