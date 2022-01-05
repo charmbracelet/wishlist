@@ -44,6 +44,7 @@ func connect(prev ssh.Session, address string) error {
 		return err
 	}
 	defer func() {
+		log.Println("closing conn")
 		if err := conn.Close(); err != nil {
 			errors = multierror.Append(errors, err)
 		}
@@ -55,6 +56,7 @@ func connect(prev ssh.Session, address string) error {
 	}
 
 	defer func() {
+		log.Println("closing session")
 		if err := session.Close(); err != nil {
 			errors = multierror.Append(errors, err)
 		}
@@ -65,7 +67,8 @@ func connect(prev ssh.Session, address string) error {
 	session.Stdin = prev
 
 	pty, winch, _ := prev.Pty()
-	if err := session.RequestPty(pty.Term, pty.Window.Height, pty.Window.Width, gossh.TerminalModes{}); err != nil {
+	w := pty.Window
+	if err := session.RequestPty(pty.Term, w.Height, w.Width, nil); err != nil {
 		return err
 	}
 
@@ -87,10 +90,6 @@ func connect(prev ssh.Session, address string) error {
 	if err := session.Run(""); err != nil {
 		return err
 	}
-
-	// if err := session.Wait(); err != nil {
-	// 	return multierror.Append(errors, err)
-	// }
 
 	return errors
 }
