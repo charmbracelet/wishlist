@@ -32,6 +32,12 @@ func main() {
 		},
 		Endpoints: []*wishlist.Endpoint{
 			{
+				Name: "example app",
+				Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+					return initialModel(), []tea.ProgramOption{}
+				},
+			},
+			{
 				Name:    "foo bar",
 				Address: "some.other.server:2222",
 			},
@@ -40,12 +46,6 @@ func main() {
 			},
 			{
 				Address: "entries without names are ignored",
-			},
-			{
-				Name: "example app",
-				Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-					return initialModel(), []tea.ProgramOption{}
-				},
 			},
 		},
 	}); err != nil {
@@ -70,6 +70,7 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		log.Println("keypress:", msg)
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
