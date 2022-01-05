@@ -15,7 +15,7 @@ var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 var enter = key.NewBinding(
 	key.WithKeys("enter"),
-	key.WithHelp("Enter", "SSH"),
+	key.WithHelp("Enter", "Connect"),
 )
 
 func newListing(endpoints []*Endpoint, s ssh.Session) tea.Model {
@@ -30,43 +30,28 @@ func newListing(endpoints []*Endpoint, s ssh.Session) tea.Model {
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
 	}
-	return model{
+	return listModel{
 		list:      l,
 		endpoints: endpoints,
 		session:   s,
 	}
 }
 
-type model struct {
+func (i *Endpoint) Title() string       { return i.Name }
+func (i *Endpoint) Description() string { return fmt.Sprintf("ssh://%s", i.Address) }
+func (i *Endpoint) FilterValue() string { return i.Name }
+
+type listModel struct {
 	list      list.Model
 	endpoints []*Endpoint
 	session   ssh.Session
 }
 
-func (i *Endpoint) Title() string       { return i.Name }
-func (i *Endpoint) Description() string { return fmt.Sprintf("ssh://%s", i.Address) }
-func (i *Endpoint) FilterValue() string { return i.Name }
-
-func (m model) Init() tea.Cmd {
+func (m listModel) Init() tea.Cmd {
 	return nil
 }
 
-func connectCmd(sess ssh.Session, e *Endpoint) tea.Cmd {
-	return func() tea.Msg {
-		log.Printf("connecting to %q (%s)", e.Name, e.Address)
-		if err := connect(sess, e); err != nil {
-			fmt.Fprintln(sess, err.Error())
-			sess.Exit(1)
-			return nil // unreachable
-		}
-		log.Printf("finished connection to %q (%s)", e.Name, e.Address)
-		fmt.Fprintf(sess, "Closed connection to %q (%s)\n", e.Name, e.Address)
-		sess.Exit(0)
-		return nil // unreachable
-	}
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
@@ -83,7 +68,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m model) View() string {
+func (m listModel) View() string {
 	return docStyle.Render(m.list.View())
 }
 
@@ -92,6 +77,25 @@ type connectedModel struct{}
 func (connectedModel) Init() tea.Cmd { return nil }
 func (connectedModel) View() string  { return "" }
 func (m connectedModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Println("noop msg", msg)
+	log.Println("ign msg:", msg)
 	return m, nil
+}
+
+//
+// cmds
+//
+
+func connectCmd(sess ssh.Session, e *Endpoint) tea.Cmd {
+	return func() tea.Msg {
+		log.Printf("connecting to %q (%s)", e.Name, e.Address)
+		if err := connect(sess, e); err != nil {
+			fmt.Fprintln(sess, err.Error())
+			sess.Exit(1)
+			return nil // unreachable
+		}
+		log.Printf("finished connection to %q (%s)", e.Name, e.Address)
+		fmt.Fprintf(sess, "Closed connection to %q (%s)\n", e.Name, e.Address)
+		sess.Exit(0)
+		return nil // unreachable
+	}
 }
