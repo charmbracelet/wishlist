@@ -38,8 +38,9 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
+			model := newListing(endpoints, s)
 			p := tea.NewProgram(
-				newListing(endpoints, s),
+				model,
 				tea.WithInput(newBlockingReader(listStdin)),
 				tea.WithOutput(s),
 				tea.WithAltScreen(),
@@ -48,10 +49,10 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 			errch <- p.Start()
 			appch <- true
 
-			if cte := s.Context().Value(HandoffContextKey); cte != nil {
+			if endpoint := model.handoff; endpoint != nil {
 				io.ReadAll(handoffStdin) // exhaust the handoff stdin first
 				// TODO: keep exhausting the other stdin?
-				mustConnect(s, cte.(*Endpoint), newBlockingReader(handoffStdin))
+				mustConnect(s, endpoint, newBlockingReader(handoffStdin))
 			}
 		}
 	}
