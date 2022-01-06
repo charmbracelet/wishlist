@@ -38,8 +38,52 @@ func cmdMiddleware(endpoints []*Endpoint) wish.Middleware {
 func handoffMiddleware(h ssh.Handler) ssh.Handler {
 	return func(s ssh.Session) {
 		if cte := s.Context().Value(HandoffContextKey); cte != nil {
-			s.Context().SetValue(bm.QuitAppContextKey, true)
+			s.Context().SetValue(QuitAppContextKey, true)
 			MustConnect(s, cte.(*Endpoint))
+		}
+	}
+}
+
+func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
+	return func(h ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
+			errc := make(chan error, 1)
+			m, opts := bth(s)
+			if m != nil {
+				opts = append(opts, tea.WithInput(s), tea.WithOutput(s))
+				p := tea.NewProgram(m, opts...)
+				_, windowChanges, _ := s.Pty()
+
+				go func() {
+					for {
+						select {
+						case <-s.Context().Done():
+							if p != nil {
+								p.Quit()
+							}
+							return
+						case w := <-windowChanges:
+							if p != nil {
+								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+							}
+						case err := <-errc:
+							if err != nil {
+								log.Print(err)
+							}
+						default:
+							if p == nil {
+								continue
+							}
+							if q := s.Context().Value(QuitAppContextKey); q != nil {
+								p.Quit()
+								return
+							}
+						}
+					}
+				}()
+				errc <- p.Start()
+			}
+			h(s)
 		}
 	}
 }
@@ -57,7 +101,7 @@ func Serve(config *Config) error {
 			Address: toAddress(config.Listen, config.Port),
 			Middlewares: []wish.Middleware{
 				handoffMiddleware,
-				bm.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+				bubbleteaMiddleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 					return newListing(config.Endpoints, s), nil
 				}),
 				cmdMiddleware(config.Endpoints),

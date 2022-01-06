@@ -22,7 +22,7 @@ func MustConnect(s ssh.Session, e *Endpoint) {
 	if err := connect(s, e); err != nil {
 		fmt.Fprintln(s, err.Error())
 		s.Exit(1)
-		return //unreachable
+		return // unreachable
 	}
 	fmt.Fprintf(s, "Closed connection to %q (%s)\n", e.Name, e.Address)
 	s.Exit(0)
