@@ -16,6 +16,7 @@ import (
 func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
+	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2)
 }
 
 func MustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
