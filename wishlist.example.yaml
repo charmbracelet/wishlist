@@ -1,17 +1,10 @@
 listen: 0.0.0.0
 port: 2222
 endpoints:
-- name: confetti
-  address: ssh.caarlos0.dev:2222
-- name: fireworks
-  address: ssh.caarlos0.dev:2223
-- name: party
-  address: ssh.caarlos0.dev:2225
-- name: pc
-  address: darkstar.local:22
-- name: pi3
-  address: pi3.local:22
-  user: ubuntu
-- name: pi4
-  address: pi4.local:22
+- name: app1
+  address: foo.bar:2222
+- name: app2
+  address: foo.bar:2223
+- name: server
+  address: s01.foo.bar:22
   user: ubuntu
