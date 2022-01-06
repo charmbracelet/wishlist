@@ -30,11 +30,13 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 				for _, e := range endpoints {
 					if e.Name == cmd[0] {
 						mustConnect(s, e, s)
+						return // unreachable
 					}
 				}
 				fmt.Fprintf(s.Stderr(), "Command not found: %q.\n\r", cmd[0])
 				fmt.Fprintf(s.Stderr(), "Valid commands are: %s.\n\r", strings.Join(valid, ", "))
-				s.Exit(1)
+				_ = s.Exit(1)
+				return // unreachable
 			}
 			h(s)
 		}
@@ -63,7 +65,7 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 			appch <- true
 
 			if endpoint := model.handoff; endpoint != nil {
-				io.ReadAll(handoffStdin) // exhaust the handoff stdin first
+				_, _ = io.ReadAll(handoffStdin) // exhaust the handoff stdin first
 				// TODO: keep exhausting the other stdin?
 				mustConnect(s, endpoint, newBlockingReader(handoffStdin))
 			}

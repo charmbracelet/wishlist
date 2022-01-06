@@ -22,11 +22,11 @@ func resetPty(w io.Writer) {
 func mustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
 	if err := connect(s, e, stdin); err != nil {
 		fmt.Fprintf(s, "%s\n\r", err.Error())
-		s.Exit(1)
+		_ = s.Exit(1)
 		return // unreachable
 	}
 	fmt.Fprintf(s, "Closed connection to %q (%s)\n\r", e.Name, e.Address)
-	s.Exit(0)
+	_ = s.Exit(0)
 }
 
 func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
