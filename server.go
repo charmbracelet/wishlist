@@ -36,19 +36,34 @@ func cmdMiddleware(endpoints []*Endpoint) wish.Middleware {
 	}
 }
 
-// handles handoff to another app
-func handoffMiddleware(r io.Reader, p *tea.Program) func(h ssh.Handler) ssh.Handler {
-	return func(h ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
-			if cte := s.Context().Value(HandoffContextKey); cte != nil {
-				n, err := io.ReadAll(r) //exhaust the handoff stdin first
-				log.Println("exhausted handoff stdin", fmt.Sprintf("%x", n), err)
-				// p.Quit()
-				// TODO: keep exhausting the other stdin?
-				MustConnect(s, cte.(*Endpoint), blockingReader{r})
+func multiplex(r io.Reader, done <-chan bool) (io.Reader, io.Reader) {
+	var r1 bytes.Buffer
+	var r2 bytes.Buffer
+	w := io.MultiWriter(&r1, &r2)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				buf := [256]byte{}
+				n, err := r.Read(buf[:])
+				if err != nil {
+					log.Println("multiplex error:", err)
+					continue
+				}
+				if n == 0 {
+					continue
+				}
+				if _, err := w.Write(buf[:n]); err != nil {
+					log.Println("multiplex error:", err)
+				}
 			}
 		}
-	}
+	}()
+
+	return &r1, &r2
 }
 
 func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
@@ -60,46 +75,24 @@ func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
 				h(s)
 				return
 			}
-			var listStdin bytes.Buffer
-			var handoffStdin bytes.Buffer
-			stdin := io.MultiWriter(&listStdin, &handoffStdin)
 
-			go func() {
-				for {
-					select {
-					case <-s.Context().Done():
-						return
-					default:
-						buf := [256]byte{}
-						n, err := s.Read(buf[:])
-						if err != nil {
-							errc <- err
-							continue
-						}
-						if n == 0 {
-							continue
-						}
-						if _, err := stdin.Write(buf[:n]); err != nil {
-							errc <- err
-						}
-					}
-				}
-			}()
+			done := make(chan bool, 1)
+			defer func() { done <- true }()
+			listStdin, handoffStdin := multiplex(s, done)
 
-			opts = append(opts, tea.WithInput(blockingReader{&listStdin}), tea.WithOutput(s))
+			opts = append(opts, tea.WithInput(blockingReader{listStdin}), tea.WithOutput(s))
 			p := tea.NewProgram(m, opts...)
-			_, windowChanges, _ := s.Pty()
 
 			go func() {
+				_, winch, _ := s.Pty()
 				for {
 					select {
 					case <-s.Context().Done():
-						log.Println("DONE")
 						if p != nil {
 							p.Quit()
 						}
 						return
-					case w := <-windowChanges:
+					case w := <-winch:
 						if p != nil {
 							p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
 						}
@@ -112,15 +105,13 @@ func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
 			}()
 
 			errc <- p.Start()
+			log.Println("here")
 
 			if cte := s.Context().Value(HandoffContextKey); cte != nil {
-				n, err := io.ReadAll(&handoffStdin) //exhaust the handoff stdin first
+				n, err := io.ReadAll(handoffStdin) // exhaust the handoff stdin first
 				log.Println("exhausted handoff stdin", len(n), err)
-				// p.Quit()
 				// TODO: keep exhausting the other stdin?
-				log.Println("blocks")
-				MustConnect(s, cte.(*Endpoint), blockingReader{&handoffStdin})
-				log.Println("unblocks")
+				MustConnect(s, cte.(*Endpoint), blockingReader{handoffStdin})
 			}
 		}
 	}
