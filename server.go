@@ -76,17 +76,20 @@ func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
 				return
 			}
 
-			done := make(chan bool, 1)
-			defer func() { done <- true }()
-			listStdin, handoffStdin := multiplex(s, done)
+			mdone := make(chan bool, 1)
+			defer func() { mdone <- true }()
+			listStdin, handoffStdin := multiplex(s, mdone)
 
 			opts = append(opts, tea.WithInput(blockingReader{listStdin}), tea.WithOutput(s))
 			p := tea.NewProgram(m, opts...)
 
+			appdone := make(chan bool, 1)
 			go func() {
 				_, winch, _ := s.Pty()
 				for {
 					select {
+					case <-appdone:
+						return
 					case <-s.Context().Done():
 						if p != nil {
 							p.Quit()
@@ -105,7 +108,7 @@ func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
 			}()
 
 			errc <- p.Start()
-			log.Println("here")
+			appdone <- true
 
 			if cte := s.Context().Value(HandoffContextKey); cte != nil {
 				n, err := io.ReadAll(handoffStdin) // exhaust the handoff stdin first
