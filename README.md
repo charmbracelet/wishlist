@@ -17,7 +17,7 @@ Check the `wishlist.example.yaml` file as well as `wishlist --help`
 ### Library
 
 You can also use wishlist as a library, in which you can also start several apps within the same process.
-
+Check the `_example` folder for a working example.
 
 ## Auth
 
