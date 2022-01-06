@@ -21,9 +21,9 @@ ssh-add -k # adds all your pubkeys
 ssh-add -l # should list the added keys
 
 ssh \
-	-o 'ForwardAgent=yes' \ # forwards the agent
-	-o 'UserKnownHostsFile=/dev/null' \ # do not add to ~/.ssh/known_hosts, optional
-	-p 2222 \ # port
-	foo.bar \ # host
-	-t list # optional, app name
+  -o 'ForwardAgent=yes' \ # forwards the agent
+  -o 'UserKnownHostsFile=/dev/null' \ # do not add to ~/.ssh/known_hosts, optional
+  -p 2222 \ # port
+  foo.bar \ # host
+  -t list # optional, app name
 ```
