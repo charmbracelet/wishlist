@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
@@ -12,16 +13,28 @@ import (
 
 // handles ssh host -t appname
 func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
+	valid := []string{"list"}
+	for _, e := range endpoints {
+		valid = append(valid, fmt.Sprintf("%q", e.Name))
+	}
 	return func(h ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			if cmd := s.Command(); len(cmd) == 1 && cmd[0] != "list" {
+			cmd := s.Command()
+
+			if len(cmd) == 0 {
+				h(s)
+				return
+			}
+
+			if len(cmd) == 1 && cmd[0] != "list" {
 				for _, e := range endpoints {
 					if e.Name == cmd[0] {
 						mustConnect(s, e, s)
 					}
 				}
-				fmt.Fprintln(s.Stderr(), "command not found:", cmd)
-				return
+				fmt.Fprintf(s.Stderr(), "Command not found: %q.\n\r", cmd[0])
+				fmt.Fprintf(s.Stderr(), "Valid commands are: %s.\n\r", strings.Join(valid, ", "))
+				s.Exit(1)
 			}
 			h(s)
 		}
