@@ -31,7 +31,6 @@ func mustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
 
 func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	resetPty(prev)
-	defer resetPty(prev)
 
 	methods, closers, err := authMethods(prev)
 	defer closers.close()

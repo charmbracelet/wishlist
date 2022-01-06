@@ -5,7 +5,19 @@ Wishlist is a directory for SSH Apps, and a SSH app itself.
 It can be used to start multiple SSH apps within a single package, and provide a list of them over SSH as well.
 You can also list apps provided elsewhere.
 
-You can also use the `wishlist` CLI to just start a listing of external SSH apps based on a JSON config file.
+You can also use the `wishlist` CLI to just start a listing of external SSH apps based on a YAML config file.
+
+## Usage
+
+### CLI
+
+If you just want a directory of existing apps, you can use the `wishlist` CLI and a YAML config file.
+Check the `wishlist.example.yaml` file as well as `wishlist --help`
+
+### Library
+
+You can also use wishlist as a library, in which you can also start several apps within the same process.
+
 
 ## Auth
 

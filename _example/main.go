@@ -15,7 +15,8 @@ import (
 )
 
 func main() {
-	if err := wishlist.Serve(&wishlist.Config{
+	// wishlist config
+	cfg := &wishlist.Config{
 		Listen: "127.0.0.1",
 		Port:   2222,
 		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
@@ -23,7 +24,7 @@ func main() {
 				wish.WithAddress(e.Address),
 				wish.WithMiddleware(
 					append(
-						e.Middlewares,
+						e.Middlewares, // this is the important bit: the middlewares from the endpoint
 						lm.Middleware(),
 						activeterm.Middleware(),
 					)...,
@@ -32,16 +33,36 @@ func main() {
 		},
 		Endpoints: []*wishlist.Endpoint{
 			{
-				Name: "example",
+				Name: "bubbletea",
 				Middlewares: []wish.Middleware{
-					bm.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+					bm.Middleware(func(ssh.Session) (tea.Model, []tea.ProgramOption) {
 						return initialModel(), nil
 					}),
 				},
 			},
 			{
-				Name:    "foobar",
-				Address: "some.other.server:2222",
+				Name: "simple",
+				Middlewares: []wish.Middleware{
+					func(h ssh.Handler) ssh.Handler {
+						return func(s ssh.Session) {
+							s.Write([]byte("hello, world\n\r"))
+							h(s)
+						}
+					},
+				},
+			},
+			{
+				Name:    "app2",
+				Address: "app.addr:2222",
+			},
+			{
+				Name:    "server1",
+				Address: "server1:22",
+			},
+			{
+				Name:    "server2",
+				Address: "server1:22",
+				User:    "override_user",
 			},
 			{
 				Name: "entries without middlewares and addresses are ignored",
@@ -50,7 +71,10 @@ func main() {
 				Address: "entries without names are ignored",
 			},
 		},
-	}); err != nil {
+	}
+
+	// start all the servers
+	if err := wishlist.Serve(cfg); err != nil {
 		log.Fatalln(err)
 	}
 }
