@@ -2,7 +2,6 @@ package wishlist
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -55,8 +54,11 @@ func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
-			e := m.list.SelectedItem().(*Endpoint)
-			return connectedModel{}, connectCmd(m.session, e)
+			m.session.Context().SetValue(
+				HandoffContextKey,
+				m.list.SelectedItem().(*Endpoint),
+			)
+			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
@@ -70,25 +72,4 @@ func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m listModel) View() string {
 	return docStyle.Render(m.list.View())
-}
-
-type connectedModel struct{}
-
-func (connectedModel) Init() tea.Cmd { return nil }
-func (connectedModel) View() string  { return "" }
-func (m connectedModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Println("ign msg:", msg)
-	return m, nil
-}
-
-//
-// cmds
-//
-
-func connectCmd(sess ssh.Session, e *Endpoint) tea.Cmd {
-	return func() tea.Msg {
-		log.Printf("connecting to %q (%s)", e.Name, e.Address)
-		mustConnect(sess, e)
-		return nil // unreachable
-	}
 }

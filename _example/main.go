@@ -22,17 +22,21 @@ func main() {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
 				wish.WithMiddleware(
-					bm.Middleware(e.Handler),
-					lm.Middleware(),
-					activeterm.Middleware(),
+					append(
+						e.Middlewares,
+						lm.Middleware(),
+						activeterm.Middleware(),
+					)...,
 				),
 			)
 		},
 		Endpoints: []*wishlist.Endpoint{
 			{
 				Name: "example",
-				Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-					return initialModel(), nil
+				Middlewares: []wish.Middleware{
+					bm.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+						return initialModel(), nil
+					}),
 				},
 			},
 			{

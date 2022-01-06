@@ -18,7 +18,7 @@ func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
 }
 
-func mustConnect(s ssh.Session, e *Endpoint) {
+func MustConnect(s ssh.Session, e *Endpoint) {
 	if err := connect(s, e); err != nil {
 		fmt.Fprintln(s, err.Error())
 		s.Exit(1)

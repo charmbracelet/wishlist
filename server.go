@@ -10,9 +10,39 @@ import (
 	"syscall"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/wish"
+	bm "github.com/charmbracelet/wish/bubbletea"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 )
+
+// handles ssh host -t appname
+func cmdMiddleware(endpoints []*Endpoint) wish.Middleware {
+	return func(h ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
+			if cmd := s.Command(); len(cmd) == 1 && cmd[0] != "list" {
+				for _, e := range endpoints {
+					if e.Name == cmd[0] {
+						MustConnect(s, e)
+					}
+				}
+				fmt.Fprintln(s.Stderr(), "command not found:", cmd)
+				return
+			}
+			h(s)
+		}
+	}
+}
+
+// handles handoff to another app
+func handoffMiddleware(h ssh.Handler) ssh.Handler {
+	return func(s ssh.Session) {
+		if cte := s.Context().Value(HandoffContextKey); cte != nil {
+			s.Context().SetValue(bm.QuitAppContextKey, true)
+			MustConnect(s, cte.(*Endpoint))
+		}
+	}
+}
 
 // Serve servers the list for the given config.
 func Serve(config *Config) error {
@@ -25,23 +55,12 @@ func Serve(config *Config) error {
 		{
 			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
-			Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-				cmd := s.Command()
-				if len(cmd) == 1 && cmd[0] != "list" {
-					for _, e := range config.Endpoints {
-						if e.Name == cmd[0] {
-							if e.Handler != nil {
-								return e.Handler(s)
-							}
-							if e.Address != "" {
-								mustConnect(s, e)
-								return nil, nil
-							}
-						}
-					}
-					log.Println("command not found:", cmd)
-				}
-				return newListing(config.Endpoints, s), nil
+			Middlewares: []wish.Middleware{
+				handoffMiddleware,
+				bm.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+					return newListing(config.Endpoints, s), nil
+				}),
+				cmdMiddleware(config.Endpoints),
 			},
 		},
 	}, config.Endpoints...) {
