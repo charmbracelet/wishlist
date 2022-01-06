@@ -1,7 +1,9 @@
 package wishlist
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -23,7 +25,7 @@ func cmdMiddleware(endpoints []*Endpoint) wish.Middleware {
 			if cmd := s.Command(); len(cmd) == 1 && cmd[0] != "list" {
 				for _, e := range endpoints {
 					if e.Name == cmd[0] {
-						MustConnect(s, e)
+						MustConnect(s, e, s)
 					}
 				}
 				fmt.Fprintln(s.Stderr(), "command not found:", cmd)
@@ -35,11 +37,16 @@ func cmdMiddleware(endpoints []*Endpoint) wish.Middleware {
 }
 
 // handles handoff to another app
-func handoffMiddleware(h ssh.Handler) ssh.Handler {
-	return func(s ssh.Session) {
-		if cte := s.Context().Value(HandoffContextKey); cte != nil {
-			s.Context().SetValue(QuitAppContextKey, true)
-			MustConnect(s, cte.(*Endpoint))
+func handoffMiddleware(r io.Reader, p *tea.Program) func(h ssh.Handler) ssh.Handler {
+	return func(h ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
+			if cte := s.Context().Value(HandoffContextKey); cte != nil {
+				n, err := io.ReadAll(r) //exhaust the handoff stdin first
+				log.Println("exhausted handoff stdin", fmt.Sprintf("%x", n), err)
+				// p.Quit()
+				// TODO: keep exhausting the other stdin?
+				MustConnect(s, cte.(*Endpoint), blockingReader{r})
+			}
 		}
 	}
 }
@@ -49,41 +56,72 @@ func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
 		return func(s ssh.Session) {
 			errc := make(chan error, 1)
 			m, opts := bth(s)
-			if m != nil {
-				opts = append(opts, tea.WithInput(s), tea.WithOutput(s))
-				p := tea.NewProgram(m, opts...)
-				_, windowChanges, _ := s.Pty()
+			if m == nil {
+				h(s)
+				return
+			}
+			var listStdin bytes.Buffer
+			var handoffStdin bytes.Buffer
+			stdin := io.MultiWriter(&listStdin, &handoffStdin)
 
-				go func() {
-					for {
-						select {
-						case <-s.Context().Done():
-							if p != nil {
-								p.Quit()
-							}
-							return
-						case w := <-windowChanges:
-							if p != nil {
-								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
-							}
-						case err := <-errc:
-							if err != nil {
-								log.Print(err)
-							}
-						default:
-							if p == nil {
-								continue
-							}
-							if q := s.Context().Value(QuitAppContextKey); q != nil {
-								p.Quit()
-								return
-							}
+			go func() {
+				for {
+					select {
+					case <-s.Context().Done():
+						return
+					default:
+						buf := [256]byte{}
+						n, err := s.Read(buf[:])
+						if err != nil {
+							errc <- err
+							continue
+						}
+						if n == 0 {
+							continue
+						}
+						if _, err := stdin.Write(buf[:n]); err != nil {
+							errc <- err
 						}
 					}
-				}()
-				errc <- p.Start()
+				}
+			}()
+
+			opts = append(opts, tea.WithInput(blockingReader{&listStdin}), tea.WithOutput(s))
+			p := tea.NewProgram(m, opts...)
+			_, windowChanges, _ := s.Pty()
+
+			go func() {
+				for {
+					select {
+					case <-s.Context().Done():
+						log.Println("DONE")
+						if p != nil {
+							p.Quit()
+						}
+						return
+					case w := <-windowChanges:
+						if p != nil {
+							p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+						}
+					case err := <-errc:
+						if err != nil {
+							log.Print("got an err:", err)
+						}
+					}
+				}
+			}()
+
+			errc <- p.Start()
+
+			if cte := s.Context().Value(HandoffContextKey); cte != nil {
+				n, err := io.ReadAll(&handoffStdin) //exhaust the handoff stdin first
+				log.Println("exhausted handoff stdin", len(n), err)
+				// p.Quit()
+				// TODO: keep exhausting the other stdin?
+				log.Println("blocks")
+				MustConnect(s, cte.(*Endpoint), blockingReader{&handoffStdin})
+				log.Println("unblocks")
 			}
-			h(s)
 		}
 	}
 }
@@ -100,7 +138,7 @@ func Serve(config *Config) error {
 			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
 			Middlewares: []wish.Middleware{
-				handoffMiddleware,
+				// handoffMiddleware,
 				bubbleteaMiddleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 					return newListing(config.Endpoints, s), nil
 				}),

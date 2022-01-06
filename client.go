@@ -18,8 +18,10 @@ func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
 }
 
-func MustConnect(s ssh.Session, e *Endpoint) {
-	if err := connect(s, e); err != nil {
+func MustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
+	log.Println("connecting:", e.Address)
+	if err := connect(s, e, stdin); err != nil {
+		log.Println("failed to connect:", err)
 		fmt.Fprintln(s, err.Error())
 		s.Exit(1)
 		return // unreachable
@@ -28,7 +30,7 @@ func MustConnect(s ssh.Session, e *Endpoint) {
 	s.Exit(0)
 }
 
-func connect(prev ssh.Session, e *Endpoint) error {
+func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	resetPty(prev)
 	defer resetPty(prev)
 
@@ -67,7 +69,7 @@ func connect(prev ssh.Session, e *Endpoint) error {
 
 	session.Stdout = prev
 	session.Stderr = prev.Stderr()
-	session.Stdin = prev
+	session.Stdin = stdin
 
 	pty, winch, _ := prev.Pty()
 	w := pty.Window
@@ -80,16 +82,6 @@ func connect(prev ssh.Session, e *Endpoint) error {
 
 	go notifyWindowChanges(session, done, winch)
 
-	// Non blocking:
-	// - session.Shell()
-	// - session.Start()
-	//
-	// Blocking:
-	// - session.Run()
-	// - session.Output()
-	// - session.CombinedOutput()
-	// - session.Wait()
-	//
 	if err := session.Shell(); err != nil {
 		return err
 	}
