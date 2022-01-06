@@ -19,9 +19,7 @@ func resetPty(w io.Writer) {
 }
 
 func MustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
-	log.Println("connecting:", e.Address)
 	if err := connect(s, e, stdin); err != nil {
-		log.Println("failed to connect:", err)
 		fmt.Fprintln(s, err.Error())
 		s.Exit(1)
 		return // unreachable
