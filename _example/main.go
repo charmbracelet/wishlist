@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/accesscontrol"
 	"github.com/charmbracelet/wish/activeterm"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
@@ -22,16 +22,25 @@ func main() {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
 				wish.WithMiddleware(
-					bm.Middleware(e.Handler),
-					lm.Middleware(),
-					accesscontrol.Middleware(),
-					activeterm.Middleware(),
+					append(
+						e.Middlewares,
+						lm.Middleware(),
+						activeterm.Middleware(),
+					)...,
 				),
 			)
 		},
 		Endpoints: []*wishlist.Endpoint{
 			{
-				Name:    "foo bar",
+				Name: "example",
+				Middlewares: []wish.Middleware{
+					bm.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+						return initialModel(), nil
+					}),
+				},
+			},
+			{
+				Name:    "foobar",
 				Address: "some.other.server:2222",
 			},
 			{
@@ -40,21 +49,14 @@ func main() {
 			{
 				Address: "entries without names are ignored",
 			},
-			{
-				Name: "example app",
-				Handler: func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-					return initialModel(), []tea.ProgramOption{}
-				},
-			},
 		},
 	}); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 }
 
 type model struct {
-	spinner  spinner.Model
-	quitting bool
+	spinner spinner.Model
 }
 
 func initialModel() model {
@@ -70,24 +72,20 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		log.Println("keypress:", msg)
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
-			m.quitting = true
 			return m, tea.Quit
-		default:
-			return m, nil
 		}
-	default:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
+	case tea.WindowSizeMsg:
+		log.Println("window size:", msg)
 	}
+	var cmd tea.Cmd
+	m.spinner, cmd = m.spinner.Update(msg)
+	return m, cmd
 }
 
 func (m model) View() string {
 	str := fmt.Sprintf("\n\n   %s Loading forever...press q to quit\n\n", m.spinner.View())
-	if m.quitting {
-		return str + "\n"
-	}
 	return str
 }

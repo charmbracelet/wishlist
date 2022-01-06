@@ -8,7 +8,6 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/accesscontrol"
 	"github.com/charmbracelet/wish/activeterm"
-	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
 	"github.com/gliderlabs/ssh"
@@ -29,14 +28,21 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	names := []string{"list"}
+	for _, e := range config.Endpoints {
+		names = append(names, e.Name)
+	}
+
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
 		return wish.NewServer(
 			wish.WithAddress(e.Address),
 			wish.WithMiddleware(
-				bm.Middleware(e.Handler),
-				lm.Middleware(),
-				accesscontrol.Middleware(),
-				activeterm.Middleware(),
+				append(
+					e.Middlewares,
+					lm.Middleware(),
+					accesscontrol.Middleware(names...),
+					activeterm.Middleware(),
+				)...,
 			),
 		)
 	}
