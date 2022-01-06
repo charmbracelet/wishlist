@@ -1,9 +1,7 @@
 package wishlist
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -11,116 +9,11 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
-	bm "github.com/charmbracelet/wish/bubbletea"
-	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 )
 
-// handles ssh host -t appname
-func cmdMiddleware(endpoints []*Endpoint) wish.Middleware {
-	return func(h ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
-			if cmd := s.Command(); len(cmd) == 1 && cmd[0] != "list" {
-				for _, e := range endpoints {
-					if e.Name == cmd[0] {
-						MustConnect(s, e, s)
-					}
-				}
-				fmt.Fprintln(s.Stderr(), "command not found:", cmd)
-				return
-			}
-			h(s)
-		}
-	}
-}
-
-func multiplex(r io.Reader, done <-chan bool) (io.Reader, io.Reader) {
-	var r1 bytes.Buffer
-	var r2 bytes.Buffer
-	w := io.MultiWriter(&r1, &r2)
-
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			default:
-				buf := [256]byte{}
-				n, err := r.Read(buf[:])
-				if err != nil {
-					log.Println("multiplex error:", err)
-					continue
-				}
-				if n == 0 {
-					continue
-				}
-				if _, err := w.Write(buf[:n]); err != nil {
-					log.Println("multiplex error:", err)
-				}
-			}
-		}
-	}()
-
-	return &r1, &r2
-}
-
-func bubbleteaMiddleware(bth bm.BubbleTeaHandler) wish.Middleware {
-	return func(h ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
-			errc := make(chan error, 1)
-			m, opts := bth(s)
-			if m == nil {
-				h(s)
-				return
-			}
-
-			mdone := make(chan bool, 1)
-			defer func() { mdone <- true }()
-			listStdin, handoffStdin := multiplex(s, mdone)
-
-			opts = append(opts, tea.WithInput(blockingReader{listStdin}), tea.WithOutput(s))
-			p := tea.NewProgram(m, opts...)
-
-			appdone := make(chan bool, 1)
-			go func() {
-				_, winch, _ := s.Pty()
-				for {
-					select {
-					case <-appdone:
-						return
-					case <-s.Context().Done():
-						if p != nil {
-							p.Quit()
-						}
-						return
-					case w := <-winch:
-						if p != nil {
-							p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
-						}
-					case err := <-errc:
-						if err != nil {
-							log.Print("got an err:", err)
-						}
-					}
-				}
-			}()
-
-			errc <- p.Start()
-			appdone <- true
-
-			if cte := s.Context().Value(HandoffContextKey); cte != nil {
-				n, err := io.ReadAll(handoffStdin) // exhaust the handoff stdin first
-				log.Println("exhausted handoff stdin", len(n), err)
-				// TODO: keep exhausting the other stdin?
-				MustConnect(s, cte.(*Endpoint), blockingReader{handoffStdin})
-			}
-		}
-	}
-}
-
-// Serve servers the list for the given config.
+// Serve serves wishlist with the given config.
 func Serve(config *Config) error {
 	var closes []func() error
 	done := make(chan os.Signal, 1)
@@ -132,11 +25,8 @@ func Serve(config *Config) error {
 			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
 			Middlewares: []wish.Middleware{
-				// handoffMiddleware,
-				bubbleteaMiddleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-					return newListing(config.Endpoints, s), nil
-				}),
-				cmdMiddleware(config.Endpoints),
+				listingMiddleware(config.Endpoints),
+				cmdsMiddleware(config.Endpoints),
 			},
 		},
 	}, config.Endpoints...) {
@@ -164,6 +54,7 @@ func Serve(config *Config) error {
 	return closeAll(closes)
 }
 
+// listenAndServe starts a server for the given endpoint.
 func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	s, err := config.Factory(endpoint)
 	if err != nil {
@@ -182,6 +73,7 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	return s.Close, nil
 }
 
+// runs all the close functions and returns all errors.
 func closeAll(closes []func() error) error {
 	var result error
 	for _, close := range closes {
@@ -192,6 +84,7 @@ func closeAll(closes []func() error) error {
 	return result
 }
 
+// returns `listen:port`
 func toAddress(listen string, port int64) string {
 	return fmt.Sprintf("%s:%d", listen, port)
 }

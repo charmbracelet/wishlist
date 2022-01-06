@@ -5,8 +5,19 @@ import (
 	"time"
 )
 
+// blockingReader is an io.Reader that blocks until the underlying reader
+// returns something other than io.EOF.
+//
+// on EOF, it'll keep trying to read every 10ms.
+//
+// The purpose of this is to be used to "emulate a STDIN" (which never EOFs)
+// from another io.Reader, e.g. a bytes.Buffer.
 type blockingReader struct {
 	r io.Reader
+}
+
+func newBlockingReader(r io.Reader) io.Reader {
+	return blockingReader{r}
 }
 
 type readResult struct {
