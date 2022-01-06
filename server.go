@@ -9,42 +9,11 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
-	bm "github.com/charmbracelet/wish/bubbletea"
-	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 )
 
-// handles ssh host -t appname
-func cmdMiddleware(endpoints []*Endpoint) wish.Middleware {
-	return func(h ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
-			if cmd := s.Command(); len(cmd) == 1 && cmd[0] != "list" {
-				for _, e := range endpoints {
-					if e.Name == cmd[0] {
-						MustConnect(s, e)
-					}
-				}
-				fmt.Fprintln(s.Stderr(), "command not found:", cmd)
-				return
-			}
-			h(s)
-		}
-	}
-}
-
-// handles handoff to another app
-func handoffMiddleware(h ssh.Handler) ssh.Handler {
-	return func(s ssh.Session) {
-		if cte := s.Context().Value(HandoffContextKey); cte != nil {
-			s.Context().SetValue(bm.QuitAppContextKey, true)
-			MustConnect(s, cte.(*Endpoint))
-		}
-	}
-}
-
-// Serve servers the list for the given config.
+// Serve serves wishlist with the given config.
 func Serve(config *Config) error {
 	var closes []func() error
 	done := make(chan os.Signal, 1)
@@ -56,11 +25,8 @@ func Serve(config *Config) error {
 			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
 			Middlewares: []wish.Middleware{
-				handoffMiddleware,
-				bm.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-					return newListing(config.Endpoints, s), nil
-				}),
-				cmdMiddleware(config.Endpoints),
+				listingMiddleware(config.Endpoints),
+				cmdsMiddleware(config.Endpoints),
 			},
 		},
 	}, config.Endpoints...) {
@@ -88,6 +54,7 @@ func Serve(config *Config) error {
 	return closeAll(closes)
 }
 
+// listenAndServe starts a server for the given endpoint.
 func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	s, err := config.Factory(endpoint)
 	if err != nil {
@@ -106,6 +73,7 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	return s.Close, nil
 }
 
+// runs all the close functions and returns all errors.
 func closeAll(closes []func() error) error {
 	var result error
 	for _, close := range closes {
@@ -116,6 +84,7 @@ func closeAll(closes []func() error) error {
 	return result
 }
 
+// returns `listen:port`
 func toAddress(listen string, port int64) string {
 	return fmt.Sprintf("%s:%d", listen, port)
 }

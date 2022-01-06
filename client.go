@@ -16,19 +16,20 @@ import (
 func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
+	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2)
 }
 
-func MustConnect(s ssh.Session, e *Endpoint) {
-	if err := connect(s, e); err != nil {
-		fmt.Fprintln(s, err.Error())
-		s.Exit(1)
-		return //unreachable
+func mustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
+	if err := connect(s, e, stdin); err != nil {
+		fmt.Fprintf(s, "%s\n\r", err.Error())
+		_ = s.Exit(1)
+		return // unreachable
 	}
-	fmt.Fprintf(s, "Closed connection to %q (%s)\n", e.Name, e.Address)
-	s.Exit(0)
+	fmt.Fprintf(s, "Closed connection to %q (%s)\n\r", e.Name, e.Address)
+	_ = s.Exit(0)
 }
 
-func connect(prev ssh.Session, e *Endpoint) error {
+func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	resetPty(prev)
 	defer resetPty(prev)
 
@@ -60,14 +61,14 @@ func connect(prev ssh.Session, e *Endpoint) error {
 	}
 
 	defer func() {
-		if err := session.Close(); err != nil {
+		if err := session.Close(); err != nil && err != io.EOF {
 			log.Println("failed to close session:", err)
 		}
 	}()
 
 	session.Stdout = prev
 	session.Stderr = prev.Stderr()
-	session.Stdin = prev
+	session.Stdin = stdin
 
 	pty, winch, _ := prev.Pty()
 	w := pty.Window
@@ -80,16 +81,6 @@ func connect(prev ssh.Session, e *Endpoint) error {
 
 	go notifyWindowChanges(session, done, winch)
 
-	// Non blocking:
-	// - session.Shell()
-	// - session.Start()
-	//
-	// Blocking:
-	// - session.Run()
-	// - session.Output()
-	// - session.CombinedOutput()
-	// - session.Wait()
-	//
 	if err := session.Shell(); err != nil {
 		return err
 	}
@@ -101,7 +92,6 @@ func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan 
 	for {
 		select {
 		case <-done:
-			log.Println("winch done")
 			return
 		case w := <-winch:
 			if w.Height == 0 && w.Width == 0 {
@@ -109,7 +99,7 @@ func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan 
 				return
 			}
 			if err := session.WindowChange(w.Height, w.Width); err != nil {
-				log.Println("failed to notify window change", err)
+				log.Println("failed to notify window change:", err)
 				return
 			}
 		}
@@ -144,8 +134,7 @@ func authMethods(s ssh.Session) ([]gossh.AuthMethod, closers, error) {
 }
 
 func tryAuthAgent(s ssh.Session) ([]gossh.AuthMethod, closers, error) {
-	ok, err := s.SendRequest("auth-agent-req@openssh.com", true, nil)
-	log.Println("agent forward:", ok, err, ssh.AgentRequested(s))
+	_, _ = s.SendRequest("auth-agent-req@openssh.com", true, nil)
 
 	if ssh.AgentRequested(s) {
 		l, err := ssh.NewAgentListener()

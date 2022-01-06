@@ -17,7 +17,7 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
-func newListing(endpoints []*Endpoint, s ssh.Session) tea.Model {
+func newListing(endpoints []*Endpoint, s ssh.Session) *listModel {
 	var items []list.Item
 	for _, endpoint := range endpoints {
 		if endpoint.Valid() {
@@ -29,7 +29,7 @@ func newListing(endpoints []*Endpoint, s ssh.Session) tea.Model {
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
 	}
-	return listModel{
+	return &listModel{
 		list:      l,
 		endpoints: endpoints,
 		session:   s,
@@ -44,20 +44,18 @@ type listModel struct {
 	list      list.Model
 	endpoints []*Endpoint
 	session   ssh.Session
+	handoff   *Endpoint
 }
 
-func (m listModel) Init() tea.Cmd {
+func (m *listModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
-			m.session.Context().SetValue(
-				HandoffContextKey,
-				m.list.SelectedItem().(*Endpoint),
-			)
+			m.handoff = m.list.SelectedItem().(*Endpoint)
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
@@ -70,6 +68,6 @@ func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m listModel) View() string {
+func (m *listModel) View() string {
 	return docStyle.Render(m.list.View())
 }

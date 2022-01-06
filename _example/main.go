@@ -44,7 +44,7 @@ func main() {
 				Address: "some.other.server:2222",
 			},
 			{
-				Name: "entries without handlers and without addresses are ignored",
+				Name: "entries without middlewares and addresses are ignored",
 			},
 			{
 				Address: "entries without names are ignored",
