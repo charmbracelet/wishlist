@@ -5,10 +5,7 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-const (
-	HandoffContextKey = "handoff-to"
-	QuitAppContextKey = "quit-app"
-)
+const HandoffContextKey = "handoff-to"
 
 // Endpoint represents an endpoint to list.
 // If it has a Handler, wishlist will start an SSH server on the given address.
