@@ -43,7 +43,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 
 	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, prev.User()),
-		HostKeyCallback: hostKeyCallback(e),
+		HostKeyCallback: hostKeyCallback(e, ".wishlist_known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
 	}
 
@@ -176,9 +176,13 @@ func firstNonEmpty(ss ...string) string {
 	return ""
 }
 
-func hostKeyCallback(e *Endpoint) gossh.HostKeyCallback {
+// hostKeyCallback returns a callback that will be used to verify the host key.
+//
+// it creates a file in the given path, and uses that to verify hosts and keys.
+// if the host does not exist there, it adds it so its available next time, as plain old `ssh` does.
+func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 	return func(hostname string, remote net.Addr, key gossh.PublicKey) error {
-		kh, err := os.OpenFile(".wishlist_known_hosts", os.O_WRONLY|os.O_CREATE, 0600)
+		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		if err != nil {
 			return err
 		}
@@ -195,6 +199,7 @@ func hostKeyCallback(e *Endpoint) gossh.HostKeyCallback {
 				if len(kerr.Want) > 0 {
 					return fmt.Errorf("possible man-in-the-middle attack: %w", err)
 				} else {
+					// if want is empty, it means the host was not in the known_hosts file, so lets add it there.
 					_, err := fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
 					return err
 				}
