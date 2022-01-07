@@ -182,11 +182,11 @@ func firstNonEmpty(ss ...string) string {
 // if the host does not exist there, it adds it so its available next time, as plain old `ssh` does.
 func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 	return func(hostname string, remote net.Addr, key gossh.PublicKey) error {
-		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600)
 		if err != nil {
 			return err
 		}
-		defer kh.Close()
+		defer func() { _ = kh.Close() }()
 
 		callback, err := knownhosts.New(kh.Name())
 		if err != nil {
@@ -198,11 +198,10 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 			if errors.As(err, &kerr) {
 				if len(kerr.Want) > 0 {
 					return fmt.Errorf("possible man-in-the-middle attack: %w", err)
-				} else {
-					// if want is empty, it means the host was not in the known_hosts file, so lets add it there.
-					_, err := fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
-					return err
 				}
+				// if want is empty, it means the host was not in the known_hosts file, so lets add it there.
+				_, err := fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
+				return err
 			}
 		}
 		return nil

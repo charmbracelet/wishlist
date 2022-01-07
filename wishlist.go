@@ -36,8 +36,13 @@ func newListing(endpoints []*Endpoint, s ssh.Session) *listModel {
 	}
 }
 
-func (i *Endpoint) Title() string       { return i.Name }
+// Title to abide the list.Item interface.
+func (i *Endpoint) Title() string { return i.Name }
+
+// Description to abide the list.Item interface.
 func (i *Endpoint) Description() string { return fmt.Sprintf("ssh://%s", i.Address) }
+
+// FilterValue to abide the list.Item interface.
 func (i *Endpoint) FilterValue() string { return i.Name }
 
 type listModel struct {

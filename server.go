@@ -38,6 +38,8 @@ func Serve(config *Config) error {
 			endpoint.Address = toAddress(config.Listen, atomic.AddInt64(&config.lastPort, 1))
 		}
 
+		// i don't see where close was declared before, linter bug maybe?
+		// nolint:predeclared
 		close, err := listenAndServe(config, *endpoint)
 		if close != nil {
 			closes = append(closes, close)
