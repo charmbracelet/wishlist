@@ -11,7 +11,7 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-// handles ssh host -t appname
+// handles ssh host -t appname.
 func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 	valid := []string{"list"}
 	for _, e := range endpoints {
@@ -43,7 +43,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 	}
 }
 
-// handles the listing and handoff of apps
+// handles the listing and handoff of apps.
 func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 	return func(h ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
@@ -78,6 +78,7 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 // - errch: when the program errors
 // - session's context done: when the session is terminated by either party
 // - winch: when the terminal is resized
+// and handles them accordingly.
 func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, errch <-chan error) {
 	_, winch, _ := s.Pty()
 	for {

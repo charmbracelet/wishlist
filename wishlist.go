@@ -10,7 +10,7 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var docStyle = lipgloss.NewStyle().Margin(1, 2) // nolint:gomnd
 
 var enter = key.NewBinding(
 	key.WithKeys("enter"),

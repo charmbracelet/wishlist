@@ -29,6 +29,8 @@ func (r blockingReader) Read(data []byte) (int, error) {
 	readch := make(chan readResult, 1)
 
 	go func() {
+		// 10ms is not that much a magic number, more like a guess.
+		// nolint:gomnd
 		ticker := time.NewTicker(time.Millisecond * 10)
 		defer ticker.Stop()
 

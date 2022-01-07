@@ -86,7 +86,7 @@ func closeAll(closes []func() error) error {
 	return result
 }
 
-// returns `listen:port`
+// returns `listen:port`.
 func toAddress(listen string, port int64) string {
 	return fmt.Sprintf("%s:%d", listen, port)
 }
