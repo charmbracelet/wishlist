@@ -197,7 +197,7 @@ func firstNonEmpty(ss ...string) string {
 // if the host does not exist there, it adds it so its available next time, as plain old `ssh` does.
 func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 	return func(hostname string, remote net.Addr, key gossh.PublicKey) error {
-		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600)
+		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) // nolint:gomnd
 		if err != nil {
 			return err
 		}

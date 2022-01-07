@@ -21,7 +21,7 @@ func Serve(config *Config) error {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	if config.Port == 0 {
-		port, err := getFirstOpenPort(config.Listen, 22, 2222)
+		port, err := getFirstOpenPort(config.Listen, 22, 2222) // nolint:gomnd
 		if err != nil {
 			return fmt.Errorf("could not get an open port and none was provided: %w", err)
 		}
@@ -32,7 +32,7 @@ func Serve(config *Config) error {
 		config.Listen = "127.0.0.1"
 	}
 
-	if err := os.MkdirAll(".wishlist", 0700); err != nil {
+	if err := os.MkdirAll(".wishlist", 0o700); err != nil { // nolint:gomnd
 		return fmt.Errorf("could not create .wishlist dir: %w", err)
 	}
 
