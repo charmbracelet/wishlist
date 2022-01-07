@@ -118,6 +118,9 @@ func (c closers) close() {
 	}
 }
 
+// authMethod returns an auth method.
+//
+// it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
 func authMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	method, closers, err := tryAuthAgent(s)
 	if err != nil {
@@ -131,6 +134,7 @@ func authMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	return method, closers, err
 }
 
+// tryAuthAgent will try to use an ssh-agent to authenticate.
 func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	_, _ = s.SendRequest("auth-agent-req@openssh.com", true, nil)
 
@@ -154,6 +158,8 @@ func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	return nil, nil, nil
 }
 
+// tryNewKey will create a .wishlist/client_ed25519 keypair if one does not exist.
+// It will return an auth method that uses the keypair if it exist or is successfully created.
 func tryNewKey() (gossh.AuthMethod, error) {
 	key, err := keygen.New(".wishlist", "client", nil, keygen.Ed25519)
 	if err != nil {

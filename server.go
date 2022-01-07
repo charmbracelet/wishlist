@@ -23,13 +23,17 @@ func Serve(config *Config) error {
 	if config.Port == 0 {
 		port, err := getFirstOpenPort(config.Listen, 22, 2222)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not get an open port and none was provided: %w", err)
 		}
 		config.Port = port
 	}
 
 	if config.Listen == "" {
 		config.Listen = "127.0.0.1"
+	}
+
+	if err := os.MkdirAll(".wishlist", 0700); err != nil {
+		return fmt.Errorf("could not create .wishlist dir: %w", err)
 	}
 
 	config.lastPort = config.Port
