@@ -32,7 +32,7 @@ func mustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
 func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	resetPty(prev)
 
-	methods, closers, err := authMethods(prev)
+	method, closers, err := authMethod(prev)
 	defer closers.close()
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, prev.User()),
 		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
-		Auth:            methods,
+		Auth:            []gossh.AuthMethod{method},
 	}
 
 	conn, err := gossh.Dial("tcp", e.Address, conf)
@@ -115,24 +115,20 @@ func (c closers) close() {
 	}
 }
 
-func authMethods(s ssh.Session) ([]gossh.AuthMethod, closers, error) {
-	var authMethods []gossh.AuthMethod
-	methods, closers, err := tryAuthAgent(s)
+func authMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
+	method, closers, err := tryAuthAgent(s)
 	if err != nil {
-		return methods, closers, err
+		return method, closers, err
 	}
-	if methods != nil {
-		authMethods = append(authMethods, methods...)
+	if method != nil {
+		return method, closers, nil
 	}
 
-	methods, err = tryNewKey()
-	if err != nil {
-		return methods, closers, err
-	}
-	return append(authMethods, methods...), closers, nil
+	method, err = tryNewKey()
+	return method, closers, err
 }
 
-func tryAuthAgent(s ssh.Session) ([]gossh.AuthMethod, closers, error) {
+func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	_, _ = s.SendRequest("auth-agent-req@openssh.com", true, nil)
 
 	if ssh.AgentRequested(s) {
@@ -147,15 +143,15 @@ func tryAuthAgent(s ssh.Session) ([]gossh.AuthMethod, closers, error) {
 			return nil, closers{l.Close}, err
 		}
 
-		return []gossh.AuthMethod{
-			gossh.PublicKeysCallback(agent.NewClient(conn).Signers),
-		}, closers{l.Close, conn.Close}, nil
+		return gossh.PublicKeysCallback(agent.NewClient(conn).Signers),
+			closers{l.Close, conn.Close},
+			nil
 	}
 
 	return nil, nil, nil
 }
 
-func tryNewKey() ([]gossh.AuthMethod, error) {
+func tryNewKey() (gossh.AuthMethod, error) {
 	key, err := keygen.New("", "", nil, keygen.Ed25519)
 	if err != nil {
 		return nil, err
@@ -165,7 +161,7 @@ func tryNewKey() ([]gossh.AuthMethod, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []gossh.AuthMethod{gossh.PublicKeys(signer)}, nil
+	return gossh.PublicKeys(signer), nil
 }
 
 func firstNonEmpty(ss ...string) string {
