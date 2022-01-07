@@ -1,16 +1,19 @@
 package wishlist
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"os"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 func resetPty(w io.Writer) {
@@ -40,7 +43,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 
 	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, prev.User()),
-		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
+		HostKeyCallback: hostKeyCallback(e),
 		Auth:            []gossh.AuthMethod{method},
 	}
 
@@ -171,4 +174,32 @@ func firstNonEmpty(ss ...string) string {
 		}
 	}
 	return ""
+}
+
+func hostKeyCallback(e *Endpoint) gossh.HostKeyCallback {
+	return func(hostname string, remote net.Addr, key gossh.PublicKey) error {
+		kh, err := os.OpenFile(".wishlist_known_hosts", os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			return err
+		}
+		defer kh.Close()
+
+		callback, err := knownhosts.New(kh.Name())
+		if err != nil {
+			return err
+		}
+
+		if err := callback(hostname, remote, key); err != nil {
+			var kerr *knownhosts.KeyError
+			if errors.As(err, &kerr) {
+				if len(kerr.Want) > 0 {
+					return fmt.Errorf("possible man-in-the-middle attack: %w", err)
+				} else {
+					_, err := fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
+					return err
+				}
+			}
+		}
+		return nil
+	}
 }
