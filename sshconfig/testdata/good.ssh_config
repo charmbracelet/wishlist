@@ -18,3 +18,17 @@ Host app2
   User someoneelse
   Port 2223
   IdentityFile ignored
+
+Host multiple1 multiple2 multiple3
+  User multi
+
+Host multiple1
+  HostName multi1.foo.local
+
+Host multiple2
+  HostName multi2.foo.local
+  Port 2223
+
+Host multiple3
+  HostName multi3.foo.local
+  User overrided
