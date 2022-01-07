@@ -57,7 +57,9 @@ func main() {
 func getConfig(path string) (wishlist.Config, error) {
 	ext := filepath.Ext(path)
 	if ext == ".yaml" || ext == ".yml" {
-		return getYAMLConfig(path)
+		if _, err := os.Stat(path); err == nil {
+			return getYAMLConfig(path)
+		}
 	}
 	return getSSHConfig(path)
 }
