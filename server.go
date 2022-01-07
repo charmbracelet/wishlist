@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"sync/atomic"
 	"syscall"
+	"time"
 
 	"github.com/charmbracelet/wish"
 	"github.com/hashicorp/go-multierror"
@@ -20,7 +21,15 @@ func Serve(config *Config) error {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	if config.Port == 0 {
-		config.Port = 22 // default SSH port
+		port, err := getFirstOpenPort(config.Listen, 22, 2222)
+		if err != nil {
+			return err
+		}
+		config.Port = port
+	}
+
+	if config.Listen == "" {
+		config.Listen = "127.0.0.1"
 	}
 
 	config.lastPort = config.Port
@@ -92,5 +101,18 @@ func closeAll(closes []func() error) error {
 
 // returns `listen:port`.
 func toAddress(listen string, port int64) string {
-	return fmt.Sprintf("%s:%d", listen, port)
+	return net.JoinHostPort(listen, fmt.Sprintf("%d", port))
+}
+
+func getFirstOpenPort(addr string, ports ...int64) (int64, error) {
+	for _, port := range ports {
+		conn, err := net.DialTimeout("tcp", toAddress(addr, port), time.Second)
+		if err != nil {
+			return port, nil
+		}
+		if err := conn.Close(); err != nil {
+			return 0, err
+		}
+	}
+	return 0, fmt.Errorf("all ports unavailable")
 }

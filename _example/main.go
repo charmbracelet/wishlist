@@ -17,8 +17,6 @@ import (
 func main() {
 	// wishlist config
 	cfg := &wishlist.Config{
-		Listen: "127.0.0.1",
-		Port:   2222,
 		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
