@@ -1,6 +1,8 @@
 package wishlist
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
@@ -12,6 +14,10 @@ type Endpoint struct {
 	Address     string            `yaml:"address"` // Endpoint address in the `host:port` format, if empty, will be the same address as the list, increasing the port number.
 	User        string            `yaml:"user"`    // User to authenticate as.
 	Middlewares []wish.Middleware `yaml:"-"`       // wish middlewares you can use in the factory method.
+}
+
+func (e *Endpoint) String() string {
+	return fmt.Sprintf(`%q => "%s@%s"`, e.Name, e.User, e.Address)
 }
 
 // Returns true if the endpoint is valid.
