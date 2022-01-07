@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	lm "github.com/charmbracelet/wish/logging"
@@ -14,12 +15,22 @@ import (
 )
 
 func main() {
-	file := flag.String("config", "wishlist.yaml", "path to config file")
+	file := flag.String("config", ".wishlist/config.yaml", "path to config file")
 	flag.Parse()
 
 	bts, err := os.ReadFile(*file)
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if !k.IsKeyPairExists() {
+		if err := k.WriteKeys(); err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	var config wishlist.Config

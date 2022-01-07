@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	bm "github.com/charmbracelet/wish/bubbletea"
@@ -15,11 +16,23 @@ import (
 )
 
 func main() {
+	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if err := k.WriteKeys(); err != nil {
+		log.Fatalln(err)
+	}
+
 	// wishlist config
 	cfg := &wishlist.Config{
 		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
+				wish.WithHostKeyPEM(k.PrivateKeyPEM),
+				wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+					return true
+				}),
 				wish.WithMiddleware(
 					append(
 						e.Middlewares, // this is the important bit: the middlewares from the endpoint

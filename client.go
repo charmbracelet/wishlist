@@ -43,7 +43,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 
 	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, prev.User()),
-		HostKeyCallback: hostKeyCallback(e, ".wishlist_known_hosts"),
+		HostKeyCallback: hostKeyCallback(e, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
 	}
 
@@ -155,7 +155,7 @@ func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 }
 
 func tryNewKey() (gossh.AuthMethod, error) {
-	key, err := keygen.New("", "", nil, keygen.Ed25519)
+	key, err := keygen.New(".wishlist", "client", nil, keygen.Ed25519)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,11 @@ func tryNewKey() (gossh.AuthMethod, error) {
 	if err != nil {
 		return nil, err
 	}
-	return gossh.PublicKeys(signer), nil
+
+	if !key.IsKeyPairExists() {
+		err = key.WriteKeys()
+	}
+	return gossh.PublicKeys(signer), err
 }
 
 func firstNonEmpty(ss ...string) string {
