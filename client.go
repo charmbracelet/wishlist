@@ -24,11 +24,11 @@ func resetPty(w io.Writer) {
 
 func mustConnect(s ssh.Session, e *Endpoint, stdin io.Reader) {
 	if err := connect(s, e, stdin); err != nil {
-		fmt.Fprintf(s, "%s\n\r", err.Error())
+		fmt.Fprintf(s, "wishlist: %s\n\r", err.Error())
 		_ = s.Exit(1)
 		return // unreachable
 	}
-	fmt.Fprintf(s, "Closed connection to %q (%s)\n\r", e.Name, e.Address)
+	fmt.Fprintf(s, "wishlist: closed connection to %q (%s)\n\r", e.Name, e.Address)
 	_ = s.Exit(0)
 }
 
@@ -38,7 +38,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	method, closers, err := authMethod(prev)
 	defer closers.close()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to find an auth method: %w", err)
 	}
 
 	conf := &gossh.ClientConfig{
@@ -49,7 +49,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 
 	conn, err := gossh.Dial("tcp", e.Address, conf)
 	if err != nil {
-		return err
+		return fmt.Errorf("connection failed: %w", err)
 	}
 	defer func() {
 		if err := conn.Close(); err != nil {
@@ -59,7 +59,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 
 	session, err := conn.NewSession()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open session: %w", err)
 	}
 
 	defer func() {
@@ -75,7 +75,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	pty, winch, _ := prev.Pty()
 	w := pty.Window
 	if err := session.RequestPty(pty.Term, w.Height, w.Width, nil); err != nil {
-		return err
+		return fmt.Errorf("failed to request pty: %w", err)
 	}
 
 	done := make(chan bool, 1)
@@ -84,10 +84,13 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 	go notifyWindowChanges(session, done, winch)
 
 	if err := session.Shell(); err != nil {
-		return err
+		return fmt.Errorf("failed to start shell: %w", err)
 	}
 
-	return session.Wait()
+	if err := session.Wait(); err != nil {
+		return fmt.Errorf("session failed: %w", err)
+	}
+	return nil
 }
 
 func notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan ssh.Window) {
@@ -155,6 +158,7 @@ func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 			nil
 	}
 
+	fmt.Fprintf(s.Stderr(), "wishlist: ssh agent not available\n\r")
 	return nil, nil, nil
 }
 
@@ -171,10 +175,11 @@ func tryNewKey() (gossh.AuthMethod, error) {
 		return nil, err
 	}
 
-	if !key.IsKeyPairExists() {
-		err = key.WriteKeys()
+	if key.IsKeyPairExists() {
+		return gossh.PublicKeys(signer), nil
 	}
-	return gossh.PublicKeys(signer), err
+
+	return gossh.PublicKeys(signer), key.WriteKeys()
 }
 
 func firstNonEmpty(ss ...string) string {

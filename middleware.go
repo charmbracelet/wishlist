@@ -13,7 +13,7 @@ import (
 
 // handles ssh host -t appname.
 func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
-	valid := []string{"list"}
+	valid := []string{`"list"`}
 	for _, e := range endpoints {
 		valid = append(valid, fmt.Sprintf("%q", e.Name))
 	}
@@ -33,8 +33,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 						return // unreachable
 					}
 				}
-				fmt.Fprintf(s.Stderr(), "Command not found: %q.\n\r", cmd[0])
-				fmt.Fprintf(s.Stderr(), "Valid commands are: %s.\n\r", strings.Join(valid, ", "))
+				fmt.Fprintf(s.Stderr(), "wishlist: command %q not found, valid commands are %s.\n\r", cmd[0], strings.Join(valid, ", "))
 				_ = s.Exit(1)
 				return // unreachable
 			}
