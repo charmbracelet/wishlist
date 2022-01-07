@@ -19,6 +19,10 @@ func Serve(config *Config) error {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
+	if config.Port == 0 {
+		config.Port = 22 // default SSH port
+	}
+
 	config.lastPort = config.Port
 	for _, endpoint := range append([]*Endpoint{
 		{
