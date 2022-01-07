@@ -14,11 +14,12 @@ import (
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
+	"github.com/hashicorp/go-multierror"
 	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	file := flag.String("config", ".wishlist/config.yaml", "path to config file")
+	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
 	flag.Parse()
 
 	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
@@ -55,13 +56,41 @@ func main() {
 }
 
 func getConfig(path string) (wishlist.Config, error) {
-	ext := filepath.Ext(path)
-	if ext == ".yaml" || ext == ".yml" {
-		if _, err := os.Stat(path); err == nil {
-			return getYAMLConfig(path)
+	var allErrs error
+	for _, fn := range []func() string{
+		func() string { return path },
+		func() string { return ".wishlist/config.yaml" },
+		func() string { return ".wishlist/config.yml" },
+		func() string { return ".wishlist/config" },
+		func() string { return "/etc/ssh/ssh_config" },
+		func() string {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return ""
+			}
+			return filepath.Join(home, ".ssh/config")
+		},
+	} {
+		path := fn()
+		if path == "" {
+			continue
 		}
+
+		var cfg wishlist.Config
+		var err error
+		ext := filepath.Ext(path)
+		if ext == ".yaml" || ext == ".yml" {
+			cfg, err = getYAMLConfig(path)
+		} else {
+			cfg, err = getSSHConfig(path)
+		}
+		if err == nil {
+			log.Println("Using config from", path)
+			return cfg, nil
+		}
+		allErrs = multierror.Append(allErrs, fmt.Errorf("%q: %w", path, err))
 	}
-	return getSSHConfig(path)
+	return wishlist.Config{}, fmt.Errorf("no valid config files found: %w", allErrs)
 }
 
 func getYAMLConfig(path string) (wishlist.Config, error) {
@@ -81,29 +110,6 @@ func getYAMLConfig(path string) (wishlist.Config, error) {
 }
 
 func getSSHConfig(path string) (wishlist.Config, error) {
-	for _, fn := range []func() string{
-		func() string { return path },
-		func() string { return ".wishlist/config" },
-		func() string { return "/etc/ssh/ssh_config" },
-		func() string {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return ""
-			}
-			return filepath.Join(home, ".ssh/config")
-		},
-	} {
-		path := fn()
-		cfg, err := getSSHConfigFrom(path)
-		if err == nil {
-			log.Println("Using config from", path)
-			return cfg, nil
-		}
-	}
-	return wishlist.Config{}, fmt.Errorf("no ssh config files found")
-}
-
-func getSSHConfigFrom(path string) (wishlist.Config, error) {
 	config := wishlist.Config{}
 	endpoints, err := sshconfig.ParseFile(path)
 	if err != nil {
