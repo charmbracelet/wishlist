@@ -46,7 +46,7 @@ func TestParseFile(t *testing.T) {
 			{
 				Name:    "multiple3",
 				Address: "multi3.foo.local:22",
-				User:    "overrided",
+				User:    "overridden",
 			},
 		}, endpoints)
 	})
