@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/wish"
+	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -79,6 +80,8 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	if err != nil {
 		return nil, err
 	}
+	s.PublicKeyHandler = publicKeyAccessOption(config.Users)
+
 	log.Printf("Starting SSH server for %s on ssh://%s", endpoint.Name, endpoint.Address)
 	ln, err := net.Listen("tcp", endpoint.Address)
 	if err != nil {
@@ -119,4 +122,31 @@ func getFirstOpenPort(addr string, ports ...int64) (int64, error) {
 		}
 	}
 	return 0, fmt.Errorf("all ports unavailable")
+}
+
+func publicKeyAccessOption(users []User) ssh.PublicKeyHandler {
+	if len(users) == 0 {
+		// if no users, assume everyone can login
+		return nil
+	}
+
+	return func(ctx ssh.Context, key ssh.PublicKey) bool {
+		for _, user := range users {
+			if user.Name == ctx.User() {
+				for _, pubkey := range user.PublicKeys {
+					upk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(pubkey))
+					if err != nil {
+						log.Printf("invalid key for user %q: %v", user.Name, err)
+						return false
+					}
+					if ssh.KeysEqual(upk, key) {
+						log.Printf("authorized %s@%s...", ctx.User(), pubkey[:30])
+						return true
+					}
+				}
+			}
+		}
+		log.Printf("denied %s@%s", ctx.User(), key.Type())
+		return false
+	}
 }

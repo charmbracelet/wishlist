@@ -40,7 +40,6 @@ func main() {
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
 		return wish.NewServer(
 			wish.WithAddress(e.Address),
-			publicKeyAccessOption(config.Users),
 			wish.WithMiddleware(
 				append(
 					e.Middlewares,
@@ -54,32 +53,6 @@ func main() {
 	if err := wishlist.Serve(&config); err != nil {
 		log.Fatalln(err)
 	}
-}
-
-func publicKeyAccessOption(users []wishlist.User) ssh.Option {
-	if len(users) == 0 {
-		// if no users, assume everyone can login
-		return func(s *ssh.Server) error { return nil }
-	}
-	return wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
-		for _, user := range users {
-			if user.Name == ctx.User() {
-				for _, pubkey := range user.PublicKeys {
-					upk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(pubkey))
-					if err != nil {
-						log.Printf("invalid key for user %q: %v", user.Name, err)
-						return false
-					}
-					if ssh.KeysEqual(upk, key) {
-						log.Printf("authorized %s@%s...", ctx.User(), pubkey[:30])
-						return true
-					}
-				}
-			}
-		}
-		log.Printf("denied %s@%s", ctx.User(), key.Type())
-		return false
-	})
 }
 
 func getConfig(path string) (wishlist.Config, error) {

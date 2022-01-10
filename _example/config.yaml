@@ -5,14 +5,13 @@
 listen: 127.0.0.1         # defaults to 0.0.0.0
 port: 2223                # defaults to 22 or 2222, whichever is open
 
-# endpoints to list:
-endpoints:
+endpoints:                # endpoints to list
 - name: appname           # prefer to avoid spaces
   address: foo.local:2234 # address in host:port format
   user: notme             # overrides user, defauts to client's user
 
-# users to allow access to the list
-users:
+users:                    # users to allow access to the list
 - name: carlos            # user login
   public-keys:            # their public keys
-  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDXTlLdHrS+PRjQ6gfWXBy17bUF8PeKbhMNl5wcOo/fS8Tb9+cV6rWbADtAHJWR3oGAYZ0nLSUVTil3y493uPxvmFGdAvJoue5X4QWweoObrFeVg5PXEZZZyVrKiTvE5DNdwZrR4QtXcNO3qdaaF9pnLFjCGGzfOAlYIRRnX5k7hkd5FFUQiAKIPxPGG7sfWVnobqwC/eWqk8fUVxhe8/i3uiiaql+QdMMuK0Bs4uuZFiKVuHgKdpgwsHOt57uazGTq+bKo5RIR4Mdr+/F4sBH3ndamOK7FOSwfM/4WUlmgWucHmW6mMndy6gyYQzsbZYUsrcoD3Ym5OXBGLgIarMEL carlos@Carlos-MacBook-Pro-Retina.local
+  - key1
+
