@@ -105,7 +105,6 @@ func getYAMLConfig(path string) (wishlist.Config, error) {
 		return config, fmt.Errorf("failed to parse config: %w", err)
 	}
 
-	log.Println("Using config from", path)
 	return config, nil
 }
 
