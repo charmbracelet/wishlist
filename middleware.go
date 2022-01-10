@@ -7,8 +7,10 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
+	"github.com/muesli/termenv"
 )
 
 // handles ssh host -t appname.
@@ -46,6 +48,8 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 	return func(h ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
+			lipgloss.SetColorProfile(termenv.ANSI256)
+
 			plexch := make(chan bool, 1)
 			defer func() { plexch <- true }()
 			listStdin, handoffStdin := multiplex(s, plexch)
