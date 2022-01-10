@@ -1,0 +1,34 @@
+Host darkstar
+  HostName darkstar.local
+
+Host supernova
+  HostName supernova.local
+  User notme
+  ForwardAgent does-not-matter
+
+Host *
+  Hostname ignored-because-wildcard
+
+Host app1
+  HostName app.foo.local
+  Port 2222
+
+Host app2
+  HostName app.foo.local
+  User someoneelse
+  Port 2223
+  IdentityFile ignored
+
+Host multiple1 multiple2 multiple3
+  User multi
+
+Host multiple1
+  HostName multi1.foo.local
+
+Host multiple2
+  HostName multi2.foo.local
+  Port 2223
+
+Host multiple3
+  HostName multi3.foo.local
+  User overridden

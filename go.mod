@@ -10,6 +10,7 @@ require (
 	github.com/charmbracelet/wish v0.1.1
 	github.com/gliderlabs/ssh v0.3.3
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/kevinburke/ssh_config v1.1.0
 	github.com/muesli/termenv v0.9.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
