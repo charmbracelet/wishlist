@@ -45,7 +45,7 @@ ssh \
 
 ## Running
 
-Wishlist will readn and store all its information in a `.wishlist` folder in the current working directory:
+Wishlist will read and store all its information in a `.wishlist` folder in the current working directory:
 
 - the server keys
 - the client keys
