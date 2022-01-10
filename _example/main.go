@@ -20,8 +20,10 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if err := k.WriteKeys(); err != nil {
-		log.Fatalln(err)
+	if !k.IsKeyPairExists() {
+		if err := k.WriteKeys(); err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	// wishlist config
