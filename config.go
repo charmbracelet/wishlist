@@ -36,6 +36,13 @@ type Config struct {
 	Port      int64                               `yaml:"port"`      // Port to start the first server on.
 	Endpoints []*Endpoint                         `yaml:"endpoints"` // Endpoints to list.
 	Factory   func(Endpoint) (*ssh.Server, error) `yaml:"-"`         // Factory used to create the SSH server for the given endpoint.
+	Users     []User                              `yaml:"users"`     // Users allowed to access the list.
 
 	lastPort int64
+}
+
+// User contains user-level configuration for a repository.
+type User struct {
+	Name       string   `yaml:"name"`
+	PublicKeys []string `yaml:"public-keys"`
 }
