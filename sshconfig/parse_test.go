@@ -2,6 +2,7 @@ package sshconfig
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"testing/iotest"
 
@@ -60,7 +61,7 @@ func TestParseFile(t *testing.T) {
 	t.Run("invalid path", func(t *testing.T) {
 		endpoints, err := ParseFile("testdata/nope.ssh_config")
 		require.Empty(t, endpoints)
-		require.EqualError(t, err, `failed to open config: open testdata/nope.ssh_config: no such file or directory`)
+		require.ErrorIs(t, err, os.ErrNotExist)
 	})
 }
 
