@@ -38,6 +38,7 @@ func main() {
 	}
 
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
+		// TODO: security (e.g. allowed pubkeys)
 		return wish.NewServer(
 			wish.WithAddress(e.Address),
 			wish.WithMiddleware(
@@ -62,7 +63,6 @@ func getConfig(path string) (wishlist.Config, error) {
 		func() string { return ".wishlist/config.yaml" },
 		func() string { return ".wishlist/config.yml" },
 		func() string { return ".wishlist/config" },
-		func() string { return "/etc/ssh/ssh_config" },
 		func() string {
 			home, err := os.UserHomeDir()
 			if err != nil {
@@ -70,6 +70,7 @@ func getConfig(path string) (wishlist.Config, error) {
 			}
 			return filepath.Join(home, ".ssh/config")
 		},
+		func() string { return "/etc/ssh/ssh_config" },
 	} {
 		path := fn()
 		if path == "" {
