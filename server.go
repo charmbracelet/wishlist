@@ -29,7 +29,7 @@ func Serve(config *Config) error {
 	}
 
 	if config.Listen == "" {
-		config.Listen = "127.0.0.1"
+		config.Listen = "0.0.0.0"
 	}
 
 	if err := os.MkdirAll(".wishlist", 0o700); err != nil { // nolint:gomnd

@@ -39,3 +39,41 @@ ssh \
   foo.bar \ # host
   -t list # optional, app name
 ```
+
+## Running
+
+Wishlist will readn and store all its information in a `.wishlist` folder in the current working directory:
+
+- the server keys
+- the client keys
+- known hosts
+- config files
+
+The config files are tried in the following order:
+
+- the `-config` flag in either YAML or SSH config formats - [example YAML](/wishlist.example.yaml) | [example SSH config](/sshconfig/testdata/good.ssh_config)
+- `.wishlist/config.yaml` - [example](/wishlist.example.yaml)
+- `.wishlist/config.yml` - [example](/wishlist.example.yaml)
+- `$HOME/.ssh/config`
+- `/etc/ssh/ssh_config`
+
+The first one that is loaded and parsed without errors will be used.
+This means that if you have your common used hosts in your `~/.ssh/config`, you can simply run `wishlist` and get it running right away.
+It also means that if you don't want that, you can pass a path to `-config`, and it can be either a YAML or a SSH config file.
+
+### Using the binary
+
+```sh
+wishlist
+```
+
+### Using Docker
+
+```sh
+mkdir .wishlist
+$EDITOR .wishlist/config.yaml # either an YAML or a SSH config
+docker run \
+  -p 2222:22 \
+  -v $PWD/.wishlist:/.wishlist \
+  docker.io/charmcli/wishlist:latest
+```
