@@ -2,6 +2,9 @@
 
 Wishlist is a directory for SSH Apps, and a SSH app itself.
 
+![screencast](https://user-images.githubusercontent.com/245435/148814423-2a3b05b4-fb79-4ff9-a475-1942d6ffb363.gif)
+
+
 It can be used to start multiple SSH apps within a single package, and provide a list of them over SSH as well.
 You can also list apps provided elsewhere.
 
