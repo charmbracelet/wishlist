@@ -1,0 +1,10 @@
+#
+# setup wishlist with a YAML file
+#
+
+listen: 127.0.0.1         # defaults to 0.0.0.0
+port: 2223                # defaults to 22 or 2222, whichever is open
+endpoints:
+- name: appname           # prefer to avoid spaces
+  address: foo.local:2234 # address in host:port format
+  user: notme             # overrides user, defauts to client's user

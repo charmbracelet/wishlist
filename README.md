@@ -51,9 +51,9 @@ Wishlist will readn and store all its information in a `.wishlist` folder in the
 
 The config files are tried in the following order:
 
-- the `-config` flag in either YAML or SSH config formats - [example YAML](/wishlist.example.yaml) | [example SSH config](/sshconfig/testdata/good.ssh_config)
-- `.wishlist/config.yaml` - [example](/wishlist.example.yaml)
-- `.wishlist/config.yml` - [example](/wishlist.example.yaml)
+- the `-config` flag in either YAML or SSH config formats - [[example YAML](/_example/config.yaml)|[example SSH config](/example/config.ssh_config)]
+- `.wishlist/config.yaml` - [[example](/_example/config.yaml)]
+- `.wishlist/config.yml` - [[example](/_example/config.yaml)]
 - `$HOME/.ssh/config`
 - `/etc/ssh/ssh_config`
 
