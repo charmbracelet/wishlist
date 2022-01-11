@@ -1,5 +1,5 @@
 Wishlist
-==========
+========
 
 <p>
     <a href="https://github.com/charmbracelet/wishlist/releases"><img src="https://img.shields.io/github/release/charmbracelet/wishlist.svg" alt="Latest Release"></a>
@@ -11,32 +11,32 @@ The SSH app directory ✨
 
 ![screencast](https://user-images.githubusercontent.com/245435/148814423-2a3b05b4-fb79-4ff9-a475-1942d6ffb363.gif)
 
-With Wishlist you can have a single entrypoints for multiple SSH endpoints, whether they are [Wish](https://github.com/charmbracelet/wish) apps or not.
+With Wishlist you can have a single entrypoint for multiple SSH endpoints, whether they are [Wish](https://github.com/charmbracelet/wish) apps or not.
 
-It can be used to start multiple SSH apps within a single package, and provide a list of them over SSH as well.
-You can also list apps provided elsewhere.
+As a server, it can be used to start multiple SSH apps within a single package and list them over SSH.
+You can list apps provided elsewhere, too.
 
-You can also use the `wishlist` CLI to just start a listing of external SSH apps based on a YAML config file.
+You can also use the `wishlist` CLI to list and connect to servers in your `~/.ssh/config` or a YAML config file.
 
 ## Usage
 
 ### CLI
 
-If you just want a directory of existing apps, you can use the `wishlist` CLI and a YAML config file.
-Check the `wishlist.example.yaml` file as well as `wishlist --help`
+If you just want a directory of existing servers, you can use the `wishlist` CLI and a YAML config file. You can also just run it without any arguments to list the servers in your `~/.ssh/config`.
+Check the [example config file](/_example/config.yaml) file as well as `wishlist --help` for details.
 
 ### Library
 
-You can also use wishlist as a library, in which you can also start several apps within the same process.
-Check the `_example` folder for a working example.
+Wishlist is also available as a library which allows you to start several apps within the same process.
+Check out the `_example` folder for a working example.
 
 ## Auth
 
 * if ssh agent forwarding is available, it will be used
 * otherwise, each session will create a new ed25519 key and use it, in which case your app will be to allow access to any public key
-* password auth is not supported
+* password-based auth is not supported
 
-### Example agent forwarding
+### Agent forwarding example
 
 ```sh
 eval (ssh-agent)
@@ -61,7 +61,7 @@ Host wishlist
 	UserKnownHostsFile /dev/null
 ```
 
-## Running
+## Running it
 
 Wishlist will read and store all its information in a `.wishlist` folder in the current working directory:
 
@@ -106,14 +106,15 @@ docker run \
 
 ## Acknowledgments
 
-The gif above shows a lot of [Maas Lalani's](https://github.com/maaslalani) [confetty](https://github.com/maaslalani/confetty).
+The gif above shows a lot of [Maas Lalani’s](https://github.com/maaslalani) [confeTTY](https://github.com/maaslalani/confetty).
 
 ## Feedback
 
-We'd love to hear your thoughts on this tutorial. Feel free to drop us a note!
+We'd love to hear your thoughts on this project. Feel free to drop us a note!
 
 * [Twitter](https://twitter.com/charmcli)
 * [The Fediverse](https://mastodon.technology/@charm)
+* [Slack](https://charm.sh/slack)
 
 ## License
 
