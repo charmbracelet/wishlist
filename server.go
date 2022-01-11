@@ -1,6 +1,7 @@
 package wishlist
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -92,7 +93,12 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 			log.Println("SSH server error:", err)
 		}
 	}()
-	return s.Close, nil
+
+	return func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer func() { cancel() }()
+		return s.Shutdown(ctx)
+	}, nil
 }
 
 // runs all the close functions and returns all errors.
