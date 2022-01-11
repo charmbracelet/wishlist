@@ -40,6 +40,7 @@ func main() {
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
 		return wish.NewServer(
 			wish.WithAddress(e.Address),
+			wish.WithHostKeyPath(filepath.Join(k.KeyDir, "server_ed25519")),
 			wish.WithMiddleware(
 				append(
 					e.Middlewares,
