@@ -23,7 +23,7 @@ You can also use the `wishlist` CLI to list and connect to servers in your `~/.s
 ### CLI
 
 If you just want a directory of existing servers, you can use the `wishlist` CLI and a YAML config file. You can also just run it without any arguments to list the servers in your `~/.ssh/config`.
-Check the `wishlist.example.yaml` file as well as `wishlist --help` for details.
+Check the [example config file](/_example/config.yaml) file as well as `wishlist --help` for details.
 
 ### Library
 
