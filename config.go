@@ -16,11 +16,12 @@ type Endpoint struct {
 	Middlewares []wish.Middleware `yaml:"-"`       // wish middlewares you can use in the factory method.
 }
 
+// String returns the endpoint in a friendly string format.
 func (e *Endpoint) String() string {
 	return fmt.Sprintf(`%q => "%s@%s"`, e.Name, e.User, e.Address)
 }
 
-// Returns true if the endpoint is valid.
+// Valid returns true if the endpoint is valid.
 func (e Endpoint) Valid() bool {
 	return e.Name != "" && (len(e.Middlewares) > 0 || e.Address != "")
 }
