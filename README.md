@@ -1,4 +1,11 @@
-# wishlist
+Wishlist
+==========
+
+<p>
+    <a href="https://github.com/charmbracelet/wishlist/releases"><img src="https://img.shields.io/github/release/charmbracelet/wishlist.svg" alt="Latest Release"></a>
+    <a href="https://pkg.go.dev/github.com/charmbracelet/wishlist?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc"></a>
+    <a href="https://github.com/charmbracelet/wishlist/actions"><img src="https://github.com/charmbracelet/wishlist/workflows/build/badge.svg" alt="Build Status"></a>
+</p>
 
 Wishlist is a directory for SSH Apps, and a SSH app itself.
 
@@ -95,3 +102,22 @@ docker run \
   -v $PWD/.wishlist:/.wishlist \
   docker.io/charmcli/wishlist:latest
 ```
+
+## Feedback
+
+We'd love to hear your thoughts on this tutorial. Feel free to drop us a note!
+
+* [Twitter](https://twitter.com/charmcli)
+* [The Fediverse](https://mastodon.technology/@charm)
+
+## License
+
+[MIT](/LICENSE)
+
+***
+
+Part of [Charm](https://charm.sh).
+
+<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge-unrounded.jpg" width="400"></a>
+
+Charm热爱开源 • Charm loves open source
