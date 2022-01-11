@@ -104,6 +104,10 @@ docker run \
   docker.io/charmcli/wishlist:latest
 ```
 
+## Acknowledgments
+
+The gif above shows a lot of [Maas Lalani's](https://github.com/maaslalani) [confetty](https://github.com/maaslalani/confetty).
+
 ## Feedback
 
 We'd love to hear your thoughts on this tutorial. Feel free to drop us a note!
@@ -119,6 +123,6 @@ We'd love to hear your thoughts on this tutorial. Feel free to drop us a note!
 
 Part of [Charm](https://charm.sh).
 
-<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge-unrounded.jpg" width="400"></a>
+<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400"></a>
 
 Charm热爱开源 • Charm loves open source
