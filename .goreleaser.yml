@@ -62,13 +62,12 @@ brews:
     homepage: "https://charm.sh/"
     description: "The SSH app's directory"
 
-signs:
-  - artifacts: checksum
-
 checksum:
   name_template: "checksums.txt"
+
 snapshot:
   name_template: "{{ incpatch .Version }}-devel"
+
 changelog:
   sort: asc
   filters:
