@@ -47,8 +47,8 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 					continue // ignore empty nodes
 				}
 
-				parts := strings.SplitN(node, " ", 2)
-				if len(parts) != 2 {
+				parts := strings.SplitN(node, " ", 2) // nolint:gomnd
+				if len(parts) != 2 {                  // nolint:gomnd
 					return nil, fmt.Errorf("invalid node on app %q: %q", name, node)
 				}
 
@@ -71,7 +71,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 		}
 	}
 
-	var endpoints []*wishlist.Endpoint
+	endpoints := make([]*wishlist.Endpoint, 0, len(infos))
 	for name, info := range infos {
 		if info.Port == "" {
 			info.Port = "22"

@@ -38,6 +38,7 @@ func main() {
 	}
 
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
+		// nolint:wrapcheck
 		return wish.NewServer(
 			wish.WithAddress(e.Address),
 			wish.WithHostKeyPath(filepath.Join(k.KeyDir, "server_ed25519")),
@@ -113,7 +114,7 @@ func getSSHConfig(path string) (wishlist.Config, error) {
 	config := wishlist.Config{}
 	endpoints, err := sshconfig.ParseFile(path)
 	if err != nil {
-		return config, err
+		return config, err // nolint:wrapcheck
 	}
 	config.Endpoints = endpoints
 	return config, nil
