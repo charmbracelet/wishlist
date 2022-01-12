@@ -19,7 +19,7 @@ func ParseFile(path string) ([]*wishlist.Endpoint, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config: %w", err)
 	}
-	defer f.Close()
+	defer f.Close() // nolint:errcheck
 	return ParseReader(f)
 }
 
