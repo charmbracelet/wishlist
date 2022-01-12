@@ -7,7 +7,7 @@ Wishlist
     <a href="https://github.com/charmbracelet/wishlist/actions"><img src="https://github.com/charmbracelet/wishlist/workflows/build/badge.svg" alt="Build Status"></a>
 </p>
 
-The SSH host directory ✨
+The SSH directory ✨
 
 ![screencast](https://user-images.githubusercontent.com/245435/148814423-2a3b05b4-fb79-4ff9-a475-1942d6ffb363.gif)
 
