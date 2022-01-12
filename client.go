@@ -62,6 +62,7 @@ func connect(prev ssh.Session, e *Endpoint, stdin io.Reader) error {
 		return fmt.Errorf("failed to open session: %w", err)
 	}
 
+	log.Printf("%s connect to %q, %s -> %s", prev.User(), e.Name, prev.RemoteAddr().String(), conn.RemoteAddr().String())
 	defer func() {
 		if err := session.Close(); err != nil && err != io.EOF {
 			log.Println("failed to close session:", err)
