@@ -81,10 +81,10 @@ func getConfig(path string) (wishlist.Config, error) {
 
 		var cfg wishlist.Config
 		var err error
-		ext := filepath.Ext(path)
-		if ext == ".yaml" || ext == ".yml" {
+		switch filepath.Ext(path) {
+		case ".yaml", ".yml":
 			cfg, err = getYAMLConfig(path)
-		} else {
+		default:
 			cfg, err = getSSHConfig(path)
 		}
 		if err == nil {

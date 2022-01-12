@@ -10,11 +10,11 @@ import (
 )
 
 func TestGetConfig(t *testing.T) {
+	tmp := t.TempDir()
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, os.Chdir(dir)) })
 
-	tmp := t.TempDir()
 	require.NoError(t, os.Chdir(tmp))
 	require.NoError(t, os.Mkdir(".wishlist", 0o755))
 	require.NoError(t, os.WriteFile(".wishlist/config.yaml", []byte(`
