@@ -13,5 +13,6 @@ endpoints:                # endpoints to list
 users:                    # users to allow access to the list
 - name: carlos            # user login
   public-keys:            # their public keys
-  - key1
+  - ssh-rsa AAAAB3Nz...   # string redacted for the sake of brevity
+  - ssh-ed25519 AAAA...   # string redacted for the sake of brevity
 
