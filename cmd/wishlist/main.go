@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -90,7 +91,11 @@ func getConfig(path string) (wishlist.Config, error) {
 			log.Println("Using config from", path)
 			return cfg, nil
 		}
-		allErrs = multierror.Append(allErrs, fmt.Errorf("%q: %w", path, err))
+		if errors.Is(err, os.ErrNotExist) {
+			allErrs = multierror.Append(allErrs, fmt.Errorf("%q: %w", path, err))
+			continue
+		}
+		return cfg, err
 	}
 	return wishlist.Config{}, fmt.Errorf("no valid config files found: %w", allErrs)
 }
