@@ -69,7 +69,6 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 
 			if endpoint := model.handoff; endpoint != nil {
 				_, _ = io.ReadAll(handoffStdin) // exhaust the handoff stdin first
-				// TODO: keep exhausting the other stdin?
 				mustConnect(s, endpoint, newBlockingReader(handoffStdin))
 			}
 		}

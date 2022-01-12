@@ -144,13 +144,13 @@ func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	if ssh.AgentRequested(s) {
 		l, err := ssh.NewAgentListener()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, err // nolint:wrapcheck
 		}
 		go ssh.ForwardAgentConnections(l, s)
 
 		conn, err := net.Dial(l.Addr().Network(), l.Addr().String())
 		if err != nil {
-			return nil, closers{l.Close}, err
+			return nil, closers{l.Close}, err // nolint:wrapcheck
 		}
 
 		return gossh.PublicKeysCallback(agent.NewClient(conn).Signers),
@@ -167,12 +167,12 @@ func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 func tryNewKey() (gossh.AuthMethod, error) {
 	key, err := keygen.New(".wishlist", "client", nil, keygen.Ed25519)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck
 	}
 
 	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck
 	}
 
 	if key.IsKeyPairExists() {
@@ -199,13 +199,13 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 	return func(hostname string, remote net.Addr, key gossh.PublicKey) error {
 		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) // nolint:gomnd
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to open known_hosts: %w", err)
 		}
 		defer func() { _ = kh.Close() }()
 
 		callback, err := knownhosts.New(kh.Name())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check known_hosts: %w", err)
 		}
 
 		if err := callback(hostname, remote, key); err != nil {
@@ -215,9 +215,10 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 					return fmt.Errorf("possible man-in-the-middle attack: %w", err)
 				}
 				// if want is empty, it means the host was not in the known_hosts file, so lets add it there.
-				_, err := fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
-				return err
+				fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
+				return nil
 			}
+			return fmt.Errorf("failed to check known_hosts: %w", err)
 		}
 		return nil
 	}
