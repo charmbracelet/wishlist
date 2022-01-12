@@ -12,6 +12,7 @@ import (
 func TestGetConfig(t *testing.T) {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, os.Chdir(dir)) })
 
 	tmp := t.TempDir()
 	require.NoError(t, os.Chdir(tmp))
