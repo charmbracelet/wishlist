@@ -114,26 +114,6 @@ dockers:
     dockerfile: Dockerfile
     use: buildx
   - image_templates:
-      - "docker.io/charmcli/wishlist:latest-i386"
-      - "docker.io/charmcli/wishlist:v{{ .Major }}.{{ .Minor }}-i386"
-      - "docker.io/charmcli/wishlist:v{{ .Version }}-i386"
-      - "ghcr.io/charmbracelet/wishlist:latest-i386"
-      - "ghcr.io/charmbracelet/wishlist:v{{ .Major }}.{{ .Minor }}-i386"
-      - "ghcr.io/charmbracelet/wishlist:v{{ .Version }}-i386"
-    goarch: "386"
-    build_flag_templates:
-      - --platform=linux/i386
-      - --label=org.opencontainers.image.title={{ .ProjectName }}
-      - --label=org.opencontainers.image.description={{ .ProjectName }}
-      - --label=org.opencontainers.image.url=https://github.com/charmbracelet/wishlist
-      - --label=org.opencontainers.image.source=https://github.com/charmbracelet/wishlist
-      - --label=org.opencontainers.image.version=v{{ .Version }}
-      - --label=org.opencontainers.image.created={{ .Date }}
-      - --label=org.opencontainers.image.revision={{ .FullCommit }}
-      - --label=org.opencontainers.image.licenses=MIT
-    dockerfile: Dockerfile
-    use: buildx
-  - image_templates:
       - "docker.io/charmcli/wishlist:latest-arm64"
       - "docker.io/charmcli/wishlist:v{{ .Major }}.{{ .Minor }}-arm64"
       - "docker.io/charmcli/wishlist:v{{ .Version }}-arm64"
@@ -181,34 +161,28 @@ docker_manifests:
       - docker.io/charmcli/wishlist:latest-amd64
       - docker.io/charmcli/wishlist:latest-arm64
       - docker.io/charmcli/wishlist:latest-armv7
-      - docker.io/charmcli/wishlist:latest-i386
   - name_template: ghcr.io/charmbracelet/wishlist:latest
     image_templates:
       - ghcr.io/charmbracelet/wishlist:latest-amd64
       - ghcr.io/charmbracelet/wishlist:latest-arm64
       - ghcr.io/charmbracelet/wishlist:latest-armv7
-      - ghcr.io/charmbracelet/wishlist:latest-i386
   - name_template: docker.io/charmcli/wishlist:v{{ .Major }}.{{ .Minor }}
     image_templates:
       - docker.io/charmcli/wishlist:v{{ .Major }}.{{ .Minor }}-amd64
       - docker.io/charmcli/wishlist:v{{ .Major }}.{{ .Minor }}-arm64
       - docker.io/charmcli/wishlist:v{{ .Major }}.{{ .Minor }}-armv7
-      - docker.io/charmcli/wishlist:v{{ .Major }}.{{ .Minor }}-i386
   - name_template: ghcr.io/charmbracelet/wishlist:v{{ .Major }}.{{ .Minor }}
     image_templates:
       - ghcr.io/charmbracelet/wishlist:v{{ .Major }}.{{ .Minor }}-amd64
       - ghcr.io/charmbracelet/wishlist:v{{ .Major }}.{{ .Minor }}-arm64
       - ghcr.io/charmbracelet/wishlist:v{{ .Major }}.{{ .Minor }}-armv7
-      - ghcr.io/charmbracelet/wishlist:v{{ .Major }}.{{ .Minor }}-i386
   - name_template: docker.io/charmcli/wishlist:v{{ .Version }}
     image_templates:
       - docker.io/charmcli/wishlist:v{{ .Version }}-amd64
       - docker.io/charmcli/wishlist:v{{ .Version }}-arm64
       - docker.io/charmcli/wishlist:v{{ .Version }}-armv7
-      - docker.io/charmcli/wishlist:v{{ .Version }}-i386
   - name_template: ghcr.io/charmbracelet/wishlist:v{{ .Version }}
     image_templates:
       - ghcr.io/charmbracelet/wishlist:v{{ .Version }}-amd64
       - ghcr.io/charmbracelet/wishlist:v{{ .Version }}-arm64
       - ghcr.io/charmbracelet/wishlist:v{{ .Version }}-armv7
-      - ghcr.io/charmbracelet/wishlist:v{{ .Version }}-i386
