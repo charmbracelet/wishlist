@@ -4,7 +4,6 @@ package sshconfig
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -35,12 +34,12 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 	for _, h := range config.Hosts {
 		for _, pattern := range h.Patterns {
 			name := pattern.String()
-			info := infos[name]
 
 			if strings.Contains(name, "*") {
 				continue // ignore wildcards
 			}
 
+			info := infos[name]
 			for _, n := range h.Nodes {
 				node := strings.TrimSpace(n.String())
 				if node == "" {
@@ -62,8 +61,6 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 					info.User = value
 				case "Port":
 					info.Port = value
-				default:
-					log.Printf("ignoring invalid node type %q on host %q", key, name)
 				}
 			}
 
@@ -73,6 +70,9 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 
 	var endpoints []*wishlist.Endpoint
 	for name, info := range infos {
+		if info.Hostname == "" {
+			info.Hostname = name // Host foo.bar, use foo.bar as name and HostName
+		}
 		if info.Port == "" {
 			info.Port = "22"
 		}
