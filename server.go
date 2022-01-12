@@ -119,14 +119,19 @@ func toAddress(listen string, port int64) string {
 
 func getFirstOpenPort(addr string, ports ...int64) (int64, error) {
 	for _, port := range ports {
-		conn, err := net.DialTimeout("tcp", toAddress(addr, port), time.Second)
+		ln, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, port))
 		if err != nil {
-			return port, nil
+			continue
 		}
-		if err := conn.Close(); err != nil {
+
+		// port seems available
+		if err := ln.Close(); err != nil {
 			return 0, err
 		}
+
+		return port, nil
 	}
+
 	return 0, fmt.Errorf("all ports unavailable")
 }
 
