@@ -116,7 +116,6 @@ func TestPublicKeyHandler(t *testing.T) {
 			})(fakeCtx{}, k))
 		})
 	})
-
 }
 
 type fakeCtx struct {
