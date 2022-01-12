@@ -32,3 +32,8 @@ Host multiple2
 Host multiple3
   HostName multi3.foo.local
   User overridden
+
+Host no.hostname
+  Port 23231
+
+Host only.host

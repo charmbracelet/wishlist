@@ -13,3 +13,7 @@ Host foo
 
 	# all other SSH options are ignored
 	# wildcard Hosts are also ignored
+
+# Having only the Host key also works, it'll be both the endpoint's name and
+#  hostname, using 22 as default port
+Host ssh.example.com
