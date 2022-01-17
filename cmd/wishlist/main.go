@@ -41,7 +41,7 @@ func main() {
 		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
 			Version = info.Main.Version
 		}
-		log.Printf("wishlist version %s (%s)", Version, CommitSHA)
+		fmt.Printf("wishlist version %s (%s)\n", Version, CommitSHA)
 		return
 	}
 
