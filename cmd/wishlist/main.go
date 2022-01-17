@@ -31,6 +31,10 @@ var (
 func main() {
 	version := flag.Bool("version", false, "print version and exit")
 	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Wishlist, a SSH directory.\n\n")
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	if *version {
