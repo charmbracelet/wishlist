@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/wish"
@@ -22,6 +23,12 @@ import (
 func main() {
 	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
 	flag.Parse()
+
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
+		log.Printf("Running wishlist %s", info.Main.Version)
+	} else {
+		log.Printf("Running wishlist devel")
+	}
 
 	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
 	if err != nil {
