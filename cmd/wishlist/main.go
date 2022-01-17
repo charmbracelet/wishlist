@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/wish"
@@ -19,9 +20,23 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	CommitSHA = "<none>"
+	Version   = "devel"
+)
+
 func main() {
+	version := flag.Bool("version", false, "print version and exit")
 	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
 	flag.Parse()
+
+	if *version {
+		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
+			Version = info.Main.Version
+		}
+		log.Printf("wishlist version %s (%s)", Version, CommitSHA)
+		return
+	}
 
 	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
 	if err != nil {
