@@ -20,14 +20,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	// CommitSHA is set by goreleaser on build time.
+	CommitSHA = "<none>"
+
+	// Version is set by goreleaser on build time.
+	Version = "devel"
+)
+
 func main() {
+	version := flag.Bool("version", false, "print version and exit")
 	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
 	flag.Parse()
 
-	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
-		log.Printf("Running wishlist %s", info.Main.Version)
-	} else {
-		log.Printf("Running wishlist devel")
+	if *version {
+		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
+			Version = info.Main.Version
+		}
+		log.Printf("wishlist version %s (%s)", Version, CommitSHA)
+		return
 	}
 
 	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
