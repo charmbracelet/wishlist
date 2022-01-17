@@ -21,8 +21,11 @@ import (
 )
 
 var (
+	// CommitSHA is set by goreleaser on build time.
 	CommitSHA = "<none>"
-	Version   = "devel"
+
+	// Version is set by goreleaser on build time.
+	Version = "devel"
 )
 
 func main() {
