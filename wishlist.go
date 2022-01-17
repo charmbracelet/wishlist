@@ -60,7 +60,11 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
-			m.handoff = m.list.SelectedItem().(*Endpoint)
+			var selectedItem = m.list.SelectedItem()
+			if selectedItem == nil {
+				return m, nil
+			}
+			m.handoff = selectedItem.(*Endpoint)
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
