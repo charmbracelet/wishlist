@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
@@ -31,6 +32,7 @@ var (
 func main() {
 	version := flag.Bool("version", false, "print version and exit")
 	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
+	local := flag.Bool("local", false, "do not start a server, go straight into the UI")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Wishlist, a SSH directory.\n\n")
 		flag.PrintDefaults()
@@ -45,6 +47,24 @@ func main() {
 		return
 	}
 
+	config, err := getConfig(*file)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if *local {
+		f, err := tea.LogToFile("wishlist.log", "")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer f.Close()
+		p := tea.NewProgram(wishlist.NewListing(config.Endpoints, nil))
+		if err := p.Start(); err != nil {
+			log.Fatalln(err)
+		}
+		return
+	}
+
 	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
 	if err != nil {
 		log.Fatalln(err)
@@ -53,11 +73,6 @@ func main() {
 		if err := k.WriteKeys(); err != nil {
 			log.Fatalln(err)
 		}
-	}
-
-	config, err := getConfig(*file)
-	if err != nil {
-		log.Fatalln(err)
 	}
 
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {

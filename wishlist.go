@@ -2,6 +2,7 @@ package wishlist
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -17,7 +18,7 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
-func newListing(endpoints []*Endpoint, s ssh.Session) *listModel {
+func NewListing(endpoints []*Endpoint, s ssh.Session) *listModel {
 	var items []list.Item
 	for _, endpoint := range endpoints {
 		if endpoint.Valid() {
@@ -65,6 +66,16 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			m.handoff = selectedItem.(*Endpoint)
+			if m.session == nil {
+				// local run
+				return m, func() tea.Msg {
+					log.Println("local connect")
+					if err := connectLocal(m.handoff); err != nil {
+						log.Println(err)
+					}
+					return nil
+				}
+			}
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:

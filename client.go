@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/user"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
@@ -14,7 +15,82 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
+	"golang.org/x/crypto/ssh/terminal"
 )
+
+func connectLocal(e *Endpoint) error {
+	resetPty(os.Stdout)
+	log.Println("GOOOOOOOOOOOOO", e.Address)
+
+	// method, closers, err := authMethod(prev)
+	// defer closers.close()
+	// if err != nil {
+	// 	return fmt.Errorf("failed to find an auth method: %w", err)
+	// }
+
+	// home, err := os.UserHomeDir()
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get user home dir: %w", err)
+	// }
+	user, err := user.Current()
+
+	if err != nil {
+		return fmt.Errorf("failed to get current username: %w", err)
+	}
+
+	m, _ := tryNewKey()
+	conf := &gossh.ClientConfig{
+		User: firstNonEmpty(e.User, user.Username),
+		Auth: []gossh.AuthMethod{m},
+		// HostKeyCallback: hostKeyCallback(e, filepath.Join(home, ".ssh/known_hosts")),
+		HostKeyCallback: hostKeyCallback(e, ".wishlist/known_hosts"),
+	}
+
+	log.Println(conf.User, conf.Auth, conf.HostKeyCallback)
+
+	conn, err := gossh.Dial("tcp", e.Address, conf)
+	if err != nil {
+		return fmt.Errorf("connection failed: %w", err)
+	}
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Println("failed to close conn:", err)
+		}
+	}()
+
+	session, err := conn.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to open session: %w", err)
+	}
+
+	defer func() {
+		if err := session.Close(); err != nil && err != io.EOF {
+			log.Println("failed to close session:", err)
+		}
+	}()
+
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	session.Stdin = os.Stdin
+
+	w, h, err := terminal.GetSize(0)
+	if err != nil {
+		return fmt.Errorf("failed to get term size: %w", err)
+	}
+
+	if err := session.RequestPty("xterm-256", h, w, nil); err != nil {
+		return fmt.Errorf("failed to request a pty: %w", err)
+	}
+	if err := session.Shell(); err != nil {
+		return fmt.Errorf("failed to start shell: %w", err)
+	}
+
+	if err := session.Wait(); err != nil {
+		return fmt.Errorf("session failed: %w", err)
+	}
+	return nil
+
+}
 
 func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
