@@ -43,8 +43,6 @@ func connectLocal(e *Endpoint) error {
 		HostKeyCallback: hostKeyCallback(e, filepath.Join(home, ".ssh/known_hosts")),
 	}
 
-	log.Println(conf.User, conf.Auth, conf.HostKeyCallback)
-
 	conn, err := gossh.Dial("tcp", e.Address, conf)
 	if err != nil {
 		return fmt.Errorf("connection failed: %w", err)
@@ -78,6 +76,7 @@ func connectLocal(e *Endpoint) error {
 	if err := session.RequestPty("xterm-256", h, w, nil); err != nil {
 		return fmt.Errorf("failed to request a pty: %w", err)
 	}
+	// TODO: handle resizes... somehow
 	if err := session.Shell(); err != nil {
 		return fmt.Errorf("failed to start shell: %w", err)
 	}
@@ -242,7 +241,8 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 		"id_rsa",
 		"id_ed25519",
 	} {
-		bts, err := os.ReadFile(filepath.Join(home, ".ssh", name))
+		path := filepath.Join(home, ".ssh", name)
+		bts, err := os.ReadFile(path)
 		if err != nil {
 			continue
 		}
@@ -250,6 +250,7 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 		if err != nil {
 			return methods, err
 		}
+		log.Printf("using %q", path)
 		methods = append(methods, gossh.PublicKeys(signer))
 	}
 
