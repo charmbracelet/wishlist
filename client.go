@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/user"
+	"path/filepath"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
@@ -20,30 +21,26 @@ import (
 
 func connectLocal(e *Endpoint) error {
 	resetPty(os.Stdout)
-	log.Println("GOOOOOOOOOOOOO", e.Address)
+	defer resetPty(os.Stdout)
 
-	// method, closers, err := authMethod(prev)
-	// defer closers.close()
-	// if err != nil {
-	// 	return fmt.Errorf("failed to find an auth method: %w", err)
-	// }
-
-	// home, err := os.UserHomeDir()
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get user home dir: %w", err)
-	// }
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home dir: %w", err)
+	}
 	user, err := user.Current()
 
 	if err != nil {
 		return fmt.Errorf("failed to get current username: %w", err)
 	}
 
-	m, _ := tryNewKey()
+	methods, err := tryUserKeys(home)
+	if err != nil {
+		return fmt.Errorf("failed to get user keys: %w", err)
+	}
 	conf := &gossh.ClientConfig{
-		User: firstNonEmpty(e.User, user.Username),
-		Auth: []gossh.AuthMethod{m},
-		// HostKeyCallback: hostKeyCallback(e, filepath.Join(home, ".ssh/known_hosts")),
-		HostKeyCallback: hostKeyCallback(e, ".wishlist/known_hosts"),
+		User:            firstNonEmpty(e.User, user.Username),
+		Auth:            methods,
+		HostKeyCallback: hostKeyCallback(e, filepath.Join(home, ".ssh/known_hosts")),
 	}
 
 	log.Println(conf.User, conf.Auth, conf.HostKeyCallback)
@@ -237,6 +234,26 @@ func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 
 	fmt.Fprintf(s.Stderr(), "wishlist: ssh agent not available\n\r")
 	return nil, nil, nil
+}
+
+func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
+	var methods []gossh.AuthMethod
+	for _, name := range []string{
+		"id_rsa",
+		"id_ed25519",
+	} {
+		bts, err := os.ReadFile(filepath.Join(home, ".ssh", name))
+		if err != nil {
+			continue
+		}
+		signer, err := gossh.ParsePrivateKey(bts)
+		if err != nil {
+			return methods, err
+		}
+		methods = append(methods, gossh.PublicKeys(signer))
+	}
+
+	return methods, nil
 }
 
 // tryNewKey will create a .wishlist/client_ed25519 keypair if one does not exist.

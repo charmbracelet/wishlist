@@ -73,7 +73,7 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err := connectLocal(m.handoff); err != nil {
 						log.Println(err)
 					}
-					return nil
+					return tea.Quit()
 				}
 			}
 			return m, tea.Quit
