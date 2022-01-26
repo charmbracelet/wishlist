@@ -13,15 +13,8 @@ import (
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/term"
 )
-
-// TODO: move this elsewhere
-
-type sshClient interface {
-	Connect(*Endpoint) error
-}
 
 type remoteClient struct {
 	session ssh.Session
@@ -123,7 +116,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 	session.Stderr = os.Stderr
 	session.Stdin = os.Stdin
 
-	w, h, err := terminal.GetSize(int(os.Stdout.Fd()))
+	w, h, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		return fmt.Errorf("failed to get term size: %w", err)
 	}
@@ -139,14 +132,13 @@ func (c *localClient) Connect(e *Endpoint) error {
 	}()
 
 	go func() {
-		for {
-			select {
-			case <-sig:
-				w, h, err := term.GetSize(int(os.Stdout.Fd()))
-				if err != nil {
-					log.Println(err)
-				}
-				session.WindowChange(h, w)
+		for range sig {
+			w, h, err := term.GetSize(int(os.Stdout.Fd()))
+			if err != nil {
+				log.Println(err)
+			}
+			if err := session.WindowChange(h, w); err != nil {
+				log.Println(err)
 			}
 		}
 	}()

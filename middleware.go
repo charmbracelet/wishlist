@@ -56,7 +56,7 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
-			model := NewListing(endpoints, s)
+			model := newListing(endpoints, s)
 			p := tea.NewProgram(
 				model,
 				tea.WithInput(newBlockingReader(listStdin)),

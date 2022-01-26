@@ -57,8 +57,12 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer f.Close()
-		p := tea.NewProgram(wishlist.NewListing(config.Endpoints, nil))
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Println(err)
+			}
+		}()
+		p := tea.NewProgram(wishlist.LocalListing(config.Endpoints))
 		if err := p.Start(); err != nil {
 			log.Fatalln(err)
 		}

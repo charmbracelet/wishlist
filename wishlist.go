@@ -18,7 +18,12 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
-func NewListing(endpoints []*Endpoint, s ssh.Session) *listModel {
+// LocalListing creates a new listing model for local usage only.
+func LocalListing(endpoints []*Endpoint) tea.Model {
+	return newListing(endpoints, nil)
+}
+
+func newListing(endpoints []*Endpoint, s ssh.Session) *listModel {
 	var items []list.Item
 	for _, endpoint := range endpoints {
 		if endpoint.Valid() {
