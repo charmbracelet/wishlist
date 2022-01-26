@@ -1,14 +1,13 @@
 package wishlist
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"os/signal"
 	"os/user"
 	"path/filepath"
-	"syscall"
 
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
@@ -125,23 +124,9 @@ func (c *localClient) Connect(e *Endpoint) error {
 		return fmt.Errorf("failed to request a pty: %w", err)
 	}
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGWINCH)
-	defer func() {
-		signal.Stop(sig)
-	}()
-
-	go func() {
-		for range sig {
-			w, h, err := term.GetSize(int(os.Stdout.Fd()))
-			if err != nil {
-				log.Println(err)
-			}
-			if err := session.WindowChange(h, w); err != nil {
-				log.Println(err)
-			}
-		}
-	}()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go c.notifyWindowChanges(ctx, session)
 
 	return shellAndWait(session)
 }
