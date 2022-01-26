@@ -22,14 +22,14 @@ func (c *localClient) Connect(e *Endpoint) error {
 		return fmt.Errorf("failed to get current username: %w", err)
 	}
 
-	method, err := localBestAuthMethod(e)
+	methods, err := localBestAuthMethod(e)
 	if err != nil {
 		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
 	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, user.Username),
-		Auth:            []gossh.AuthMethod{method},
-		HostKeyCallback: hostKeyCallback(e, filepath.Join(home, ".ssh/known_hosts")),
+		Auth:            methods,
+		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
 	}
 
 	session, cls, err := createSession(conf, e)
@@ -47,7 +47,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 		return fmt.Errorf("failed to get term size: %w", err)
 	}
 
-	if err := session.RequestPty(os.Getenv("$TERM"), h, w, nil); err != nil {
+	if err := session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
 		return fmt.Errorf("failed to request a pty: %w", err)
 	}
 

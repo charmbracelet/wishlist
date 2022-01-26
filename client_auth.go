@@ -39,18 +39,22 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
 // - an IdentityFile, if there's one set in the endpoint
 // - the local ssh agent, if available
 // - common key filenames under ~/.ssh/
-func localBestAuthMethod(e *Endpoint) (gossh.AuthMethod, error) {
+func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user home dir: %w", err)
 	}
 	if e.IdentityFile != "" {
-		return tryIdentityFile(home, e.IdentityFile)
+		return toAuthMethodList(tryIdentityFile(home, e.IdentityFile))
 	}
 	if method, err := tryLocalAgent(); err != nil || method != nil {
-		return method, err
+		return toAuthMethodList(method, err)
 	}
 	return tryUserKeys(home)
+}
+
+func toAuthMethodList(m gossh.AuthMethod, err error) ([]gossh.AuthMethod, error) {
+	return []gossh.AuthMethod{m}, err
 }
 
 // tryLocalAgent checks if there's a local agent at $SSH_AUTH_SOCK and, if so,
