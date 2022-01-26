@@ -58,6 +58,9 @@ func (m *listModel) Init() tea.Cmd {
 }
 
 func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.handoff != nil {
+		return m, nil
+	}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
@@ -68,13 +71,13 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.handoff = selectedItem.(*Endpoint)
 			if m.session == nil {
 				// local run
-				return m, func() tea.Msg {
+				return m, tea.Sequentially(func() tea.Msg {
 					client := &localClient{}
 					if err := client.Connect(m.handoff); err != nil {
 						log.Println(err)
 					}
-					return tea.Quit
-				}
+					return nil
+				}, tea.Quit)
 			}
 			return m, tea.Quit
 		}
@@ -89,5 +92,8 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *listModel) View() string {
+	if m.handoff != nil {
+		return ""
+	}
 	return docStyle.Render(m.list.View())
 }
