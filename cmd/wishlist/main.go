@@ -53,29 +53,9 @@ func main() {
 	}
 
 	if *local {
-		f, err := tea.LogToFile("wishlist.log", "")
-		if err != nil {
+		if err := workLocally(config); err != nil {
 			log.Fatalln(err)
 		}
-		defer func() {
-			if err := f.Close(); err != nil {
-				log.Println(err)
-			}
-		}()
-		m := wishlist.LocalListing(config.Endpoints)
-		if err := tea.NewProgram(m).Start(); err != nil {
-			log.Fatalln(err)
-		}
-
-		if m.HandoffTo() == nil {
-			return
-		}
-
-		log.SetOutput(os.Stderr)
-		if err := wishlist.NewLocalSSHClient().Connect(m.HandoffTo()); err != nil {
-			log.Fatalln(err)
-		}
-
 		return
 	}
 
@@ -174,4 +154,28 @@ func getSSHConfig(path string) (wishlist.Config, error) {
 	}
 	config.Endpoints = endpoints
 	return config, nil
+}
+
+// nolint: wrapcheck
+func workLocally(config wishlist.Config) error {
+	f, err := tea.LogToFile("wishlist.log", "")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+	m := wishlist.LocalListing(config.Endpoints)
+	if err := tea.NewProgram(m).Start(); err != nil {
+		return err
+	}
+
+	if m.HandoffTo() == nil {
+		return nil
+	}
+
+	log.SetOutput(os.Stderr)
+	return wishlist.NewLocalSSHClient().Connect(m.HandoffTo())
 }
