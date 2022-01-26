@@ -77,9 +77,9 @@ func tryNewKey() (gossh.AuthMethod, error) {
 }
 
 // tryUserKeys will try to find id_rsa and id_ed25519 keys in the user $HOME/~.ssh folder.
-// TODO: parse ssh config and get keys from there if any
+// TODO: parse ssh config and get keys from there if any.
 func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
-	var methods []gossh.AuthMethod
+	var methods []gossh.AuthMethod // nolint: prealloc
 	for _, name := range []string{
 		"id_rsa",
 		"id_ed25519",
@@ -91,7 +91,7 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 		}
 		signer, err := gossh.ParsePrivateKey(bts)
 		if err != nil {
-			return methods, err
+			return methods, fmt.Errorf("failed to parse private key: %q: %w", path, err)
 		}
 		log.Printf("using %q", path)
 		methods = append(methods, gossh.PublicKeys(signer))
