@@ -39,6 +39,9 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
 // - an IdentityFile, if there's one set in the endpoint
 // - the local ssh agent, if available
 // - common key filenames under ~/.ssh/
+//
+// If any of the methods fails, it returns an error.
+// It'll return a nil list if none of the methods is available.
 func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
