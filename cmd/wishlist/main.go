@@ -71,6 +71,7 @@ func main() {
 			return
 		}
 
+		log.SetOutput(os.Stderr)
 		if err := wishlist.NewLocalSSHClient().Connect(m.HandoffTo()); err != nil {
 			log.Fatalln(err)
 		}

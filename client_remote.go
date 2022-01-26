@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gliderlabs/ssh"
+	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -71,4 +72,10 @@ func (c *remoteClient) notifyWindowChanges(session *gossh.Session, done <-chan b
 			}
 		}
 	}
+}
+
+func resetPty(w io.Writer) {
+	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
+	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
+	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2) // nolint:gomnd
 }

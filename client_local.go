@@ -11,10 +11,7 @@ import (
 	"golang.org/x/term"
 )
 
-type SSHClient interface {
-	Connect(e *Endpoint) error
-}
-
+// NewLocalSSHClient returns a SSH Client for local usage.
 func NewLocalSSHClient() SSHClient {
 	return &localClient{}
 }
@@ -22,9 +19,6 @@ func NewLocalSSHClient() SSHClient {
 type localClient struct{}
 
 func (c *localClient) Connect(e *Endpoint) error {
-	// resetPty(os.Stdout)
-	// defer resetPty(os.Stdout)
-
 	user, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("failed to get current username: %w", err)
@@ -43,7 +37,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 	session, cls, err := createSession(conf, e)
 	defer cls.close()
 	if err != nil {
-		return fmt.Errorf("failed to create sessio: %w", err)
+		return fmt.Errorf("failed to create session: %w", err)
 	}
 
 	session.Stdout = os.Stdout

@@ -14,6 +14,7 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
+	"golang.org/x/term"
 )
 
 // remoteBestAuthMethod returns an auth method.
@@ -122,7 +123,7 @@ func tryNewKey() (gossh.AuthMethod, error) {
 
 // tryIdentityFile tries to use the given idendity file.
 func tryIdentityFile(home, id string) (gossh.AuthMethod, error) {
-	return parsePrivateKey(expand(home, id), "")
+	return parsePrivateKey(expand(home, id), nil)
 }
 
 func expand(home, p string) string {
@@ -140,7 +141,7 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 		"id_rsa",
 		"id_ed25519",
 	} {
-		method, err := parsePrivateKey(filepath.Join(home, ".ssh", name), "")
+		method, err := parsePrivateKey(filepath.Join(home, ".ssh", name), nil)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
@@ -152,13 +153,13 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 	return methods, nil
 }
 
-func parsePrivateKey(path, password string) (gossh.AuthMethod, error) {
+func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 	bts, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read key: %q: %w", path, err)
 	}
 	var signer gossh.Signer
-	if password == "" {
+	if len(password) == 0 {
 		signer, err = gossh.ParsePrivateKey(bts)
 	} else {
 		signer, err = gossh.ParsePrivateKeyWithPassphrase(bts, []byte(password))
@@ -167,7 +168,9 @@ func parsePrivateKey(path, password string) (gossh.AuthMethod, error) {
 		pwderr := &gossh.PassphraseMissingError{}
 		if errors.As(err, &pwderr) {
 			fmt.Printf("Enter the password for %q: ", path) // TODO: why is this not displayed?
-			if _, err := fmt.Scan(&password); err != nil {
+			password, err = term.ReadPassword(int(os.Stdin.Fd()))
+			fmt.Println()
+			if err != nil {
 				return nil, fmt.Errorf("failed to read password: %q", err)
 			}
 			return parsePrivateKey(path, password)

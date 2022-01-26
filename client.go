@@ -2,12 +2,14 @@ package wishlist
 
 import (
 	"fmt"
-	"io"
 	"log"
 
-	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
 )
+
+type SSHClient interface {
+	Connect(e *Endpoint) error
+}
 
 func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, closers, error) {
 	var cl closers
@@ -54,10 +56,4 @@ func firstNonEmpty(ss ...string) string {
 		}
 	}
 	return ""
-}
-
-func resetPty(w io.Writer) {
-	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
-	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
-	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2) // nolint:gomnd
 }
