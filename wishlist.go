@@ -69,11 +69,11 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.session == nil {
 				// local run
 				return m, func() tea.Msg {
-					log.Println("local connect")
-					if err := connectLocal(m.handoff); err != nil {
+					client := &localClient{}
+					if err := client.Connect(m.handoff); err != nil {
 						log.Println(err)
 					}
-					return tea.Quit()
+					return tea.Quit
 				}
 			}
 			return m, tea.Quit
