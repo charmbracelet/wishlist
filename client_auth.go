@@ -111,7 +111,7 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 func parsePrivateKey(path string) (gossh.AuthMethod, error) {
 	bts, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read key: %q: %w", path, err)
 	}
 	signer, err := gossh.ParsePrivateKey(bts)
 	if err != nil {
