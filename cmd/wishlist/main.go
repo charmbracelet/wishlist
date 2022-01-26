@@ -62,10 +62,19 @@ func main() {
 				log.Println(err)
 			}
 		}()
-		p := tea.NewProgram(wishlist.LocalListing(config.Endpoints))
-		if err := p.Start(); err != nil {
+		m := wishlist.LocalListing(config.Endpoints)
+		if err := tea.NewProgram(m).Start(); err != nil {
 			log.Fatalln(err)
 		}
+
+		if m.HandoffTo() == nil {
+			return
+		}
+
+		if err := wishlist.NewLocalSSHClient().Connect(m.HandoffTo()); err != nil {
+			log.Fatalln(err)
+		}
+
 		return
 	}
 

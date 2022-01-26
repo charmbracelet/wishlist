@@ -2,7 +2,6 @@ package wishlist
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -18,8 +17,13 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
+type HandoffModel interface {
+	tea.Model
+	HandoffTo() *Endpoint
+}
+
 // LocalListing creates a new listing model for local usage only.
-func LocalListing(endpoints []*Endpoint) tea.Model {
+func LocalListing(endpoints []*Endpoint) HandoffModel {
 	return newListing(endpoints, nil)
 }
 
@@ -63,9 +67,6 @@ func (m *listModel) Init() tea.Cmd {
 }
 
 func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if m.handoff != nil {
-		return m, nil
-	}
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
@@ -74,16 +75,6 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			m.handoff = selectedItem.(*Endpoint)
-			if m.session == nil {
-				// local run
-				return m, tea.Sequentially(func() tea.Msg {
-					client := &localClient{}
-					if err := client.Connect(m.handoff); err != nil {
-						log.Println(err)
-					}
-					return nil
-				}, tea.Quit)
-			}
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
@@ -101,4 +92,8 @@ func (m *listModel) View() string {
 		return ""
 	}
 	return docStyle.Render(m.list.View())
+}
+
+func (m *listModel) HandoffTo() *Endpoint {
+	return m.handoff
 }

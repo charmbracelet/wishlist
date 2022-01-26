@@ -11,11 +11,19 @@ import (
 	"golang.org/x/term"
 )
 
+type SSHClient interface {
+	Connect(e *Endpoint) error
+}
+
+func NewLocalSSHClient() SSHClient {
+	return &localClient{}
+}
+
 type localClient struct{}
 
 func (c *localClient) Connect(e *Endpoint) error {
-	resetPty(os.Stdout)
-	defer resetPty(os.Stdout)
+	// resetPty(os.Stdout)
+	// defer resetPty(os.Stdout)
 
 	user, err := user.Current()
 	if err != nil {
