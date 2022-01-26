@@ -17,6 +17,7 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
+// HandoffModel is a tea.Model that can tell where it should ssh into.
 type HandoffModel interface {
 	tea.Model
 	HandoffTo() *Endpoint
