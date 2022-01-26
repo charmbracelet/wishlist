@@ -7,6 +7,7 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+// SSHClient is a SSH client.
 type SSHClient interface {
 	Connect(e *Endpoint) error
 }
