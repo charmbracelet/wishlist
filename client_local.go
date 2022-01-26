@@ -17,32 +17,18 @@ func (c *localClient) Connect(e *Endpoint) error {
 	resetPty(os.Stdout)
 	defer resetPty(os.Stdout)
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("failed to get user home dir: %w", err)
-	}
 	user, err := user.Current()
-
 	if err != nil {
 		return fmt.Errorf("failed to get current username: %w", err)
 	}
 
-	var methods []gossh.AuthMethod
-	if e.IdentityFile == "" {
-		methods, err = tryUserKeys(home)
-		if err != nil {
-			return fmt.Errorf("failed to get user keys: %w", err)
-		}
-	} else {
-		method, err := tryIdentityFile(home, e.IdentityFile)
-		if err != nil {
-			return fmt.Errorf("failed to parse IdentityFile: %q: %w", e.IdentityFile, err)
-		}
-		methods = append(methods, method)
+	method, err := localBestAuthMethod(e)
+	if err != nil {
+		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
 	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, user.Username),
-		Auth:            methods,
+		Auth:            []gossh.AuthMethod{method},
 		HostKeyCallback: hostKeyCallback(e, filepath.Join(home, ".ssh/known_hosts")),
 	}
 

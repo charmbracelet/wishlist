@@ -20,7 +20,7 @@ import (
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
 func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
-	method, closers, err := tryAuthAgent(s)
+	method, closers, err := tryRemoteAuthAgent(s)
 	if err != nil {
 		return method, closers, err
 	}
@@ -32,8 +32,44 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	return method, closers, err
 }
 
-// tryAuthAgent will try to use an ssh-agent to authenticate.
-func tryAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
+// localBestAuthMethod figures out which authentication method is the best for
+// the given endpoint.
+//
+// preference order:
+// - an IdentityFile, if there's one set in the endpoint
+// - the local ssh agent, if available
+// - common key filenames under ~/.ssh/
+func localBestAuthMethod(e *Endpoint) (gossh.AuthMethod, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user home dir: %w", err)
+	}
+	if e.IdentityFile != "" {
+		return tryIdentityFile(home, e.IdentityFile)
+	}
+	if method, err := tryLocalAgent(); err != nil || method != nil {
+		return method, err
+	}
+	return tryUserKeys(home)
+}
+
+// tryLocalAgent checks if there's a local agent at $SSH_AUTH_SOCK and, if so,
+// uses it to authenticate.
+func tryLocalAgent() (gossh.AuthMethod, error) {
+	socket := os.Getenv("SSH_AUTH_SOCK")
+	if socket == "" {
+		return nil, nil
+	}
+	conn, err := net.Dial("unix", socket)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connecto to SSH_AUTH_SOCK: %w", err)
+	}
+	log.Println("using SSH agent")
+	return gossh.PublicKeysCallback(agent.NewClient(conn).Signers), nil
+}
+
+// tryRemoteAuthAgent will try to use an ssh-agent to authenticate.
+func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
 	_, _ = s.SendRequest("auth-agent-req@openssh.com", true, nil)
 
 	if ssh.AgentRequested(s) {
@@ -77,6 +113,7 @@ func tryNewKey() (gossh.AuthMethod, error) {
 	return gossh.PublicKeys(signer), key.WriteKeys()
 }
 
+// tryIdentityFile tries to use the given idendity file.
 func tryIdentityFile(home, id string) (gossh.AuthMethod, error) {
 	return parsePrivateKey(expand(home, id), "")
 }
