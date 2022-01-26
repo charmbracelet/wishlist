@@ -131,7 +131,6 @@ func expand(home, p string) string {
 		return p
 	}
 	return filepath.Join(home, strings.TrimPrefix(p, "~/"))
-
 }
 
 // tryUserKeys will try to find id_rsa and id_ed25519 keys in the user $HOME/~.ssh folder.
@@ -162,7 +161,7 @@ func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 	if len(password) == 0 {
 		signer, err = gossh.ParsePrivateKey(bts)
 	} else {
-		signer, err = gossh.ParsePrivateKeyWithPassphrase(bts, []byte(password))
+		signer, err = gossh.ParsePrivateKeyWithPassphrase(bts, password)
 	}
 	if err != nil {
 		pwderr := &gossh.PassphraseMissingError{}
