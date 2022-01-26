@@ -78,7 +78,7 @@ func tryNewKey() (gossh.AuthMethod, error) {
 }
 
 func tryIdentityFile(home, id string) (gossh.AuthMethod, error) {
-	return parsePrivateKey(expand(home, id))
+	return parsePrivateKey(expand(home, id), "")
 }
 
 func expand(home, p string) string {
@@ -96,7 +96,7 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 		"id_rsa",
 		"id_ed25519",
 	} {
-		method, err := parsePrivateKey(filepath.Join(home, ".ssh", name))
+		method, err := parsePrivateKey(filepath.Join(home, ".ssh", name), "")
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
@@ -108,13 +108,26 @@ func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 	return methods, nil
 }
 
-func parsePrivateKey(path string) (gossh.AuthMethod, error) {
+func parsePrivateKey(path, password string) (gossh.AuthMethod, error) {
 	bts, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read key: %q: %w", path, err)
 	}
-	signer, err := gossh.ParsePrivateKey(bts)
+	var signer gossh.Signer
+	if password == "" {
+		signer, err = gossh.ParsePrivateKey(bts)
+	} else {
+		signer, err = gossh.ParsePrivateKeyWithPassphrase(bts, []byte(password))
+	}
 	if err != nil {
+		pwderr := &gossh.PassphraseMissingError{}
+		if errors.As(err, &pwderr) {
+			fmt.Printf("Enter the password for %q: ", path) // TODO: why is this not displayed?
+			if _, err := fmt.Scan(&password); err != nil {
+				return nil, fmt.Errorf("failed to read password: %q", err)
+			}
+			return parsePrivateKey(path, password)
+		}
 		return nil, fmt.Errorf("failed to parse private key: %q: %w", path, err)
 	}
 	log.Printf("using %q", path)
