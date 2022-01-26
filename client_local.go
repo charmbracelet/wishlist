@@ -27,9 +27,18 @@ func (c *localClient) Connect(e *Endpoint) error {
 		return fmt.Errorf("failed to get current username: %w", err)
 	}
 
-	methods, err := tryUserKeys(home)
-	if err != nil {
-		return fmt.Errorf("failed to get user keys: %w", err)
+	var methods []gossh.AuthMethod
+	if e.IdentityFile == "" {
+		methods, err = tryUserKeys(home)
+		if err != nil {
+			return fmt.Errorf("failed to get user keys: %w", err)
+		}
+	} else {
+		method, err := tryIdentityFile(home, e.IdentityFile)
+		if err != nil {
+			return fmt.Errorf("failed to parse IdentityFile: %q: %w", e.IdentityFile, err)
+		}
+		methods = append(methods, method)
 	}
 	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, user.Username),

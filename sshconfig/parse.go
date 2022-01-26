@@ -61,6 +61,8 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 					info.User = value
 				case "Port":
 					info.Port = value
+				case "IdentityFile":
+					info.IdentityFile = value
 				}
 			}
 
@@ -77,9 +79,10 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			info.Port = "22"
 		}
 		endpoints = append(endpoints, &wishlist.Endpoint{
-			Name:    name,
-			Address: net.JoinHostPort(info.Hostname, info.Port),
-			User:    info.User,
+			Name:         name,
+			Address:      net.JoinHostPort(info.Hostname, info.Port),
+			User:         info.User,
+			IdentityFile: info.IdentityFile,
 		})
 	}
 
@@ -87,7 +90,8 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 }
 
 type hostinfo struct {
-	User     string
-	Hostname string
-	Port     string
+	User         string
+	Hostname     string
+	Port         string
+	IdentityFile string
 }

@@ -10,10 +10,11 @@ import (
 // Endpoint represents an endpoint to list.
 // If it has a Handler, wishlist will start an SSH server on the given address.
 type Endpoint struct {
-	Name        string            `yaml:"name"`    // Endpoint name.
-	Address     string            `yaml:"address"` // Endpoint address in the `host:port` format, if empty, will be the same address as the list, increasing the port number.
-	User        string            `yaml:"user"`    // User to authenticate as.
-	Middlewares []wish.Middleware `yaml:"-"`       // wish middlewares you can use in the factory method.
+	Name         string            `yaml:"name"`    // Endpoint name.
+	Address      string            `yaml:"address"` // Endpoint address in the `host:port` format, if empty, will be the same address as the list, increasing the port number.
+	User         string            `yaml:"user"`    // User to authenticate as.
+	IdentityFile string            `yaml:"-"`       // IdentityFile is only set when parsing from a SSH Config file, and used only on local mode.
+	Middlewares  []wish.Middleware `yaml:"-"`       // wish middlewares you can use in the factory method.
 }
 
 // String returns the endpoint in a friendly string format.

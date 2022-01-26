@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
@@ -76,28 +77,48 @@ func tryNewKey() (gossh.AuthMethod, error) {
 	return gossh.PublicKeys(signer), key.WriteKeys()
 }
 
+func tryIdentityFile(home, id string) (gossh.AuthMethod, error) {
+	return parsePrivateKey(expand(home, id))
+}
+
+func expand(home, p string) string {
+	if !strings.HasPrefix(p, "~/") {
+		return p
+	}
+	return filepath.Join(home, strings.TrimPrefix(p, "~/"))
+
+}
+
 // tryUserKeys will try to find id_rsa and id_ed25519 keys in the user $HOME/~.ssh folder.
-// TODO: parse ssh config and get keys from there if any.
 func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod // nolint: prealloc
 	for _, name := range []string{
 		"id_rsa",
 		"id_ed25519",
 	} {
-		path := filepath.Join(home, ".ssh", name)
-		bts, err := os.ReadFile(path)
+		method, err := parsePrivateKey(filepath.Join(home, ".ssh", name))
 		if err != nil {
-			continue
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			return methods, err
 		}
-		signer, err := gossh.ParsePrivateKey(bts)
-		if err != nil {
-			return methods, fmt.Errorf("failed to parse private key: %q: %w", path, err)
-		}
-		log.Printf("using %q", path)
-		methods = append(methods, gossh.PublicKeys(signer))
+		methods = append(methods, method)
 	}
-
 	return methods, nil
+}
+
+func parsePrivateKey(path string) (gossh.AuthMethod, error) {
+	bts, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	signer, err := gossh.ParsePrivateKey(bts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse private key: %q: %w", path, err)
+	}
+	log.Printf("using %q", path)
+	return gossh.PublicKeys(signer), nil
 }
 
 // hostKeyCallback returns a callback that will be used to verify the host key.

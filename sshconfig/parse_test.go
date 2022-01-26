@@ -30,9 +30,10 @@ func TestParseFile(t *testing.T) {
 				Address: "app.foo.local:2222",
 			},
 			{
-				Name:    "app2",
-				Address: "app.foo.local:2223",
-				User:    "someoneelse",
+				Name:         "app2",
+				Address:      "app.foo.local:2223",
+				User:         "someoneelse",
+				IdentityFile: "./testdata/key",
 			},
 			{
 				Name:    "multiple1",
