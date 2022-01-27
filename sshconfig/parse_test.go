@@ -15,7 +15,6 @@ func TestParseFile(t *testing.T) {
 		endpoints, err := ParseFile("testdata/good.ssh_config")
 		require.NoError(t, err)
 
-		t.Log(endpoints)
 		require.ElementsMatch(t, []*wishlist.Endpoint{
 			{
 				Name:    "darkstar",
@@ -159,4 +158,3 @@ func TestSplit(t *testing.T) {
 		"*":         {Hostname: "foobar"},
 	}, wildcards)
 }
-
