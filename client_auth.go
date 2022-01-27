@@ -48,17 +48,16 @@ func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user home dir: %w", err)
 	}
-	if e.IdentityFile != "" {
-		return toAuthMethodList(tryIdentityFile(home, e.IdentityFile))
-	}
+	var methods []gossh.AuthMethod
 	if method, err := tryLocalAgent(); err != nil || method != nil {
-		return toAuthMethodList(method, err)
+		methods = append(methods, method)
 	}
-	return tryUserKeys(home)
-}
-
-func toAuthMethodList(m gossh.AuthMethod, err error) ([]gossh.AuthMethod, error) {
-	return []gossh.AuthMethod{m}, err
+	if e.IdentityFile != "" {
+		method, err := tryIdentityFile(home, e.IdentityFile)
+		return append(methods, method), err
+	}
+	keys, err := tryUserKeys(home)
+	return append(methods, keys...), err
 }
 
 // tryLocalAgent checks if there's a local agent at $SSH_AUTH_SOCK and, if so,
