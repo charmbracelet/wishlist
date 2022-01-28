@@ -145,7 +145,7 @@ func TestMergeMaps(t *testing.T) {
 					},
 				},
 			),
-		).m,
+		).inner,
 	)
 }
 
@@ -161,12 +161,12 @@ func TestSplit(t *testing.T) {
 	require.Equal(t, map[string]hostinfo{
 		"*.foo.bar": {User: "yoda"},
 		"*":         {Hostname: "foobar"},
-	}, wildcards.m)
+	}, wildcards.inner)
 
 	require.Equal(t, 1, hosts.length())
 	require.Equal(t, map[string]hostinfo{
 		"foo.bar": {User: "john"},
-	}, hosts.m)
+	}, hosts.inner)
 }
 
 func TestHostinfoMap(t *testing.T) {
@@ -189,7 +189,7 @@ func TestHostinfoMap(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, hostinfo{User: "b"}, b)
 
-	require.Equal(t, len(m.m), m.length())
+	require.Equal(t, len(m.inner), m.length())
 	require.Equal(t, len(m.keys), m.length())
 
 	order := make([]string, 0, m.length())

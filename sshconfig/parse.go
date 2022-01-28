@@ -88,9 +88,9 @@ type hostinfo struct {
 }
 
 type hostinfoMap struct {
-	m    map[string]hostinfo
-	keys []string
-	lock sync.Mutex
+	inner map[string]hostinfo
+	keys  []string
+	lock  sync.Mutex
 }
 
 func (m *hostinfoMap) length() int {
@@ -102,16 +102,16 @@ func (m *hostinfoMap) length() int {
 func (m *hostinfoMap) set(k string, v hostinfo) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	if _, ok := m.m[k]; !ok {
+	if _, ok := m.inner[k]; !ok {
 		m.keys = append(m.keys, k)
 	}
-	m.m[k] = v
+	m.inner[k] = v
 }
 
 func (m *hostinfoMap) get(k string) (hostinfo, bool) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	v, ok := m.m[k]
+	v, ok := m.inner[k]
 	return v, ok
 }
 
@@ -120,14 +120,14 @@ func (m *hostinfoMap) forEach(fn func(string, hostinfo, error) error) error {
 	defer m.lock.Unlock()
 	var err error
 	for _, k := range m.keys {
-		err = fn(k, m.m[k], err)
+		err = fn(k, m.inner[k], err)
 	}
 	return err
 }
 
 func newHostinfoMap() *hostinfoMap {
 	return &hostinfoMap{
-		m: map[string]hostinfo{},
+		inner: map[string]hostinfo{},
 	}
 }
 
