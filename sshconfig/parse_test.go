@@ -15,7 +15,8 @@ func TestParseFile(t *testing.T) {
 		endpoints, err := ParseFile("testdata/good.ssh_config")
 		require.NoError(t, err)
 
-		require.ElementsMatch(t, []*wishlist.Endpoint{
+		require.Len(t, endpoints, 9)
+		require.Equal(t, []*wishlist.Endpoint{
 			{
 				Name:    "darkstar",
 				Address: "darkstar.local:22",
@@ -120,41 +121,101 @@ func TestMergeMaps(t *testing.T) {
 			},
 		},
 		merge(
-			map[string]hostinfo{
-				"foo": {
-					Hostname: "foo.bar",
+			newOrderedMapFrom(
+				map[string]hostinfo{
+					"foo": {
+						Hostname: "foo.bar",
+					},
+					"bar": {
+						User: "yoda",
+					},
 				},
-				"bar": {
-					User: "yoda",
+			),
+			newOrderedMapFrom(
+				map[string]hostinfo{
+					"foo": {
+						User:         "me",
+						IdentityFile: "id_rsa",
+						Port:         "2321",
+					},
+					"foobar": {
+						User:         "notme",
+						Hostname:     "foobar.foo",
+						IdentityFile: "id_ed25519",
+					},
 				},
-			},
-			map[string]hostinfo{
-				"foo": {
-					User:         "me",
-					IdentityFile: "id_rsa",
-					Port:         "2321",
-				},
-				"foobar": {
-					User:         "notme",
-					Hostname:     "foobar.foo",
-					IdentityFile: "id_ed25519",
-				},
-			},
-		),
+			),
+		).m,
 	)
 }
 
 func TestSplit(t *testing.T) {
-	wildcards, hosts := split(map[string]hostinfo{
+	wildcards, hosts := split(newOrderedMapFrom(map[string]hostinfo{
 		"*.foo.bar": {User: "yoda"},
 		"*":         {Hostname: "foobar"},
 		"foo.bar":   {User: "john"},
-	})
-	require.Equal(t, map[string]hostinfo{
-		"foo.bar": {User: "john"},
-	}, hosts)
+	},
+	))
+
+	require.Equal(t, 2, wildcards.lenght())
 	require.Equal(t, map[string]hostinfo{
 		"*.foo.bar": {User: "yoda"},
 		"*":         {Hostname: "foobar"},
-	}, wildcards)
+	}, wildcards.m)
+
+	require.Equal(t, 1, hosts.lenght())
+	require.Equal(t, map[string]hostinfo{
+		"foo.bar": {User: "john"},
+	}, hosts.m)
+}
+
+func TestOrderedMap(t *testing.T) {
+	m := newOrderedMap()
+	m.set("a", hostinfo{
+		User: "a",
+	})
+	m.set("b", hostinfo{
+		User: "bbbbb",
+	})
+	m.set("b", hostinfo{
+		User: "b",
+	})
+
+	a, ok := m.get("a")
+	require.True(t, ok)
+	require.Equal(t, hostinfo{User: "a"}, a)
+
+	b, ok := m.get("b")
+	require.True(t, ok)
+	require.Equal(t, hostinfo{User: "b"}, b)
+
+	require.Equal(t, len(m.m), m.lenght())
+	require.Equal(t, len(m.keys), m.lenght())
+
+	order := make([]string, 0, m.lenght())
+	require.NoError(t, m.forEach(func(s string, _ hostinfo, _ error) error {
+		order = append(order, s)
+		return nil
+	}))
+
+	require.Equal(t, []string{"a", "b"}, order)
+
+	expectedErr := fmt.Errorf("some error")
+	require.Equal(t, expectedErr, m.forEach(func(s string, h hostinfo, e error) error {
+		if e != nil {
+			return e
+		}
+		if s == "b" {
+			return expectedErr
+		}
+		return nil
+	}))
+}
+
+func newOrderedMapFrom(input map[string]hostinfo) *orderedMap {
+	m := newOrderedMap()
+	for k, v := range input {
+		m.set(k, v)
+	}
+	return m
 }

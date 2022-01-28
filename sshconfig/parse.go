@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/charmbracelet/wishlist"
 	"github.com/gobwas/glob"
@@ -32,34 +33,51 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 
 	wildcards, hosts := split(infos)
 
-	endpoints := make([]*wishlist.Endpoint, 0, len(infos))
-	for name, info := range hosts {
-		for k, v := range wildcards {
+	endpoints := make([]*wishlist.Endpoint, 0, infos.lenght())
+	if err := hosts.forEach(func(name string, info hostinfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if err := wildcards.forEach(func(k string, v hostinfo, err error) error {
+			if err != nil {
+				return err
+			}
 			g, err := glob.Compile(k)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			if g.Match(name) {
 				info = mergeHostinfo(info, v)
 			}
-		}
-
-		if info.Hostname == "" {
-			info.Hostname = name // Host foo.bar, use foo.bar as name and HostName
-		}
-		if info.Port == "" {
-			info.Port = "22"
+			return nil
+		}); err != nil {
+			return err
 		}
 
 		endpoints = append(endpoints, &wishlist.Endpoint{
-			Name:         name,
-			Address:      net.JoinHostPort(info.Hostname, info.Port),
+			Name: name,
+			Address: net.JoinHostPort(
+				firstNonEmpty(info.Hostname, name),
+				firstNonEmpty(info.Port, "22"),
+			),
 			User:         info.User,
 			IdentityFile: info.IdentityFile,
 		})
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	return endpoints, nil
+}
+
+func firstNonEmpty(ss ...string) string {
+	for _, s := range ss {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
 }
 
 type hostinfo struct {
@@ -69,18 +87,64 @@ type hostinfo struct {
 	IdentityFile string
 }
 
-func parseInternal(r io.Reader) (map[string]hostinfo, error) {
+type orderedMap struct {
+	m    map[string]hostinfo
+	keys []string
+	lock sync.Mutex
+}
+
+func (m *orderedMap) lenght() int {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	return len(m.keys)
+}
+
+func (m *orderedMap) set(k string, v hostinfo) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if _, ok := m.m[k]; !ok {
+		m.keys = append(m.keys, k)
+	}
+	m.m[k] = v
+}
+
+func (m *orderedMap) get(k string) (hostinfo, bool) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	v, ok := m.m[k]
+	return v, ok
+}
+
+func (m *orderedMap) forEach(fn func(string, hostinfo, error) error) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	var err error
+	for _, k := range m.keys {
+		err = fn(k, m.m[k], err)
+	}
+	return err
+}
+
+func newOrderedMap() *orderedMap {
+	return &orderedMap{
+		m: map[string]hostinfo{},
+	}
+}
+
+func parseInternal(r io.Reader) (*orderedMap, error) {
 	config, err := ssh_config.Decode(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
 	}
 
-	infos := map[string]hostinfo{}
+	infos := newOrderedMap()
 
+	// TODO: map keys have no ordering guarantee, we need to workaround that
+	// to make this mroe deterministic.
 	for _, h := range config.Hosts {
 		for _, pattern := range h.Patterns {
 			name := pattern.String()
-			info := infos[name]
+			info, _ := infos.get(name)
 			for _, n := range h.Nodes {
 				node := strings.TrimSpace(n.String())
 				if node == "" {
@@ -109,49 +173,53 @@ func parseInternal(r io.Reader) (map[string]hostinfo, error) {
 					if err != nil {
 						return nil, err
 					}
-					infos[name] = info
+					infos.set(name, info)
 					infos = merge(infos, included)
-					info = infos[name]
+					info, _ = infos.get(name)
 				}
 			}
 
-			infos[name] = info
+			infos.set(name, info)
 		}
 	}
 
 	return infos, nil
 }
 
-func split(m map[string]hostinfo) (wildcards map[string]hostinfo, hosts map[string]hostinfo) {
-	wildcards = map[string]hostinfo{}
-	hosts = map[string]hostinfo{}
-	for k, v := range m {
+func split(m *orderedMap) (*orderedMap, *orderedMap) {
+	wildcards := newOrderedMap()
+	hosts := newOrderedMap()
+	_ = m.forEach(func(k string, v hostinfo, _ error) error {
+		// FWIW the lib always returns at least one * section... no idea why.
 		if strings.Contains(k, "*") {
-			wildcards[k] = v
-			continue
+			wildcards.set(k, v)
+			return nil
 		}
-		hosts[k] = v
-	}
-	return
+		hosts.set(k, v)
+		return nil
+	})
+	return wildcards, hosts
 }
 
-func merge(m1, m2 map[string]hostinfo) map[string]hostinfo {
-	result := map[string]hostinfo{}
+func merge(m1, m2 *orderedMap) *orderedMap {
+	result := newOrderedMap()
 
-	for k, v := range m1 {
-		vv, ok := m2[k]
+	_ = m1.forEach(func(k string, v hostinfo, _ error) error {
+		vv, ok := m2.get(k)
 		if !ok {
-			result[k] = v
-			continue
+			result.set(k, v)
+			return nil
 		}
-		result[k] = mergeHostinfo(v, vv)
-	}
+		result.set(k, mergeHostinfo(v, vv))
+		return nil
+	})
 
-	for k, v := range m2 {
-		if _, ok := m1[k]; !ok {
-			result[k] = v
+	_ = m2.forEach(func(k string, v hostinfo, _ error) error {
+		if _, ok := m1.get(k); !ok {
+			result.set(k, v)
 		}
-	}
+		return nil
+	})
 	return result
 }
 
@@ -171,7 +239,7 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	return h2
 }
 
-func parseFileInternal(path string) (map[string]hostinfo, error) {
+func parseFileInternal(path string) (*orderedMap, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config: %w", err)
