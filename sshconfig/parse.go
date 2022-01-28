@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -167,7 +168,11 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 				case "IdentityFile":
 					info.IdentityFile = value
 				case "Include":
-					included, err := parseFileInternal(value)
+					path, err := ExpandPath(value)
+					if err != nil {
+						return nil, err
+					}
+					included, err := parseFileInternal(path)
 					if err != nil {
 						return nil, err
 					}
@@ -244,4 +249,16 @@ func parseFileInternal(path string) (*hostinfoMap, error) {
 	}
 	defer f.Close() // nolint:errcheck
 	return parseInternal(f)
+}
+
+// ExpandPath expands the given path if it starts with ~/.
+func ExpandPath(p string) (string, error) {
+	if !strings.HasPrefix(p, "~/") {
+		return p, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to expand path: %q: %w", p, err)
+	}
+	return filepath.Join(home, strings.TrimPrefix(p, "~/")), nil
 }
