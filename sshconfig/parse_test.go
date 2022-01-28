@@ -157,13 +157,13 @@ func TestSplit(t *testing.T) {
 	},
 	))
 
-	require.Equal(t, 2, wildcards.lenght())
+	require.Equal(t, 2, wildcards.length())
 	require.Equal(t, map[string]hostinfo{
 		"*.foo.bar": {User: "yoda"},
 		"*":         {Hostname: "foobar"},
 	}, wildcards.m)
 
-	require.Equal(t, 1, hosts.lenght())
+	require.Equal(t, 1, hosts.length())
 	require.Equal(t, map[string]hostinfo{
 		"foo.bar": {User: "john"},
 	}, hosts.m)
@@ -189,10 +189,10 @@ func TestHostinfoMap(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, hostinfo{User: "b"}, b)
 
-	require.Equal(t, len(m.m), m.lenght())
-	require.Equal(t, len(m.keys), m.lenght())
+	require.Equal(t, len(m.m), m.length())
+	require.Equal(t, len(m.keys), m.length())
 
-	order := make([]string, 0, m.lenght())
+	order := make([]string, 0, m.length())
 	require.NoError(t, m.forEach(func(s string, _ hostinfo, _ error) error {
 		order = append(order, s)
 		return nil

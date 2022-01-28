@@ -33,7 +33,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 
 	wildcards, hosts := split(infos)
 
-	endpoints := make([]*wishlist.Endpoint, 0, infos.lenght())
+	endpoints := make([]*wishlist.Endpoint, 0, infos.length())
 	if err := hosts.forEach(func(name string, info hostinfo, err error) error {
 		if err != nil {
 			return err
@@ -93,7 +93,7 @@ type hostinfoMap struct {
 	lock sync.Mutex
 }
 
-func (m *hostinfoMap) lenght() int {
+func (m *hostinfoMap) length() int {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	return len(m.keys)
