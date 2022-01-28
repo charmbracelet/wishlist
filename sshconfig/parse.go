@@ -44,7 +44,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			}
 			g, err := glob.Compile(k)
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid Host: %q: %w", k, err)
 			}
 			if g.Match(name) {
 				info = mergeHostinfo(info, v)
