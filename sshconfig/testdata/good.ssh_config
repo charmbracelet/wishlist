@@ -26,6 +26,7 @@ Host multiple1
 Host multiple2
   HostName multi2.foo.local
   Port 2223
+  ForwardAgent no
 
 Host multiple3
   HostName multi3.foo.local
