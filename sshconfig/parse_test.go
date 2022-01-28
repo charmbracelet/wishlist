@@ -121,7 +121,7 @@ func TestMergeMaps(t *testing.T) {
 			},
 		},
 		merge(
-			newOrderedMapFrom(
+			newHostinfoMapFrom(
 				map[string]hostinfo{
 					"foo": {
 						Hostname: "foo.bar",
@@ -131,7 +131,7 @@ func TestMergeMaps(t *testing.T) {
 					},
 				},
 			),
-			newOrderedMapFrom(
+			newHostinfoMapFrom(
 				map[string]hostinfo{
 					"foo": {
 						User:         "me",
@@ -150,7 +150,7 @@ func TestMergeMaps(t *testing.T) {
 }
 
 func TestSplit(t *testing.T) {
-	wildcards, hosts := split(newOrderedMapFrom(map[string]hostinfo{
+	wildcards, hosts := split(newHostinfoMapFrom(map[string]hostinfo{
 		"*.foo.bar": {User: "yoda"},
 		"*":         {Hostname: "foobar"},
 		"foo.bar":   {User: "john"},
@@ -169,8 +169,8 @@ func TestSplit(t *testing.T) {
 	}, hosts.m)
 }
 
-func TestOrderedMap(t *testing.T) {
-	m := newOrderedMap()
+func TestHostinfoMap(t *testing.T) {
+	m := newHostinfoMap()
 	m.set("a", hostinfo{
 		User: "a",
 	})
@@ -212,8 +212,8 @@ func TestOrderedMap(t *testing.T) {
 	}))
 }
 
-func newOrderedMapFrom(input map[string]hostinfo) *orderedMap {
-	m := newOrderedMap()
+func newHostinfoMapFrom(input map[string]hostinfo) *hostinfoMap {
+	m := newHostinfoMap()
 	for k, v := range input {
 		m.set(k, v)
 	}
