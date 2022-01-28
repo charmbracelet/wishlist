@@ -4,7 +4,6 @@ package sshconfig
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -110,7 +109,6 @@ func parseInternal(r io.Reader) (map[string]hostinfo, error) {
 					if err != nil {
 						return nil, err
 					}
-					log.Println("INCLUDED", included)
 					infos[name] = info
 					infos = merge(infos, included)
 					info = infos[name]
