@@ -15,7 +15,8 @@ func TestParseFile(t *testing.T) {
 		endpoints, err := ParseFile("testdata/good.ssh_config")
 		require.NoError(t, err)
 
-		require.ElementsMatch(t, []*wishlist.Endpoint{
+		require.Len(t, endpoints, 9)
+		require.Equal(t, []*wishlist.Endpoint{
 			{
 				Name:    "darkstar",
 				Address: "darkstar.local:22",
@@ -80,4 +81,141 @@ func TestParseReader(t *testing.T) {
 		require.EqualError(t, err, "failed to read config: any")
 		require.Empty(t, endpoints)
 	})
+}
+
+func TestParseIncludes(t *testing.T) {
+	endpoints, err := ParseFile("testdata/include.ssh_config")
+	require.NoError(t, err)
+	require.ElementsMatch(t, []*wishlist.Endpoint{
+		{
+			Name:         "test.foo.bar",
+			Address:      "test.foo.bar:2222",
+			User:         "ciclano",
+			IdentityFile: "~/.ssh/id_rsa2",
+		},
+		{
+			Name:    "something.else",
+			Address: "something.else:2323",
+			User:    "ciclano",
+		},
+	}, endpoints)
+}
+
+func TestMergeMaps(t *testing.T) {
+	require.Equal(
+		t,
+		map[string]hostinfo{
+			"foo": {
+				Hostname:     "foo.bar",
+				User:         "me",
+				IdentityFile: "id_rsa",
+				Port:         "2321",
+			},
+			"bar": {
+				User: "yoda",
+			},
+			"foobar": {
+				User:         "notme",
+				Hostname:     "foobar.foo",
+				IdentityFile: "id_ed25519",
+			},
+		},
+		merge(
+			newHostinfoMapFrom(
+				map[string]hostinfo{
+					"foo": {
+						Hostname: "foo.bar",
+					},
+					"bar": {
+						User: "yoda",
+					},
+				},
+			),
+			newHostinfoMapFrom(
+				map[string]hostinfo{
+					"foo": {
+						User:         "me",
+						IdentityFile: "id_rsa",
+						Port:         "2321",
+					},
+					"foobar": {
+						User:         "notme",
+						Hostname:     "foobar.foo",
+						IdentityFile: "id_ed25519",
+					},
+				},
+			),
+		).inner,
+	)
+}
+
+func TestSplit(t *testing.T) {
+	wildcards, hosts := split(newHostinfoMapFrom(map[string]hostinfo{
+		"*.foo.bar": {User: "yoda"},
+		"*":         {Hostname: "foobar"},
+		"foo.bar":   {User: "john"},
+	},
+	))
+
+	require.Equal(t, 2, wildcards.length())
+	require.Equal(t, map[string]hostinfo{
+		"*.foo.bar": {User: "yoda"},
+		"*":         {Hostname: "foobar"},
+	}, wildcards.inner)
+
+	require.Equal(t, 1, hosts.length())
+	require.Equal(t, map[string]hostinfo{
+		"foo.bar": {User: "john"},
+	}, hosts.inner)
+}
+
+func TestHostinfoMap(t *testing.T) {
+	m := newHostinfoMap()
+	m.set("a", hostinfo{
+		User: "a",
+	})
+	m.set("b", hostinfo{
+		User: "bbbbb",
+	})
+	m.set("b", hostinfo{
+		User: "b",
+	})
+
+	a, ok := m.get("a")
+	require.True(t, ok)
+	require.Equal(t, hostinfo{User: "a"}, a)
+
+	b, ok := m.get("b")
+	require.True(t, ok)
+	require.Equal(t, hostinfo{User: "b"}, b)
+
+	require.Equal(t, len(m.inner), m.length())
+	require.Equal(t, len(m.keys), m.length())
+
+	order := make([]string, 0, m.length())
+	require.NoError(t, m.forEach(func(s string, _ hostinfo, _ error) error {
+		order = append(order, s)
+		return nil
+	}))
+
+	require.Equal(t, []string{"a", "b"}, order)
+
+	expectedErr := fmt.Errorf("some error")
+	require.Equal(t, expectedErr, m.forEach(func(s string, h hostinfo, e error) error {
+		if e != nil {
+			return e
+		}
+		if s == "b" {
+			return expectedErr
+		}
+		return nil
+	}))
+}
+
+func newHostinfoMapFrom(input map[string]hostinfo) *hostinfoMap {
+	m := newHostinfoMap()
+	for k, v := range input {
+		m.set(k, v)
+	}
+	return m
 }

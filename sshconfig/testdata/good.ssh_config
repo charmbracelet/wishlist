@@ -6,9 +6,6 @@ Host supernova
   User notme
   ForwardAgent does-not-matter
 
-Host *
-  Hostname ignored-because-wildcard
-
 Host app1
   HostName app.foo.local
   Port 2222
