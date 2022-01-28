@@ -15,7 +15,7 @@ Host app2
   User someoneelse
   Port 2223
   IdentityFile ./testdata/key
-
+  ForwardAgent true
 
 Host multiple1 multiple2 multiple3
   User multi
@@ -33,5 +33,6 @@ Host multiple3
 
 Host no.hostname
   Port 23231
+  ForwardAgent yes
 
 Host only.host
