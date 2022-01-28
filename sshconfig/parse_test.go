@@ -15,6 +15,7 @@ func TestParseFile(t *testing.T) {
 		endpoints, err := ParseFile("testdata/good.ssh_config")
 		require.NoError(t, err)
 
+		t.Log(endpoints)
 		require.ElementsMatch(t, []*wishlist.Endpoint{
 			{
 				Name:    "darkstar",
@@ -30,9 +31,10 @@ func TestParseFile(t *testing.T) {
 				Address: "app.foo.local:2222",
 			},
 			{
-				Name:    "app2",
-				Address: "app.foo.local:2223",
-				User:    "someoneelse",
+				Name:         "app2",
+				Address:      "app.foo.local:2223",
+				User:         "someoneelse",
+				IdentityFile: "./testdata/key",
 			},
 			{
 				Name:    "multiple1",
@@ -80,3 +82,81 @@ func TestParseReader(t *testing.T) {
 		require.Empty(t, endpoints)
 	})
 }
+
+func TestParseIncludes(t *testing.T) {
+	endpoints, err := ParseFile("testdata/include.ssh_config")
+	require.NoError(t, err)
+	require.ElementsMatch(t, []*wishlist.Endpoint{
+		{
+			Name:         "test.foo.bar",
+			Address:      "test.foo.bar:2222",
+			User:         "ciclano",
+			IdentityFile: "~/.ssh/id_rsa2",
+		},
+		{
+			Name:    "something.else",
+			Address: "something.else:2323",
+			User:    "ciclano",
+		},
+	}, endpoints)
+}
+
+func TestMergeMaps(t *testing.T) {
+	require.Equal(
+		t,
+		map[string]hostinfo{
+			"foo": {
+				Hostname:     "foo.bar",
+				User:         "me",
+				IdentityFile: "id_rsa",
+				Port:         "2321",
+			},
+			"bar": {
+				User: "yoda",
+			},
+			"foobar": {
+				User:         "notme",
+				Hostname:     "foobar.foo",
+				IdentityFile: "id_ed25519",
+			},
+		},
+		merge(
+			map[string]hostinfo{
+				"foo": {
+					Hostname: "foo.bar",
+				},
+				"bar": {
+					User: "yoda",
+				},
+			},
+			map[string]hostinfo{
+				"foo": {
+					User:         "me",
+					IdentityFile: "id_rsa",
+					Port:         "2321",
+				},
+				"foobar": {
+					User:         "notme",
+					Hostname:     "foobar.foo",
+					IdentityFile: "id_ed25519",
+				},
+			},
+		),
+	)
+}
+
+func TestSplit(t *testing.T) {
+	wildcards, hosts := split(map[string]hostinfo{
+		"*.foo.bar": {User: "yoda"},
+		"*":         {Hostname: "foobar"},
+		"foo.bar":   {User: "john"},
+	})
+	require.Equal(t, map[string]hostinfo{
+		"foo.bar": {User: "john"},
+	}, hosts)
+	require.Equal(t, map[string]hostinfo{
+		"*.foo.bar": {User: "yoda"},
+		"*":         {Hostname: "foobar"},
+	}, wildcards)
+}
+
