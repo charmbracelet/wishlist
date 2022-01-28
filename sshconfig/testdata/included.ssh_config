@@ -1,0 +1,6 @@
+Host *
+	User ciclano
+
+Host *.foo.bar
+	User fulano
+	IdentityFile ~/.ssh/id_rsa2

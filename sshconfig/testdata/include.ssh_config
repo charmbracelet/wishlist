@@ -1,0 +1,7 @@
+Include ./testdata/included.ssh_config
+
+Host test.foo.bar
+	Port 2222
+
+Host something.else
+	Port 2323

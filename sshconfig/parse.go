@@ -7,8 +7,10 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/charmbracelet/wishlist"
+	"github.com/gobwas/glob"
 	"github.com/kevinburke/ssh_config"
 )
 
@@ -24,22 +26,123 @@ func ParseFile(path string) ([]*wishlist.Endpoint, error) {
 
 // ParseReader reads and parses the given reader.
 func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
+	infos, err := parseInternal(r)
+	if err != nil {
+		return nil, err
+	}
+
+	wildcards, hosts := split(infos)
+
+	endpoints := make([]*wishlist.Endpoint, 0, infos.length())
+	if err := hosts.forEach(func(name string, info hostinfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if err := wildcards.forEach(func(k string, v hostinfo, err error) error {
+			if err != nil {
+				return err
+			}
+			g, err := glob.Compile(k)
+			if err != nil {
+				return fmt.Errorf("invalid Host: %q: %w", k, err)
+			}
+			if g.Match(name) {
+				info = mergeHostinfo(info, v)
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		endpoints = append(endpoints, &wishlist.Endpoint{
+			Name: name,
+			Address: net.JoinHostPort(
+				firstNonEmpty(info.Hostname, name),
+				firstNonEmpty(info.Port, "22"),
+			),
+			User:         info.User,
+			IdentityFile: info.IdentityFile,
+		})
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return endpoints, nil
+}
+
+func firstNonEmpty(ss ...string) string {
+	for _, s := range ss {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+type hostinfo struct {
+	User         string
+	Hostname     string
+	Port         string
+	IdentityFile string
+}
+
+type hostinfoMap struct {
+	inner map[string]hostinfo
+	keys  []string
+	lock  sync.Mutex
+}
+
+func (m *hostinfoMap) length() int {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	return len(m.keys)
+}
+
+func (m *hostinfoMap) set(k string, v hostinfo) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if _, ok := m.inner[k]; !ok {
+		m.keys = append(m.keys, k)
+	}
+	m.inner[k] = v
+}
+
+func (m *hostinfoMap) get(k string) (hostinfo, bool) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	v, ok := m.inner[k]
+	return v, ok
+}
+
+func (m *hostinfoMap) forEach(fn func(string, hostinfo, error) error) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	var err error
+	for _, k := range m.keys {
+		err = fn(k, m.inner[k], err)
+	}
+	return err
+}
+
+func newHostinfoMap() *hostinfoMap {
+	return &hostinfoMap{
+		inner: map[string]hostinfo{},
+	}
+}
+
+func parseInternal(r io.Reader) (*hostinfoMap, error) {
 	config, err := ssh_config.Decode(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
 	}
 
-	infos := map[string]hostinfo{}
+	infos := newHostinfoMap()
 
 	for _, h := range config.Hosts {
 		for _, pattern := range h.Patterns {
 			name := pattern.String()
-
-			if strings.Contains(name, "*") {
-				continue // ignore wildcards
-			}
-
-			info := infos[name]
+			info, _ := infos.get(name)
 			for _, n := range h.Nodes {
 				node := strings.TrimSpace(n.String())
 				if node == "" {
@@ -61,33 +164,84 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 					info.User = value
 				case "Port":
 					info.Port = value
+				case "IdentityFile":
+					info.IdentityFile = value
+				case "Include":
+					included, err := parseFileInternal(value)
+					if err != nil {
+						return nil, err
+					}
+					infos.set(name, info)
+					infos = merge(infos, included)
+					info, _ = infos.get(name)
 				}
 			}
 
-			infos[name] = info
+			infos.set(name, info)
 		}
 	}
 
-	endpoints := make([]*wishlist.Endpoint, 0, len(infos))
-	for name, info := range infos {
-		if info.Hostname == "" {
-			info.Hostname = name // Host foo.bar, use foo.bar as name and HostName
-		}
-		if info.Port == "" {
-			info.Port = "22"
-		}
-		endpoints = append(endpoints, &wishlist.Endpoint{
-			Name:    name,
-			Address: net.JoinHostPort(info.Hostname, info.Port),
-			User:    info.User,
-		})
-	}
-
-	return endpoints, nil
+	return infos, nil
 }
 
-type hostinfo struct {
-	User     string
-	Hostname string
-	Port     string
+func split(m *hostinfoMap) (*hostinfoMap, *hostinfoMap) {
+	wildcards := newHostinfoMap()
+	hosts := newHostinfoMap()
+	_ = m.forEach(func(k string, v hostinfo, _ error) error {
+		// FWIW the lib always returns at least one * section... no idea why.
+		if strings.Contains(k, "*") {
+			wildcards.set(k, v)
+			return nil
+		}
+		hosts.set(k, v)
+		return nil
+	})
+	return wildcards, hosts
+}
+
+func merge(m1, m2 *hostinfoMap) *hostinfoMap {
+	result := newHostinfoMap()
+
+	_ = m1.forEach(func(k string, v hostinfo, _ error) error {
+		vv, ok := m2.get(k)
+		if !ok {
+			result.set(k, v)
+			return nil
+		}
+		result.set(k, mergeHostinfo(v, vv))
+		return nil
+	})
+
+	_ = m2.forEach(func(k string, v hostinfo, _ error) error {
+		if _, ok := m1.get(k); !ok {
+			result.set(k, v)
+		}
+		return nil
+	})
+	return result
+}
+
+func mergeHostinfo(h1, h2 hostinfo) hostinfo {
+	if h1.Port != "" {
+		h2.Port = h1.Port
+	}
+	if h1.Hostname != "" {
+		h2.Hostname = h1.Hostname
+	}
+	if h1.User != "" {
+		h2.User = h1.User
+	}
+	if h1.IdentityFile != "" {
+		h2.IdentityFile = h1.IdentityFile
+	}
+	return h2
+}
+
+func parseFileInternal(path string) (*hostinfoMap, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open config: %w", err)
+	}
+	defer f.Close() // nolint:errcheck
+	return parseInternal(f)
 }
