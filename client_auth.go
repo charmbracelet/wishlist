@@ -59,6 +59,18 @@ func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 // tryLocalAgent checks if there's a local agent at $SSH_AUTH_SOCK and, if so,
 // uses it to authenticate.
 func tryLocalAgent() (gossh.AuthMethod, error) {
+	agt, err := getAgent()
+	if err != nil {
+		return nil, err
+	}
+	if agt == nil {
+		return nil, nil
+	}
+	log.Println("using SSH agent")
+	return gossh.PublicKeysCallback(agt.Signers), nil
+}
+
+func getAgent() (agent.Agent, error) {
 	socket := os.Getenv("SSH_AUTH_SOCK")
 	if socket == "" {
 		return nil, nil
@@ -67,8 +79,7 @@ func tryLocalAgent() (gossh.AuthMethod, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connecto to SSH_AUTH_SOCK: %w", err)
 	}
-	log.Println("using SSH agent")
-	return gossh.PublicKeysCallback(agent.NewClient(conn).Signers), nil
+	return agent.NewClient(conn), nil
 }
 
 // tryRemoteAuthAgent will try to use an ssh-agent to authenticate.

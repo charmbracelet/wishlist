@@ -3,7 +3,6 @@ package wishlist
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -46,12 +45,14 @@ func (c *localClient) Connect(e *Endpoint) error {
 	session.Stderr = os.Stderr
 	session.Stdin = os.Stdin
 
-	if socket := os.Getenv("SSH_AUTH_SOCK"); e.ForwardAgent && socket != "" {
-		conn, err := net.Dial("unix", socket)
+	if e.ForwardAgent {
+		agt, err := getAgent()
 		if err != nil {
-			return fmt.Errorf("failed to connecto to SSH_AUTH_SOCK: %w", err)
+			return err
 		}
-		agt := agent.NewClient(conn)
+		if agt == nil {
+			return fmt.Errorf("requested ForwardAgent, but no agent is available")
+		}
 		if err := agent.RequestAgentForwarding(session); err != nil {
 			return fmt.Errorf("failed to forward agent: %w", err)
 		}
