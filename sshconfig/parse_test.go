@@ -35,6 +35,7 @@ func TestParseFile(t *testing.T) {
 				Address:      "app.foo.local:2223",
 				User:         "someoneelse",
 				IdentityFile: "./testdata/key",
+				ForwardAgent: true,
 			},
 			{
 				Name:    "multiple1",
@@ -52,8 +53,9 @@ func TestParseFile(t *testing.T) {
 				User:    "overridden",
 			},
 			{
-				Name:    "no.hostname",
-				Address: "no.hostname:23231",
+				Name:         "no.hostname",
+				Address:      "no.hostname:23231",
+				ForwardAgent: true,
 			},
 			{
 				Name:    "only.host",
