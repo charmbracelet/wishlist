@@ -12,21 +12,21 @@ type SSHClient interface {
 	Connect(e *Endpoint) error
 }
 
-func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, closers, error) {
+func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *gossh.Client, closers, error) {
 	var cl closers
 	conn, err := gossh.Dial("tcp", e.Address, conf)
 	if err != nil {
-		return nil, cl, fmt.Errorf("connection failed: %w", err)
+		return nil, nil, cl, fmt.Errorf("connection failed: %w", err)
 	}
 
 	cl = append(cl, conn.Close)
 
 	session, err := conn.NewSession()
 	if err != nil {
-		return nil, cl, fmt.Errorf("failed to open session: %w", err)
+		return nil, conn, cl, fmt.Errorf("failed to open session: %w", err)
 	}
 	cl = append(cl, session.Close)
-	return session, cl, nil
+	return session, conn, cl, nil
 }
 
 func shellAndWait(session *gossh.Session) error {

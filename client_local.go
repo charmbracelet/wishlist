@@ -3,11 +3,13 @@ package wishlist
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"os/user"
 	"path/filepath"
 
 	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
 )
 
@@ -34,7 +36,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
 	}
 
-	session, cls, err := createSession(conf, e)
+	session, client, cls, err := createSession(conf, e)
 	defer cls.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
@@ -43,6 +45,20 @@ func (c *localClient) Connect(e *Endpoint) error {
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
 	session.Stdin = os.Stdin
+
+	if socket := os.Getenv("SSH_AUTH_SOCK"); e.ForwardAgent && socket != "" {
+		conn, err := net.Dial("unix", socket)
+		if err != nil {
+			return fmt.Errorf("failed to connecto to SSH_AUTH_SOCK: %w", err)
+		}
+		agt := agent.NewClient(conn)
+		if err := agent.RequestAgentForwarding(session); err != nil {
+			return fmt.Errorf("failed to forward agent: %w", err)
+		}
+		if err := agent.ForwardToAgent(client, agt); err != nil {
+			return fmt.Errorf("failed to forward agent: %w", err)
+		}
+	}
 
 	w, h, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {

@@ -30,7 +30,7 @@ func (c *remoteClient) Connect(e *Endpoint) error {
 		Auth:            []gossh.AuthMethod{method},
 	}
 
-	session, cl, err := createSession(conf, e)
+	session, _, cl, err := createSession(conf, e)
 	defer cl.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
