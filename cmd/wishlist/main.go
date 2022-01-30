@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/wish/activeterm"
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
+	"github.com/charmbracelet/wishlist/home"
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
@@ -97,11 +98,8 @@ func getConfig(path string) (wishlist.Config, error) {
 		func() string { return ".wishlist/config.yml" },
 		func() string { return ".wishlist/config" },
 		func() string {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return ""
-			}
-			return filepath.Join(home, ".ssh/config")
+			s, _ := home.ExpandPath("~/.ssh/config")
+			return s
 		},
 		func() string { return "/etc/ssh/ssh_config" },
 	} {

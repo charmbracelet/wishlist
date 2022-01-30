@@ -7,9 +7,9 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/wishlist/home"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -44,19 +44,15 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
 // If any of the methods fails, it returns an error.
 // It'll return a nil list if none of the methods is available.
 func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user home dir: %w", err)
-	}
 	var methods []gossh.AuthMethod
 	if method, err := tryLocalAgent(); err != nil || method != nil {
 		methods = append(methods, method)
 	}
 	if e.IdentityFile != "" {
-		method, err := tryIdentityFile(home, e.IdentityFile)
+		method, err := tryIdentityFile(e.IdentityFile)
 		return append(methods, method), err
 	}
-	keys, err := tryUserKeys(home)
+	keys, err := tryUserKeys()
 	return append(methods, keys...), err
 }
 
@@ -121,25 +117,26 @@ func tryNewKey() (gossh.AuthMethod, error) {
 }
 
 // tryIdentityFile tries to use the given idendity file.
-func tryIdentityFile(home, id string) (gossh.AuthMethod, error) {
-	return parsePrivateKey(expand(home, id), nil)
-}
-
-func expand(home, p string) string {
-	if !strings.HasPrefix(p, "~/") {
-		return p
+func tryIdentityFile(id string) (gossh.AuthMethod, error) {
+	h, err := home.ExpandPath(id)
+	if err != nil {
+		return nil, err
 	}
-	return filepath.Join(home, strings.TrimPrefix(p, "~/"))
+	return parsePrivateKey(h, nil)
 }
 
 // tryUserKeys will try to find id_rsa and id_ed25519 keys in the user $HOME/~.ssh folder.
-func tryUserKeys(home string) ([]gossh.AuthMethod, error) {
+func tryUserKeys() ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod // nolint: prealloc
 	for _, name := range []string{
 		"id_rsa",
 		"id_ed25519",
 	} {
-		method, err := parsePrivateKey(filepath.Join(home, ".ssh", name), nil)
+		path, err := home.ExpandPath(filepath.Join("~/.ssh", name))
+		if err != nil {
+			return nil, err
+		}
+		method, err := parsePrivateKey(path, nil)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
