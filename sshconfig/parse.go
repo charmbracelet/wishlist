@@ -62,6 +62,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			),
 			User:         info.User,
 			IdentityFile: info.IdentityFile,
+			ForwardAgent: stringToBool(info.ForwardAgent),
 		})
 		return nil
 	}); err != nil {
@@ -69,6 +70,11 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 	}
 
 	return endpoints, nil
+}
+
+func stringToBool(s string) bool {
+	ss := strings.ToLower(strings.TrimSpace(s))
+	return ss == "true" || ss == "yes"
 }
 
 func firstNonEmpty(ss ...string) string {
@@ -85,6 +91,7 @@ type hostinfo struct {
 	Hostname     string
 	Port         string
 	IdentityFile string
+	ForwardAgent string
 }
 
 type hostinfoMap struct {
@@ -166,6 +173,8 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					info.Port = value
 				case "IdentityFile":
 					info.IdentityFile = value
+				case "ForwardAgent":
+					info.ForwardAgent = value
 				case "Include":
 					included, err := parseFileInternal(value)
 					if err != nil {
@@ -233,6 +242,9 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	}
 	if h1.IdentityFile != "" {
 		h2.IdentityFile = h1.IdentityFile
+	}
+	if h1.ForwardAgent != "" {
+		h2.ForwardAgent = h1.ForwardAgent
 	}
 	return h2
 }
