@@ -37,7 +37,7 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
 // the given endpoint.
 //
 // preference order:
-// - an IdentityFile, if there's one set in the endpoint
+// - the IdentityFiles, if they were set in the endpoint
 // - the local ssh agent, if available
 // - common key filenames under ~/.ssh/
 //
@@ -48,9 +48,10 @@ func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 	if method, err := tryLocalAgent(); err != nil || method != nil {
 		methods = append(methods, method)
 	}
-	if e.IdentityFile != "" {
-		method, err := tryIdentityFile(e.IdentityFile)
-		return append(methods, method), err
+
+	if len(e.IdentityFiles) > 0 {
+		ids, err := tryIdendityFiles(e)
+		return append(methods, ids...), err
 	}
 	keys, err := tryUserKeys()
 	return append(methods, keys...), err
@@ -125,6 +126,18 @@ func tryNewKey() (gossh.AuthMethod, error) {
 	}
 
 	return gossh.PublicKeys(signer), key.WriteKeys()
+}
+
+func tryIdendityFiles(e *Endpoint) ([]gossh.AuthMethod, error) {
+	var methods []gossh.AuthMethod
+	for _, id := range e.IdentityFiles {
+		method, err := tryIdentityFile(id)
+		if err != nil {
+			return nil, err
+		}
+		methods = append(methods, method)
+	}
+	return methods, nil
 }
 
 // tryIdentityFile tries to use the given idendity file.
