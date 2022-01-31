@@ -13,8 +13,7 @@ import (
 func TestUserKeys(t *testing.T) {
 	fn := func(home string) func(string) (string, error) {
 		return func(s string) (string, error) {
-			t.Log("PATH IS", s)
-			return filepath.Join(home, strings.TrimPrefix(s, "~/")), nil
+			return filepath.Join(home, strings.TrimPrefix(s, "~"+string(os.PathSeparator))), nil
 		}
 	}
 
