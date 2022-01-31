@@ -18,3 +18,5 @@ require (
 	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
+
+replace github.com/charmbracelet/keygen => /home/carlos/Developer/charmbracelet/keygen
