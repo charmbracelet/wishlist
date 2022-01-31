@@ -151,12 +151,25 @@ func tryIdentityFile(id string) (gossh.AuthMethod, error) {
 
 // tryUserKeys will try to find id_rsa and id_ed25519 keys in the user $HOME/~.ssh folder.
 func tryUserKeys() ([]gossh.AuthMethod, error) {
+	return tryUserKeysInternal(home.ExpandPath)
+}
+
+// https://github.com/openssh/openssh-portable/blob/8a0848cdd3b25c049332cd56034186b7853ae754/readconf.c#L2534-L2546
+// https://github.com/openssh/openssh-portable/blob/2dc328023f60212cd29504fc05d849133ae47355/pathnames.h#L71-L81
+// TODO: ideally the password should be asked only on use, in order to
+//   avoid asking the password of all user keys to use only one of them.
+func tryUserKeysInternal(pathResolver func(string) (string, error)) ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod // nolint: prealloc
 	for _, name := range []string{
 		"id_rsa",
+		// "id_dsa", // unhandled by go, deprecated by openssh
+		"id_ecdsa",
+		"id_ecdsa_sk",
 		"id_ed25519",
+		"id_ed25519_sk",
+		// "id_xmss", // unhandled by go - and most openssh versions it seems
 	} {
-		path, err := home.ExpandPath(filepath.Join("~/.ssh", name))
+		path, err := pathResolver(filepath.Join("~/.ssh", name))
 		if err != nil {
 			return nil, err
 		}
