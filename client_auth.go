@@ -129,7 +129,7 @@ func tryNewKey() (gossh.AuthMethod, error) {
 }
 
 func tryIdendityFiles(e *Endpoint) ([]gossh.AuthMethod, error) {
-	var methods []gossh.AuthMethod
+	methods := make([]gossh.AuthMethod, 0, len(e.IdentityFiles))
 	for _, id := range e.IdentityFiles {
 		method, err := tryIdentityFile(id)
 		if err != nil {
@@ -144,7 +144,7 @@ func tryIdendityFiles(e *Endpoint) ([]gossh.AuthMethod, error) {
 func tryIdentityFile(id string) (gossh.AuthMethod, error) {
 	h, err := home.ExpandPath(id)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint: wrapcheck
 	}
 	return parsePrivateKey(h, nil)
 }

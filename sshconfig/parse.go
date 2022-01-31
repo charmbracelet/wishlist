@@ -179,7 +179,7 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 				case "Include":
 					path, err := home.ExpandPath(value)
 					if err != nil {
-						return nil, err
+						return nil, err // nolint: wrapcheck
 					}
 					included, err := parseFileInternal(path)
 					if err != nil {
