@@ -1,6 +1,7 @@
 package wishlist
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +24,10 @@ func TestUserKeys(t *testing.T) {
 		require.NoError(tb, os.MkdirAll(path, 0765))
 		_, err := keygen.NewWithWrite(path, "id", nil, keygen.RSA)
 		require.NoError(tb, err)
+		filepath.Walk(tmp, func(path string, info fs.FileInfo, err error) error {
+			t.Log(path)
+			return nil
+		})
 	}
 
 	t.Run("rsa", func(t *testing.T) {
