@@ -17,6 +17,17 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
+// HandoffModel is a tea.Model that can tell where it should ssh into.
+type HandoffModel interface {
+	tea.Model
+	HandoffTo() *Endpoint
+}
+
+// LocalListing creates a new listing model for local usage only.
+func LocalListing(endpoints []*Endpoint) HandoffModel {
+	return newListing(endpoints, nil)
+}
+
 func newListing(endpoints []*Endpoint, s ssh.Session) *listModel {
 	var items []list.Item
 	for _, endpoint := range endpoints {
@@ -78,5 +89,12 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *listModel) View() string {
+	if m.handoff != nil {
+		return ""
+	}
 	return docStyle.Render(m.list.View())
+}
+
+func (m *listModel) HandoffTo() *Endpoint {
+	return m.handoff
 }

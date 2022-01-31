@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/charmbracelet/wishlist"
+	"github.com/charmbracelet/wishlist/home"
 	"github.com/gobwas/glob"
 	"github.com/kevinburke/ssh_config"
 )
@@ -60,9 +61,9 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 				firstNonEmpty(info.Hostname, name),
 				firstNonEmpty(info.Port, "22"),
 			),
-			User:         info.User,
-			IdentityFile: info.IdentityFile,
-			ForwardAgent: stringToBool(info.ForwardAgent),
+			User:          info.User,
+			IdentityFiles: info.IdentityFiles,
+			ForwardAgent:  stringToBool(info.ForwardAgent),
 		})
 		return nil
 	}); err != nil {
@@ -87,11 +88,11 @@ func firstNonEmpty(ss ...string) string {
 }
 
 type hostinfo struct {
-	User         string
-	Hostname     string
-	Port         string
-	IdentityFile string
-	ForwardAgent string
+	User          string
+	Hostname      string
+	Port          string
+	IdentityFiles []string
+	ForwardAgent  string
 }
 
 type hostinfoMap struct {
@@ -172,11 +173,15 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 				case "Port":
 					info.Port = value
 				case "IdentityFile":
-					info.IdentityFile = value
+					info.IdentityFiles = append(info.IdentityFiles, value)
 				case "ForwardAgent":
 					info.ForwardAgent = value
 				case "Include":
-					included, err := parseFileInternal(value)
+					path, err := home.ExpandPath(value)
+					if err != nil {
+						return nil, err // nolint: wrapcheck
+					}
+					included, err := parseFileInternal(path)
 					if err != nil {
 						return nil, err
 					}
@@ -240,9 +245,7 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	if h1.User != "" {
 		h2.User = h1.User
 	}
-	if h1.IdentityFile != "" {
-		h2.IdentityFile = h1.IdentityFile
-	}
+	h2.IdentityFiles = append(h2.IdentityFiles, h1.IdentityFiles...)
 	if h1.ForwardAgent != "" {
 		h2.ForwardAgent = h1.ForwardAgent
 	}

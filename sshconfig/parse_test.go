@@ -31,11 +31,11 @@ func TestParseFile(t *testing.T) {
 				Address: "app.foo.local:2222",
 			},
 			{
-				Name:         "app2",
-				Address:      "app.foo.local:2223",
-				User:         "someoneelse",
-				IdentityFile: "./testdata/key",
-				ForwardAgent: true,
+				Name:          "app2",
+				Address:       "app.foo.local:2223",
+				User:          "someoneelse",
+				IdentityFiles: []string{"./testdata/key"},
+				ForwardAgent:  true,
 			},
 			{
 				Name:    "multiple1",
@@ -90,10 +90,10 @@ func TestParseIncludes(t *testing.T) {
 	require.NoError(t, err)
 	require.ElementsMatch(t, []*wishlist.Endpoint{
 		{
-			Name:         "test.foo.bar",
-			Address:      "test.foo.bar:2222",
-			User:         "ciclano",
-			IdentityFile: "~/.ssh/id_rsa2",
+			Name:          "test.foo.bar",
+			Address:       "test.foo.bar:2222",
+			User:          "ciclano",
+			IdentityFiles: []string{"~/.ssh/id_rsa2", "~/.ssh/other_id"},
 		},
 		{
 			Name:    "something.else",
@@ -108,25 +108,26 @@ func TestMergeMaps(t *testing.T) {
 		t,
 		map[string]hostinfo{
 			"foo": {
-				Hostname:     "foo.bar",
-				User:         "me",
-				IdentityFile: "id_rsa",
-				Port:         "2321",
+				Hostname:      "foo.bar",
+				User:          "me",
+				IdentityFiles: []string{"id_rsa", "id_ed25519"},
+				Port:          "2321",
 			},
 			"bar": {
 				User: "yoda",
 			},
 			"foobar": {
-				User:         "notme",
-				Hostname:     "foobar.foo",
-				IdentityFile: "id_ed25519",
+				User:          "notme",
+				Hostname:      "foobar.foo",
+				IdentityFiles: []string{"id_ed25519"},
 			},
 		},
 		merge(
 			newHostinfoMapFrom(
 				map[string]hostinfo{
 					"foo": {
-						Hostname: "foo.bar",
+						Hostname:      "foo.bar",
+						IdentityFiles: []string{"id_ed25519"},
 					},
 					"bar": {
 						User: "yoda",
@@ -136,14 +137,14 @@ func TestMergeMaps(t *testing.T) {
 			newHostinfoMapFrom(
 				map[string]hostinfo{
 					"foo": {
-						User:         "me",
-						IdentityFile: "id_rsa",
-						Port:         "2321",
+						User:          "me",
+						IdentityFiles: []string{"id_rsa"},
+						Port:          "2321",
 					},
 					"foobar": {
-						User:         "notme",
-						Hostname:     "foobar.foo",
-						IdentityFile: "id_ed25519",
+						User:          "notme",
+						Hostname:      "foobar.foo",
+						IdentityFiles: []string{"id_ed25519"},
 					},
 				},
 			),

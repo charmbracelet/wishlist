@@ -103,3 +103,14 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, errch <-
 		}
 	}
 }
+
+func mustConnect(session ssh.Session, e *Endpoint, stdin io.Reader) {
+	client := &remoteClient{session, stdin}
+	if err := client.Connect(e); err != nil {
+		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
+		_ = session.Exit(1)
+		return // unreachable
+	}
+	fmt.Fprintf(session, "wishlist: closed connection to %q (%s)\n\r", e.Name, e.Address)
+	_ = session.Exit(0)
+}

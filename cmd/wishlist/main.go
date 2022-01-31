@@ -9,11 +9,13 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
+	"github.com/charmbracelet/wishlist/home"
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
@@ -31,6 +33,7 @@ var (
 func main() {
 	version := flag.Bool("version", false, "print version and exit")
 	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
+	local := flag.Bool("local", false, "do not start a server, go straight into the UI")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Wishlist, a SSH directory.\n\n")
 		flag.PrintDefaults()
@@ -45,6 +48,18 @@ func main() {
 		return
 	}
 
+	config, err := getConfig(*file)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if *local {
+		if err := workLocally(config); err != nil {
+			log.Fatalln(err)
+		}
+		return
+	}
+
 	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
 	if err != nil {
 		log.Fatalln(err)
@@ -53,11 +68,6 @@ func main() {
 		if err := k.WriteKeys(); err != nil {
 			log.Fatalln(err)
 		}
-	}
-
-	config, err := getConfig(*file)
-	if err != nil {
-		log.Fatalln(err)
 	}
 
 	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
@@ -88,11 +98,8 @@ func getConfig(path string) (wishlist.Config, error) {
 		func() string { return ".wishlist/config.yml" },
 		func() string { return ".wishlist/config" },
 		func() string {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return ""
-			}
-			return filepath.Join(home, ".ssh/config")
+			s, _ := home.ExpandPath("~/.ssh/config")
+			return s
 		},
 		func() string { return "/etc/ssh/ssh_config" },
 	} {
@@ -145,4 +152,28 @@ func getSSHConfig(path string) (wishlist.Config, error) {
 	}
 	config.Endpoints = endpoints
 	return config, nil
+}
+
+// nolint: wrapcheck
+func workLocally(config wishlist.Config) error {
+	f, err := tea.LogToFile("wishlist.log", "")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+	m := wishlist.LocalListing(config.Endpoints)
+	if err := tea.NewProgram(m).Start(); err != nil {
+		return err
+	}
+
+	if m.HandoffTo() == nil {
+		return nil
+	}
+
+	log.SetOutput(os.Stderr)
+	return wishlist.NewLocalSSHClient().Connect(m.HandoffTo())
 }

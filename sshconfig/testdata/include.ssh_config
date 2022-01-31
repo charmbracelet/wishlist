@@ -2,6 +2,7 @@ Include ./testdata/included.ssh_config
 
 Host test.foo.bar
 	Port 2222
+	IdentityFile ~/.ssh/other_id
 
 Host something.else
 	Port 2323
