@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/charmbracelet/bubbles v0.10.2
 	github.com/charmbracelet/bubbletea v0.19.3
-	github.com/charmbracelet/keygen v0.1.2
+	github.com/charmbracelet/keygen v0.2.0
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/charmbracelet/wish v0.2.0
 	github.com/gliderlabs/ssh v0.3.3
@@ -18,5 +18,3 @@ require (
 	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
-
-replace github.com/charmbracelet/keygen => /home/carlos/Developer/charmbracelet/keygen
