@@ -17,20 +17,22 @@ import (
 	"golang.org/x/term"
 )
 
+var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
+
 // remoteBestAuthMethod returns an auth method.
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
-func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, closers, error) {
-	method, closers, err := tryRemoteAuthAgent(s)
+func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
+	method, agt, cls, err := tryRemoteAuthAgent(s)
 	if err != nil {
-		return method, closers, err
+		return nil, nil, nil, err
 	}
 	if method != nil {
-		return method, closers, nil
+		return method, agt, cls, nil
 	}
 
 	method, err = tryNewKey()
-	return method, closers, err
+	return method, nil, nil, err
 }
 
 // localBestAuthMethod figures out which authentication method is the best for
@@ -60,7 +62,7 @@ func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 // tryLocalAgent checks if there's a local agent at $SSH_AUTH_SOCK and, if so,
 // uses it to authenticate.
 func tryLocalAgent() (gossh.AuthMethod, error) {
-	agt, err := getAgent()
+	agt, err := getLocalAgent()
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func tryLocalAgent() (gossh.AuthMethod, error) {
 	return gossh.PublicKeysCallback(agt.Signers), nil
 }
 
-func getAgent() (agent.Agent, error) {
+func getLocalAgent() (agent.Agent, error) {
 	socket := os.Getenv("SSH_AUTH_SOCK")
 	if socket == "" {
 		return nil, nil
@@ -83,29 +85,38 @@ func getAgent() (agent.Agent, error) {
 	return agent.NewClient(conn), nil
 }
 
-// tryRemoteAuthAgent will try to use an ssh-agent to authenticate.
-func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, closers, error) {
+func getRemoteAgent(s ssh.Session) (agent.Agent, closers, error) {
 	_, _ = s.SendRequest("auth-agent-req@openssh.com", true, nil)
-
-	if ssh.AgentRequested(s) {
-		l, err := ssh.NewAgentListener()
-		if err != nil {
-			return nil, nil, err // nolint:wrapcheck
-		}
-		go ssh.ForwardAgentConnections(l, s)
-
-		conn, err := net.Dial(l.Addr().Network(), l.Addr().String())
-		if err != nil {
-			return nil, closers{l.Close}, err // nolint:wrapcheck
-		}
-
-		return gossh.PublicKeysCallback(agent.NewClient(conn).Signers),
-			closers{l.Close, conn.Close},
-			nil
+	if !ssh.AgentRequested(s) {
+		return nil, nil, errNoRemoteAgent
 	}
 
-	fmt.Fprintf(s.Stderr(), "wishlist: ssh agent not available\n\r")
-	return nil, nil, nil
+	l, err := ssh.NewAgentListener()
+	if err != nil {
+		return nil, nil, err // nolint:wrapcheck
+	}
+	go ssh.ForwardAgentConnections(l, s)
+
+	conn, err := net.Dial(l.Addr().Network(), l.Addr().String())
+	if err != nil {
+		return nil, closers{l.Close}, err // nolint:wrapcheck
+	}
+
+	return agent.NewClient(conn), closers{l.Close, conn.Close}, nil
+}
+
+// tryRemoteAuthAgent will try to use an ssh-agent to authenticate.
+func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
+	agent, closers, err := getRemoteAgent(s)
+	if err != nil {
+		if errors.Is(err, errNoRemoteAgent) {
+			fmt.Fprintf(s.Stderr(), "wishlist: ssh agent not available\n\r")
+			return nil, nil, closers, nil
+		}
+		return nil, nil, closers, err
+	}
+
+	return gossh.PublicKeysCallback(agent.Signers), agent, closers, nil
 }
 
 // tryNewKey will create a .wishlist/client_ed25519 keypair if one does not exist.

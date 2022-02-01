@@ -47,7 +47,8 @@ func (c *localClient) Connect(e *Endpoint) error {
 	session.Stdin = os.Stdin
 
 	if e.ForwardAgent {
-		agt, err := getAgent()
+		log.Println("forwarding SSH agent")
+		agt, err := getLocalAgent()
 		if err != nil {
 			return err
 		}
@@ -76,19 +77,12 @@ func (c *localClient) Connect(e *Endpoint) error {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		go c.notifyWindowChanges(ctx, session)
+	} else {
+		log.Println("did not request a tty")
 	}
 
 	if e.RemoteCommand == "" {
-		log.Println("requesting shell")
 		return shellAndWait(session)
 	}
-
-	log.Println("running", e.RemoteCommand)
-	if err := session.Start(e.RemoteCommand); err != nil {
-		return fmt.Errorf("failed to execute remote command: %q: %w", e.RemoteCommand, err)
-	}
-	if err := session.Wait(); err != nil {
-		return fmt.Errorf("remote command failed: %q: %w", e.RemoteCommand, err)
-	}
-	return nil
+	return runAndWait(session, e.RemoteCommand)
 }

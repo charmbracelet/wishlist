@@ -32,10 +32,24 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *goss
 }
 
 func shellAndWait(session *gossh.Session) error {
+	log.Println("requesting shell")
 	if err := session.Shell(); err != nil {
 		return fmt.Errorf("failed to start shell: %w", err)
 	}
+	return sessionWait(session)
+}
 
+func runAndWait(session *gossh.Session, cmd string) error {
+	log.Printf("running %q", cmd)
+	if err := session.Run(cmd); err != nil {
+		return fmt.Errorf("failed to run %q: %w", cmd, err)
+	}
+
+	log.Println("waiting")
+	return sessionWait(session)
+}
+
+func sessionWait(session *gossh.Session) error {
 	if err := session.Wait(); err != nil {
 		return fmt.Errorf("session failed: %w", err)
 	}
