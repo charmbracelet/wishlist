@@ -1,7 +1,9 @@
 package wishlist
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 
 	gossh "golang.org/x/crypto/ssh"
@@ -45,6 +47,10 @@ type closers []func() error
 func (c closers) close() {
 	for _, closer := range c {
 		if err := closer(); err != nil {
+			if errors.Is(err, io.EOF) {
+				// do not print EOF errors... not a big deal anyway
+				continue
+			}
 			log.Println("failed to close:", err)
 		}
 	}

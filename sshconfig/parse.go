@@ -64,6 +64,8 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			User:          info.User,
 			IdentityFiles: info.IdentityFiles,
 			ForwardAgent:  stringToBool(info.ForwardAgent),
+			RequestTTY:    stringToBool(info.RequestTTY),
+			RemoteCommand: info.RemoteCommand,
 		})
 		return nil
 	}); err != nil {
@@ -93,6 +95,8 @@ type hostinfo struct {
 	Port          string
 	IdentityFiles []string
 	ForwardAgent  string
+	RequestTTY    string
+	RemoteCommand string
 }
 
 type hostinfoMap struct {
@@ -176,6 +180,10 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					info.IdentityFiles = append(info.IdentityFiles, value)
 				case "ForwardAgent":
 					info.ForwardAgent = value
+				case "RequestTTY":
+					info.RequestTTY = value
+				case "RemoteCommand":
+					info.RemoteCommand = value
 				case "Include":
 					path, err := home.ExpandPath(value)
 					if err != nil {
@@ -248,6 +256,12 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	h2.IdentityFiles = append(h2.IdentityFiles, h1.IdentityFiles...)
 	if h1.ForwardAgent != "" {
 		h2.ForwardAgent = h1.ForwardAgent
+	}
+	if h1.RequestTTY != "" {
+		h2.RequestTTY = h1.RequestTTY
+	}
+	if h1.RemoteCommand != "" {
+		h2.RemoteCommand = h1.RemoteCommand
 	}
 	return h2
 }

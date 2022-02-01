@@ -3,6 +3,7 @@ package wishlist
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -61,18 +62,33 @@ func (c *localClient) Connect(e *Endpoint) error {
 		}
 	}
 
-	w, h, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		return fmt.Errorf("failed to get term size: %w", err)
+	if e.RequestTTY || e.RemoteCommand == "" {
+		log.Println("requesting tty")
+		w, h, err := term.GetSize(int(os.Stdout.Fd()))
+		if err != nil {
+			return fmt.Errorf("failed to get term size: %w", err)
+		}
+
+		if err := session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
+			return fmt.Errorf("failed to request a pty: %w", err)
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go c.notifyWindowChanges(ctx, session)
 	}
 
-	if err := session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
-		return fmt.Errorf("failed to request a pty: %w", err)
+	if e.RemoteCommand == "" {
+		log.Println("requesting shell")
+		return shellAndWait(session)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go c.notifyWindowChanges(ctx, session)
-
-	return shellAndWait(session)
+	log.Println("running", e.RemoteCommand)
+	if err := session.Start(e.RemoteCommand); err != nil {
+		return fmt.Errorf("failed to execute remote command: %q: %w", e.RemoteCommand, err)
+	}
+	if err := session.Wait(); err != nil {
+		return fmt.Errorf("remote command failed: %q: %w", e.RemoteCommand, err)
+	}
+	return nil
 }

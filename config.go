@@ -15,6 +15,8 @@ type Endpoint struct {
 	User          string            `yaml:"user"`    // User to authenticate as.
 	IdentityFiles []string          `yaml:"-"`       // IdentityFiles is only set when parsing from a SSH Config file, and used only on local mode.
 	ForwardAgent  bool              `yaml:"-"`       // ForwardAgent is only set when parsing from a SSH Config file, and used only on local mode.
+	RequestTTY    bool              `yaml:"-"`       // RequestTTY is only set when parsing from a SSH Config file, and used only on local mode. It defaults to true if RemoteCommand is empty.
+	RemoteCommand string            `yaml:"-"`       // RemoteCommand is only set when parsing from a SSH Config fil, and use only on local mode. By default wishlist will request a shell.
 	Middlewares   []wish.Middleware `yaml:"-"`       // wish middlewares you can use in the factory method.
 }
 

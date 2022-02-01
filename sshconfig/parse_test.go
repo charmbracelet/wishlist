@@ -112,6 +112,8 @@ func TestMergeMaps(t *testing.T) {
 				User:          "me",
 				IdentityFiles: []string{"id_rsa", "id_ed25519"},
 				Port:          "2321",
+				RequestTTY:    "yes",
+				RemoteCommand: "tmux new -A -s default",
 			},
 			"bar": {
 				User: "yoda",
@@ -128,6 +130,7 @@ func TestMergeMaps(t *testing.T) {
 					"foo": {
 						Hostname:      "foo.bar",
 						IdentityFiles: []string{"id_ed25519"},
+						RequestTTY:    "yes",
 					},
 					"bar": {
 						User: "yoda",
@@ -140,6 +143,7 @@ func TestMergeMaps(t *testing.T) {
 						User:          "me",
 						IdentityFiles: []string{"id_rsa"},
 						Port:          "2321",
+						RemoteCommand: "tmux new -A -s default",
 					},
 					"foobar": {
 						User:          "notme",
