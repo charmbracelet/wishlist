@@ -41,7 +41,7 @@ func shellAndWait(session *gossh.Session) error {
 
 func runAndWait(session *gossh.Session, cmd string) error {
 	log.Printf("running %q", cmd)
-	if err := session.Run(cmd); err != nil {
+	if err := session.Start(cmd); err != nil {
 		return fmt.Errorf("failed to run %q: %w", cmd, err)
 	}
 
