@@ -12,7 +12,10 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kevinburke/ssh_config v1.1.0
+	github.com/muesli/mango-cobra v0.0.0-20220201014606-122d08dcc447
+	github.com/muesli/roff v0.1.0
 	github.com/muesli/termenv v0.11.0
+	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
 	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed
