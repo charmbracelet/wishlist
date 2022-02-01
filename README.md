@@ -30,7 +30,7 @@ Check the [example config file](/_example/config.yaml) file as well as `wishlist
 
 #### Local
 
-If you want to explore your own local servers, you can simply run `wishlist --local` to be presented with a the UI filled with your `~/.ssh/config` hosts.
+If you want to explore your own local servers, you can simply run `wishlist --local` to be presented with an UI filled with your `~/.ssh/config` hosts.
 
 ### Library
 

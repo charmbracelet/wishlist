@@ -8,6 +8,7 @@ import (
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 type remoteClient struct {
@@ -18,7 +19,7 @@ type remoteClient struct {
 func (c *remoteClient) Connect(e *Endpoint) error {
 	resetPty(c.session)
 
-	method, closers, err := remoteBestAuthMethod(c.session)
+	method, agt, closers, err := remoteBestAuthMethod(c.session)
 	defer closers.close()
 	if err != nil {
 		return fmt.Errorf("failed to find an auth method: %w", err)
@@ -30,7 +31,7 @@ func (c *remoteClient) Connect(e *Endpoint) error {
 		Auth:            []gossh.AuthMethod{method},
 	}
 
-	session, _, cl, err := createSession(conf, e)
+	session, client, cl, err := createSession(conf, e)
 	defer cl.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
@@ -42,18 +43,36 @@ func (c *remoteClient) Connect(e *Endpoint) error {
 	session.Stderr = c.session.Stderr()
 	session.Stdin = c.stdin
 
-	pty, winch, _ := c.session.Pty()
-	w := pty.Window
-	if err := session.RequestPty(pty.Term, w.Height, w.Width, nil); err != nil {
-		return fmt.Errorf("failed to request pty: %w", err)
+	if e.ForwardAgent {
+		log.Println("forwarding SSH agent")
+		if agt == nil {
+			return fmt.Errorf("requested ForwardAgent, but no agent is available")
+		}
+		if err := agent.RequestAgentForwarding(session); err != nil {
+			return fmt.Errorf("failed to forward agent: %w", err)
+		}
+		if err := agent.ForwardToAgent(client, agt); err != nil {
+			return fmt.Errorf("failed to forward agent: %w", err)
+		}
 	}
 
-	done := make(chan bool, 1)
-	defer func() { done <- true }()
+	if e.RemoteCommand == "" || e.RequestTTY {
+		log.Println("requesting tty")
+		pty, winch, _ := c.session.Pty()
+		w := pty.Window
+		if err := session.RequestPty(pty.Term, w.Height, w.Width, nil); err != nil {
+			return fmt.Errorf("failed to request pty: %w", err)
+		}
 
-	go c.notifyWindowChanges(session, done, winch)
+		done := make(chan bool, 1)
+		defer func() { done <- true }()
+		go c.notifyWindowChanges(session, done, winch)
+	}
 
-	return shellAndWait(session)
+	if e.RemoteCommand == "" {
+		return shellAndWait(session)
+	}
+	return runAndWait(session, e.RemoteCommand)
 }
 
 func (c *remoteClient) notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan ssh.Window) {

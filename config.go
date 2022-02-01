@@ -10,14 +10,14 @@ import (
 // Endpoint represents an endpoint to list.
 // If it has a Handler, wishlist will start an SSH server on the given address.
 type Endpoint struct {
-	Name          string            `yaml:"name"`    // Endpoint name.
-	Address       string            `yaml:"address"` // Endpoint address in the `host:port` format, if empty, will be the same address as the list, increasing the port number.
-	User          string            `yaml:"user"`    // User to authenticate as.
-	IdentityFiles []string          `yaml:"-"`       // IdentityFiles is only set when parsing from a SSH Config file, and used only on local mode.
-	ForwardAgent  bool              `yaml:"-"`       // ForwardAgent is only set when parsing from a SSH Config file, and used only on local mode.
-	RequestTTY    bool              `yaml:"-"`       // RequestTTY is only set when parsing from a SSH Config file, and used only on local mode. It defaults to true if RemoteCommand is empty.
-	RemoteCommand string            `yaml:"-"`       // RemoteCommand is only set when parsing from a SSH Config fil, and use only on local mode. By default wishlist will request a shell.
-	Middlewares   []wish.Middleware `yaml:"-"`       // wish middlewares you can use in the factory method.
+	Name          string            `yaml:"name"`           // Endpoint name.
+	Address       string            `yaml:"address"`        // Endpoint address in the `host:port` format, if empty, will be the same address as the list, increasing the port number.
+	User          string            `yaml:"user"`           // User to authenticate as.
+	ForwardAgent  bool              `yaml:"forward_agent"`  // ForwardAgent defines wether to forward the current agent. Anologous to SSH's config ForwardAgent.
+	RequestTTY    bool              `yaml:"request_tty"`    // RequestTTY defines wether to request a TTY. Anologous to SSH's config RequestTTY.
+	RemoteCommand string            `yaml:"remote_command"` // RemoteCommand defines wether to request a TTY. Anologous to SSH's config RemoteCommand.
+	IdentityFiles []string          `yaml:"-"`              // IdentityFiles is only set when parsing from a SSH Config file, and used only on local mode.
+	Middlewares   []wish.Middleware `yaml:"-"`              // wish middlewares you can use in the factory method.
 }
 
 // String returns the endpoint in a friendly string format.

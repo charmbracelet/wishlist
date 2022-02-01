@@ -2,17 +2,50 @@
 # setup wishlist with a YAML file
 #
 
-listen: 127.0.0.1         # defaults to 0.0.0.0
-port: 2223                # defaults to 22 or 2222, whichever is open
 
-endpoints:                # endpoints to list
-- name: appname           # prefer to avoid spaces
-  address: foo.local:2234 # address in host:port format
-  user: notme             # overrides user, defauts to client's user
+# Address in which wishlist should listen for.
+# Defaults to 0.0.0.0.
+listen: 127.0.0.1
 
-users:                    # users to allow access to the list
-- name: carlos            # user login
-  public-keys:            # their public keys in plain text
-  - ssh-rsa AAAAB3Nz...   # string redacted for the sake of brevity
-  - ssh-ed25519 AAAA...   #
+# Port in which wishlist should listen for.
+# Defaults to 22 or 2222, whichever is open.
+port: 2223
+
+# Endpoints to list in the UI.
+endpoints:
+-
+  # Endpoint's name.
+  # Recommended to avoid spaces so users can `ssh -t appname`.
+  name: appname
+
+  # Endpoint's address in the host:port format.
+  address: foo.local:2234
+
+  # User to use to connect.
+  # Defaults to the current remote user.
+  user: notme
+
+  # Command to run against the remote address.
+  # Defaults to asking for a shell.
+  remote_command: uptime -a
+
+  # Wether to forward the SSH agent.
+  # Will cause the connection to fail if no agent is available.
+  forward_agent: true # forwards the ssh agent
+
+  # requests a TTY.
+  # Defaults to true if remote_command is empty.
+  request_tty: true
+
+# users to allow access to the list
+users:
+  -
+    # user login
+    name: carlos
+
+    # User's public keys.
+    # Must be in the same format as seen in the ~/.allowed_keys file.
+    public-keys:
+    - ssh-rsa AAAAB3Nz...
+    - ssh-ed25519 AAAA...
 
