@@ -18,9 +18,9 @@ import (
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
-	mcobra "github.com/muesli/mango-cobra"
+	"github.com/muesli/coral"
+	mcoral "github.com/muesli/mango-coral"
 	"github.com/muesli/roff"
-	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,7 +32,7 @@ var (
 	Version = "devel"
 )
 
-var rootCmd = &cobra.Command{
+var rootCmd = &coral.Command{
 	Use:   "wishlist",
 	Short: "The SSH Directory",
 	Long: `Wishlist is a SSH directory.
@@ -43,10 +43,10 @@ be in either the SSH configuration format or YAML.
 It's also possible to serve the TUI over SSH using the server command.
 `,
 	Version: Version,
-	CompletionOptions: cobra.CompletionOptions{
+	CompletionOptions: coral.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *coral.Command, args []string) error {
 		config, err := getConfig(configFile)
 		if err != nil {
 			return err
@@ -55,14 +55,14 @@ It's also possible to serve the TUI over SSH using the server command.
 	},
 }
 
-var manCmd = &cobra.Command{
+var manCmd = &coral.Command{
 	Use:          "man",
-	Args:         cobra.NoArgs,
+	Args:         coral.NoArgs,
 	Short:        "generate man pages",
 	Hidden:       true,
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		manPage, err := mcobra.NewManPageFromCobra(1, rootCmd)
+	RunE: func(cmd *coral.Command, args []string) error {
+		manPage, err := mcoral.NewManPage(1, rootCmd)
 		if err != nil {
 			return err
 		}
@@ -73,12 +73,12 @@ var manCmd = &cobra.Command{
 	},
 }
 
-var serverCmd = &cobra.Command{
+var serverCmd = &coral.Command{
 	Use:     "serve",
 	Aliases: []string{"server", "s"},
-	Args:    cobra.NoArgs,
+	Args:    coral.NoArgs,
 	Short:   "Serve the TUI over SSH.",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *coral.Command, args []string) error {
 		config, err := getConfig(configFile)
 		if err != nil {
 			return err
