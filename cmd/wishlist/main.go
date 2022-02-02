@@ -18,7 +18,7 @@ import (
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
-	coral "github.com/muesli/coral"
+	"github.com/muesli/coral"
 	mcoral "github.com/muesli/mango-coral"
 	"github.com/muesli/roff"
 	"gopkg.in/yaml.v3"
