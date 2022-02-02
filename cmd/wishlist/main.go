@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -19,6 +18,9 @@ import (
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
+	"github.com/muesli/coral"
+	mcoral "github.com/muesli/mango-coral"
+	"github.com/muesli/roff"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,62 +32,98 @@ var (
 	Version = "devel"
 )
 
+var rootCmd = &coral.Command{
+	Use:   "wishlist",
+	Short: "The SSH Directory",
+	Long: `Wishlist is a SSH directory.
+
+It provides a TUI for your ~/.ssh/config or another config file, which can
+be in either the SSH configuration format or YAML.
+
+It's also possible to serve the TUI over SSH using the server command.
+`,
+	Version: Version,
+	CompletionOptions: coral.CompletionOptions{
+		HiddenDefaultCmd: true,
+	},
+	RunE: func(cmd *coral.Command, args []string) error {
+		config, err := getConfig(configFile)
+		if err != nil {
+			return err
+		}
+		return workLocally(config)
+	},
+}
+
+var manCmd = &coral.Command{
+	Use:          "man",
+	Args:         coral.NoArgs,
+	Short:        "generate man pages",
+	Hidden:       true,
+	SilenceUsage: true,
+	RunE: func(cmd *coral.Command, args []string) error {
+		manPage, err := mcoral.NewManPage(1, rootCmd)
+		if err != nil {
+			return err
+		}
+		manPage = manPage.WithSection("Copyright", "(C) 2022 Charmbracelet, Inc.\n"+
+			"Released under MIT license.")
+		fmt.Println(manPage.Build(roff.NewDocument()))
+		return nil
+	},
+}
+
+var serverCmd = &coral.Command{
+	Use:     "serve",
+	Aliases: []string{"server", "s"},
+	Args:    coral.NoArgs,
+	Short:   "Serve the TUI over SSH.",
+	RunE: func(cmd *coral.Command, args []string) error {
+		config, err := getConfig(configFile)
+		if err != nil {
+			return err
+		}
+		k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
+		if err != nil {
+			return err
+		}
+		if !k.IsKeyPairExists() {
+			if err := k.WriteKeys(); err != nil {
+				return err
+			}
+		}
+
+		config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
+			// nolint:wrapcheck
+			return wish.NewServer(
+				wish.WithAddress(e.Address),
+				wish.WithHostKeyPath(filepath.Join(k.KeyDir, "server_ed25519")),
+				wish.WithMiddleware(
+					append(
+						e.Middlewares,
+						lm.Middleware(),
+						activeterm.Middleware(),
+					)...,
+				),
+			)
+		}
+
+		return wishlist.Serve(&config)
+	},
+}
+
+var configFile string
+
+func init() {
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: $PWD/.wishlist/config.yaml, $PWD/.wishlist/config.yml, $HOME/.ssh/config, /etc/ssh/ssh_config")
+	rootCmd.AddCommand(serverCmd, manCmd)
+}
+
 func main() {
-	version := flag.Bool("version", false, "print version and exit")
-	file := flag.String("config", "", "path to config file, can be either yaml or SSH")
-	local := flag.Bool("local", false, "do not start a server, go straight into the UI")
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Wishlist, a SSH directory.\n\n")
-		flag.PrintDefaults()
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
+		Version = fmt.Sprintf("%s (%s)", info.Main.Version, CommitSHA)
 	}
-	flag.Parse()
-
-	if *version {
-		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
-			Version = info.Main.Version
-		}
-		fmt.Printf("wishlist version %s (%s)\n", Version, CommitSHA)
-		return
-	}
-
-	config, err := getConfig(*file)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if *local {
-		if err := workLocally(config); err != nil {
-			log.Fatalln(err)
-		}
-		return
-	}
-
-	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if !k.IsKeyPairExists() {
-		if err := k.WriteKeys(); err != nil {
-			log.Fatalln(err)
-		}
-	}
-
-	config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
-		// nolint:wrapcheck
-		return wish.NewServer(
-			wish.WithAddress(e.Address),
-			wish.WithHostKeyPath(filepath.Join(k.KeyDir, "server_ed25519")),
-			wish.WithMiddleware(
-				append(
-					e.Middlewares,
-					lm.Middleware(),
-					activeterm.Middleware(),
-				)...,
-			),
-		)
-	}
-
-	if err := wishlist.Serve(&config); err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)
 	}
 }
