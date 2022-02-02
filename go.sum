@@ -80,12 +80,12 @@ github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b h1:1XF24mVaiu7u+CFywTdcDo2ie1pzzhwjt6RHqzpMU34=
 github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b/go.mod h1:fQuZ0gauxyBcmsdE3ZT4NasjaRdxmbCS0jRHsrWu3Ho=
-github.com/muesli/coral v0.0.6-0.20220202111213-6eefe0bf0373 h1:vYv4+tlSzUC5dGL/j09BRd62820QjmFdGN+KmeOzVIM=
-github.com/muesli/coral v0.0.6-0.20220202111213-6eefe0bf0373/go.mod h1:bf91M/dkp7iHQw73HOoR9PekdTJMTD6ihJgWoDitde8=
+github.com/muesli/coral v1.0.0 h1:odyqkoEg4aJAINOzvnjN4tUsdp+Zleccs7tRIAkkYzU=
+github.com/muesli/coral v1.0.0/go.mod h1:bf91M/dkp7iHQw73HOoR9PekdTJMTD6ihJgWoDitde8=
 github.com/muesli/mango v0.0.0-20220201014152-f7df5a1c5b4b h1:kGcKjlZqUNbpUjBMdIq5/RbA2gN9ypH0Tv+MNBtCgK4=
 github.com/muesli/mango v0.0.0-20220201014152-f7df5a1c5b4b/go.mod h1:5XFpbC8jY5UUv89YQciiXNlbi+iJgt29VDC5xbzrLL4=
-github.com/muesli/mango-coral v0.0.0-20220202130203-c4d527f02a43 h1:Bbf4mXP6+rZExbAobK5Yb37aJHUE7iDDEsPZhMjlP0I=
-github.com/muesli/mango-coral v0.0.0-20220202130203-c4d527f02a43/go.mod h1:AhsaURM3E2yiHK4Du5FeJgGiWry939MnvojvFGw6BP4=
+github.com/muesli/mango-coral v1.0.0 h1:OnUtvcHZ+Q2yi0B6RXm2VJVnOJVvY7G947t4ybUy868=
+github.com/muesli/mango-coral v1.0.0/go.mod h1:8sxkm+gsWOnUiv5gpvtilx4OErv1nQVSJXJmNkExxBs=
 github.com/muesli/mango-pflag v0.0.0-20220201014449-d694870c5590 h1:bZgkcUsck7Y6kMUcpettBv6jUck4rTrgPEBIKwFbGpM=
 github.com/muesli/mango-pflag v0.0.0-20220201014449-d694870c5590/go.mod h1:o2wTF9T2N5YEx+lHxQ6R3RsUg9NH4jyaOIlnJN5KQ04=
 github.com/muesli/reflow v0.2.1-0.20210115123740-9e1d0d53df68/go.mod h1:Xk+z4oIWdQqJzsxyjgl3P22oYZnHdZ8FFTHAQQt5BMQ=

@@ -12,8 +12,8 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kevinburke/ssh_config v1.1.0
-	github.com/muesli/coral v0.0.6-0.20220202111213-6eefe0bf0373
-	github.com/muesli/mango-coral v0.0.0-20220202130203-c4d527f02a43
+	github.com/muesli/coral v1.0.0
+	github.com/muesli/mango-coral v1.0.0
 	github.com/muesli/roff v0.1.0
 	github.com/muesli/termenv v0.11.0
 	github.com/stretchr/testify v1.7.0
