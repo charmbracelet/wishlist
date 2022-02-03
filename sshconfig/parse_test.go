@@ -12,7 +12,7 @@ import (
 
 func TestParseFile(t *testing.T) {
 	t.Run("good", func(t *testing.T) {
-		endpoints, err := ParseFile("testdata/good.ssh_config")
+		endpoints, err := ParseFile("testdata/good")
 		require.NoError(t, err)
 
 		require.Len(t, endpoints, 9)
@@ -65,13 +65,13 @@ func TestParseFile(t *testing.T) {
 	})
 
 	t.Run("invalid node", func(t *testing.T) {
-		endpoints, err := ParseFile("testdata/invalid_node.ssh_config")
+		endpoints, err := ParseFile("testdata/invalid_node")
 		require.Empty(t, endpoints)
 		require.EqualError(t, err, `invalid node on app "invalid": "HostNameinvalid-because-no-spaces"`)
 	})
 
 	t.Run("invalid path", func(t *testing.T) {
-		endpoints, err := ParseFile("testdata/nope.ssh_config")
+		endpoints, err := ParseFile("testdata/nope")
 		require.Empty(t, endpoints)
 		require.ErrorIs(t, err, os.ErrNotExist)
 	})
@@ -86,7 +86,7 @@ func TestParseReader(t *testing.T) {
 }
 
 func TestParseIncludes(t *testing.T) {
-	endpoints, err := ParseFile("testdata/include.ssh_config")
+	endpoints, err := ParseFile("testdata/include")
 	require.NoError(t, err)
 	require.ElementsMatch(t, []*wishlist.Endpoint{
 		{

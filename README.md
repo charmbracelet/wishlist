@@ -80,7 +80,7 @@ Wishlist will read and store all its information in a `.wishlist` folder in the 
 Config files may be provided in either YAML or SSH Config formats:
 
 - [example YAML](/_example/config.yaml)
-- [example SSH config](/_example/config.ssh_config)
+- [example SSH config](/_example/config)
 
 The config files are tried in the following order:
 

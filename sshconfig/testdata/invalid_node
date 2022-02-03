@@ -1,2 +1,4 @@
 Host invalid
   HostNameinvalid-because-no-spaces
+
+# vim: set ft=sshconfig:
