@@ -37,3 +37,5 @@ Host no.hostname
   ForwardAgent yes
 
 Host only.host
+
+# vim: set ft=sshconfig:

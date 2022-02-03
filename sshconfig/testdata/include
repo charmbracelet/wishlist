@@ -1,4 +1,4 @@
-Include ./testdata/included.ssh_config
+Include ./testdata/included
 
 Host test.foo.bar
 	Port 2222
@@ -6,3 +6,5 @@ Host test.foo.bar
 
 Host something.else
 	Port 2323
+
+# vim: set ft=sshconfig:

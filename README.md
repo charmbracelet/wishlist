@@ -26,11 +26,23 @@ You can also use the `wishlist` CLI to list and connect to servers in your `~/.s
 #### Remote
 
 If you just want a directory of existing servers, you can use the `wishlist` CLI and a YAML config file. You can also just run it without any arguments to list the servers in your `~/.ssh/config`.
-Check the [example config file](/_example/config.yaml) file as well as `wishlist --help` for details.
+To start wishlist in server mode, you'll need to use the `serve` subcommand:
+
+```sh
+wishlist serve
+```
+
+Check the [example config file](/_example/config.yaml) file as well as `wishlist server --help` for details.
 
 #### Local
 
-If you want to explore your own local servers, you can simply run `wishlist --local` to be presented with an UI filled with your `~/.ssh/config` hosts.
+If you want to explore your `~/.ssh/config`, you can run wishlist in local mode with:
+
+```sh
+wishlist
+```
+
+Note that not all options are supported at this moment. Check the [commented example config](/_example/config) for reference.
 
 ### Library
 
@@ -80,7 +92,7 @@ Wishlist will read and store all its information in a `.wishlist` folder in the 
 Config files may be provided in either YAML or SSH Config formats:
 
 - [example YAML](/_example/config.yaml)
-- [example SSH config](/_example/config.ssh_config)
+- [example SSH config](/_example/config)
 
 The config files are tried in the following order:
 

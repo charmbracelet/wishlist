@@ -41,17 +41,17 @@ func TestGetConfig(t *testing.T) {
 
 	t.Run("ssh", func(t *testing.T) {
 		t.Run("valid", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/valid.ssh_config"))
+			_, err := getConfig(filepath.Join(dir, "testdata/valid"))
 			require.NoError(t, err)
 		})
 
 		t.Run("invalid", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/invalid.ssh_config"))
+			_, err := getConfig(filepath.Join(dir, "testdata/invalid"))
 			require.Error(t, err)
 		})
 
 		t.Run("not found", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/nope.ssh_config"))
+			_, err := getConfig(filepath.Join(dir, "testdata/nope"))
 			require.NoError(t, err)
 		})
 	})
