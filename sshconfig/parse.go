@@ -2,6 +2,7 @@
 package sshconfig
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net"
@@ -144,7 +145,24 @@ func newHostinfoMap() *hostinfoMap {
 }
 
 func parseInternal(r io.Reader) (*hostinfoMap, error) {
-	config, err := ssh_config.Decode(r)
+	bts, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config: %w", err)
+	}
+	var rb bytes.Buffer
+	for _, line := range bytes.Split(bts, []byte("\n")) {
+		if bytes.HasPrefix(bytes.TrimSpace(bytes.ToLower(line)), []byte("match")) {
+			continue
+		}
+		if _, err := rb.Write(line); err != nil {
+			return nil, err
+		}
+		if _, err := rb.Write([]byte("\n")); err != nil {
+			return nil, err
+		}
+	}
+
+	config, err := ssh_config.Decode(&rb)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
 	}
