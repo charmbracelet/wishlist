@@ -1,3 +1,5 @@
+Match host app1 exec "echo hello"
+
 Host darkstar
   HostName darkstar.local
 

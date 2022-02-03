@@ -42,7 +42,8 @@ be in either the SSH configuration format or YAML.
 
 It's also possible to serve the TUI over SSH using the server command.
 `,
-	Version: Version,
+	Version:      Version,
+	SilenceUsage: true,
 	CompletionOptions: coral.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
