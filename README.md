@@ -26,10 +26,10 @@ You can also use the `wishlist` CLI to list and connect to servers in your `~/.s
 #### Remote
 
 If you just want a directory of existing servers, you can use the `wishlist` CLI and a YAML config file. You can also just run it without any arguments to list the servers in your `~/.ssh/config`.
-To start wishlist in server mode, you'll need to use the `server` subcommand:
+To start wishlist in server mode, you'll need to use the `serve` subcommand:
 
 ```sh
-wishlist server
+wishlist serve
 ```
 
 Check the [example config file](/_example/config.yaml) file as well as `wishlist server --help` for details.
