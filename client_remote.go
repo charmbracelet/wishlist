@@ -58,7 +58,10 @@ func (c *remoteClient) Connect(e *Endpoint) error {
 
 	if e.RemoteCommand == "" || e.RequestTTY {
 		log.Println("requesting tty")
-		pty, winch, _ := c.session.Pty()
+		pty, winch, ok := c.session.Pty()
+		if !ok {
+			return fmt.Errorf("requested a tty, but current session doesn't allow one")
+		}
 		w := pty.Window
 		if err := session.RequestPty(pty.Term, w.Height, w.Width, nil); err != nil {
 			return fmt.Errorf("failed to request pty: %w", err)

@@ -8,7 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
 )
@@ -30,7 +30,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 	if err != nil {
 		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
-	conf := &gossh.ClientConfig{
+	conf := &ssh.ClientConfig{
 		User:            firstNonEmpty(e.User, user.Username),
 		Auth:            methods,
 		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
@@ -64,8 +64,24 @@ func (c *localClient) Connect(e *Endpoint) error {
 	}
 
 	if e.RequestTTY || e.RemoteCommand == "" {
+		fd := int(os.Stdout.Fd())
+		if !term.IsTerminal(fd) {
+			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")
+		}
+
 		log.Println("requesting tty")
-		w, h, err := term.GetSize(int(os.Stdout.Fd()))
+		originalState, err := term.MakeRaw(fd)
+		if err != nil {
+			return fmt.Errorf("failed get terminal state: %w", err)
+		}
+
+		defer func() {
+			if err := term.Restore(fd, originalState); err != nil {
+				log.Println("couldn't restore terminal state:", err)
+			}
+		}()
+
+		w, h, err := term.GetSize(fd)
 		if err != nil {
 			return fmt.Errorf("failed to get term size: %w", err)
 		}

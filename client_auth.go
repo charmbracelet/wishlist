@@ -211,7 +211,7 @@ func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 		pwderr := &gossh.PassphraseMissingError{}
 		if errors.As(err, &pwderr) {
 			fmt.Printf("Enter the password for %q: ", path)
-			password, err = term.ReadPassword(int(os.Stdin.Fd()))
+			password, err := term.ReadPassword(int(os.Stdin.Fd()))
 			fmt.Println()
 			if err != nil {
 				return nil, fmt.Errorf("failed to read password: %q", err)
