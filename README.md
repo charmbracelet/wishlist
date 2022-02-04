@@ -19,6 +19,34 @@ You can list apps provided elsewhere, too.
 
 You can also use the `wishlist` CLI to list and connect to servers in your `~/.ssh/config` or a YAML config file.
 
+## Installation
+
+Use your fave package manager:
+
+```bash
+# macOS or Linux
+brew install charmbracelet/tap/wishlist
+
+# Arch Linux (btw)
+yay -S wishlist-bin (or wishlist)
+
+# Windows (with Scoop)
+scoop install wishlist
+```
+
+Or download a pre-compiled binary or package from the [releases][releases] page.
+
+Or just build it yourself (requires Go 1.16+):
+
+```bash
+git clone https://github.com/charmbracelet/wishlist.git
+cd wishlist
+go build ./cmd/wishlist/
+```
+
+[releases]: https://github.com/charmbracelet/wishlist/releases
+
+
 ## Usage
 
 ### CLI
