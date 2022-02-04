@@ -64,23 +64,24 @@ func (c *localClient) Connect(e *Endpoint) error {
 	}
 
 	if e.RequestTTY || e.RemoteCommand == "" {
-		if !term.IsTerminal(Stdout) {
+		fd := int(os.Stdout.Fd())
+		if !term.IsTerminal(fd) {
 			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")
 		}
 
 		log.Println("requesting tty")
-		originalState, err := term.MakeRaw(Stdout)
+		originalState, err := term.MakeRaw(fd)
 		if err != nil {
 			return fmt.Errorf("failed get terminal state: %w", err)
 		}
 
 		defer func() {
-			if err := term.Restore(Stdout, originalState); err != nil {
+			if err := term.Restore(fd, originalState); err != nil {
 				log.Println("couldn't restore terminal state:", err)
 			}
 		}()
 
-		w, h, err := term.GetSize(Stdout)
+		w, h, err := term.GetSize(fd)
 		if err != nil {
 			return fmt.Errorf("failed to get term size: %w", err)
 		}

@@ -11,7 +11,6 @@ import (
 	"syscall"
 
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 )
 
@@ -27,7 +26,7 @@ func (c *localClient) notifyWindowChanges(ctx context.Context, session *ssh.Sess
 		case <-ctx.Done():
 			return
 		case <-sig:
-			w, h, err := term.GetSize(unix.Stdout)
+			w, h, err := term.GetSize(int(os.Stdout.Fd()))
 			if err != nil {
 				log.Println(err)
 			}
