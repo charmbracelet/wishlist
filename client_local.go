@@ -64,36 +64,37 @@ func (c *localClient) Connect(e *Endpoint) error {
 		}
 	}
 
-	if terminal.IsTerminal(unix.Stdout) {
-		if e.RequestTTY || e.RemoteCommand == "" {
-			log.Println("requesting tty")
-
-			originalState, err := terminal.MakeRaw(unix.Stdout)
-			if err != nil {
-				return fmt.Errorf("failed get terminal state: %w", err)
-			}
-
-			defer func() {
-				if err := terminal.Restore(unix.Stdout, originalState); err != nil {
-					log.Println("couldn't restore terminal state:", err)
-				}
-			}()
-
-			w, h, err := terminal.GetSize(unix.Stdout)
-			if err != nil {
-				return fmt.Errorf("failed to get term size: %w", err)
-			}
-
-			if err := session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
-				return fmt.Errorf("failed to request a pty: %w", err)
-			}
-
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			go c.notifyWindowChanges(ctx, session)
-		} else {
-			log.Println("did not request a tty")
+	if e.RequestTTY || e.RemoteCommand == "" {
+		if !terminal.IsTerminal(unix.Stdout) {
+			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")
 		}
+
+		log.Println("requesting tty")
+		originalState, err := terminal.MakeRaw(unix.Stdout)
+		if err != nil {
+			return fmt.Errorf("failed get terminal state: %w", err)
+		}
+
+		defer func() {
+			if err := terminal.Restore(unix.Stdout, originalState); err != nil {
+				log.Println("couldn't restore terminal state:", err)
+			}
+		}()
+
+		w, h, err := terminal.GetSize(unix.Stdout)
+		if err != nil {
+			return fmt.Errorf("failed to get term size: %w", err)
+		}
+
+		if err := session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
+			return fmt.Errorf("failed to request a pty: %w", err)
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go c.notifyWindowChanges(ctx, session)
+	} else {
+		log.Println("did not request a tty")
 	}
 
 	if e.RemoteCommand == "" {

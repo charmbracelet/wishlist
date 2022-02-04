@@ -14,7 +14,8 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
-	"golang.org/x/term"
+	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/sys/unix"
 )
 
 var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
@@ -211,7 +212,7 @@ func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 		pwderr := &gossh.PassphraseMissingError{}
 		if errors.As(err, &pwderr) {
 			fmt.Printf("Enter the password for %q: ", path)
-			password, err = term.ReadPassword(int(os.Stdin.Fd()))
+			password, err := terminal.ReadPassword(unix.Stdin)
 			fmt.Println()
 			if err != nil {
 				return nil, fmt.Errorf("failed to read password: %q", err)
