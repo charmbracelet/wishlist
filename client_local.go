@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
-	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/sys/unix"
+	"golang.org/x/term"
 )
 
 // NewLocalSSHClient returns a SSH Client for local usage.
@@ -65,23 +65,23 @@ func (c *localClient) Connect(e *Endpoint) error {
 	}
 
 	if e.RequestTTY || e.RemoteCommand == "" {
-		if !terminal.IsTerminal(unix.Stdout) {
+		if !term.IsTerminal(unix.Stdout) {
 			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")
 		}
 
 		log.Println("requesting tty")
-		originalState, err := terminal.MakeRaw(unix.Stdout)
+		originalState, err := term.MakeRaw(unix.Stdout)
 		if err != nil {
 			return fmt.Errorf("failed get terminal state: %w", err)
 		}
 
 		defer func() {
-			if err := terminal.Restore(unix.Stdout, originalState); err != nil {
+			if err := term.Restore(unix.Stdout, originalState); err != nil {
 				log.Println("couldn't restore terminal state:", err)
 			}
 		}()
 
-		w, h, err := terminal.GetSize(unix.Stdout)
+		w, h, err := term.GetSize(unix.Stdout)
 		if err != nil {
 			return fmt.Errorf("failed to get term size: %w", err)
 		}
