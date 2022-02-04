@@ -8,7 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
 )
@@ -30,7 +30,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 	if err != nil {
 		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
-	conf := &gossh.ClientConfig{
+	conf := &ssh.ClientConfig{
 		User:            firstNonEmpty(e.User, user.Username),
 		Auth:            methods,
 		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
