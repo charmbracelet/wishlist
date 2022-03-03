@@ -179,6 +179,10 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					continue // ignore empty nodes
 				}
 
+				if strings.HasPrefix(node, "#") {
+					continue
+				}
+
 				parts := strings.SplitN(node, " ", 2) // nolint:gomnd
 				if len(parts) != 2 {                  // nolint:gomnd
 					return nil, fmt.Errorf("invalid node on app %q: %q", name, node)
