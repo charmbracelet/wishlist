@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
@@ -17,6 +19,7 @@ import (
 	"github.com/charmbracelet/wishlist/home"
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
+	"github.com/grandcat/zeroconf"
 	"github.com/hashicorp/go-multierror"
 	"github.com/muesli/coral"
 	mcoral "github.com/muesli/mango-coral"
@@ -52,6 +55,15 @@ It's also possible to serve the TUI over SSH using the server command.
 		if err != nil {
 			return err
 		}
+
+		if useZeroconf {
+			additionalEndpoints, err := getZeroconfEndpoints()
+			if err != nil {
+				return err
+			}
+			config.Endpoints = append(config.Endpoints, additionalEndpoints...)
+		}
+
 		return workLocally(config)
 	},
 }
@@ -84,6 +96,15 @@ var serverCmd = &coral.Command{
 		if err != nil {
 			return err
 		}
+
+		if useZeroconf {
+			additionalEndpoints, err := getZeroconfEndpoints()
+			if err != nil {
+				return err
+			}
+			config.Endpoints = append(config.Endpoints, additionalEndpoints...)
+		}
+
 		k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
 		if err != nil {
 			return err
@@ -114,9 +135,11 @@ var serverCmd = &coral.Command{
 }
 
 var configFile string
+var useZeroconf bool
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: $PWD/.wishlist/config.yaml, $PWD/.wishlist/config.yml, $HOME/.ssh/config, /etc/ssh/ssh_config")
+	rootCmd.PersistentFlags().BoolVarP(&useZeroconf, "zeroconf", "z", false, "Use zeroconf service discovery (Bonjour/mDNS)")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -215,4 +238,31 @@ func workLocally(config wishlist.Config) error {
 
 	log.SetOutput(os.Stderr)
 	return wishlist.NewLocalSSHClient().Connect(m.HandoffTo())
+}
+
+func getZeroconfEndpoints() ([]*wishlist.Endpoint, error) {
+	const service = "_ssh._tcp"
+	r, _ := zeroconf.NewResolver()
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancel()
+	var err error
+	entries := make(chan *zeroconf.ServiceEntry)
+	go func() {
+		err = r.Browse(ctx, service, "", entries)
+	}()
+	var endpoints []*wishlist.Endpoint
+	for entry := range entries {
+		endpoints = append(endpoints, &wishlist.Endpoint{
+			Name:    entry.Instance,
+			Address: fmt.Sprintf("%s:%d", entry.HostName, entry.Port),
+			// TODO: some work needed to match HostName against
+			// options in .ssh/config. For example:
+			// Host *.local
+			// User jon
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	return endpoints, nil
 }
