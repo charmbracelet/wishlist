@@ -73,10 +73,12 @@ func endpointsToListItems(endpoints []*Endpoint) []list.Item {
 	return items
 }
 
+// Init comply with tea.Model interface.
 func (m *ListModel) Init() tea.Cmd {
 	return nil
 }
 
+// Update comply with tea.Model interface.
 func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -98,6 +100,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// View comply with tea.Model interface.
 func (m *ListModel) View() string {
 	if m.handoff != nil {
 		return ""
@@ -105,6 +108,7 @@ func (m *ListModel) View() string {
 	return docStyle.Render(m.list.View())
 }
 
+// HandoffTo returns which endpoint the user wants to ssh into.
 func (m *ListModel) HandoffTo() *Endpoint {
 	return m.handoff
 }
