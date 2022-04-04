@@ -28,19 +28,13 @@ func LocalListing(endpoints []*Endpoint) HandoffModel {
 	return newListing(endpoints, nil)
 }
 
-func newListing(endpoints []*Endpoint, s ssh.Session) *listModel {
-	var items []list.Item
-	for _, endpoint := range endpoints {
-		if endpoint.Valid() {
-			items = append(items, endpoint)
-		}
-	}
-	l := list.NewModel(items, list.NewDefaultDelegate(), 0, 0)
+func newListing(endpoints []*Endpoint, s ssh.Session) *ListModel {
+	l := list.NewModel(endpointsToListItems(endpoints), list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
 	}
-	return &listModel{
+	return &ListModel{
 		list:      l,
 		endpoints: endpoints,
 		session:   s,
@@ -56,18 +50,34 @@ func (i *Endpoint) Description() string { return fmt.Sprintf("ssh://%s", i.Addre
 // FilterValue to abide the list.Item interface.
 func (i *Endpoint) FilterValue() string { return i.Name }
 
-type listModel struct {
+// ListModel main wishlist model.
+type ListModel struct {
 	list      list.Model
 	endpoints []*Endpoint
 	session   ssh.Session
 	handoff   *Endpoint
 }
 
-func (m *listModel) Init() tea.Cmd {
+// SetItems allows to update the listing items.
+func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
+	return m.list.SetItems(endpointsToListItems(endpoints))
+}
+
+func endpointsToListItems(endpoints []*Endpoint) []list.Item {
+	var items []list.Item
+	for _, endpoint := range endpoints {
+		if endpoint.Valid() {
+			items = append(items, endpoint)
+		}
+	}
+	return items
+}
+
+func (m *ListModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
@@ -88,13 +98,13 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *listModel) View() string {
+func (m *ListModel) View() string {
 	if m.handoff != nil {
 		return ""
 	}
 	return docStyle.Render(m.list.View())
 }
 
-func (m *listModel) HandoffTo() *Endpoint {
+func (m *ListModel) HandoffTo() *Endpoint {
 	return m.handoff
 }
