@@ -2,7 +2,6 @@ package wishlist
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"strings"
 
@@ -31,7 +30,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 			if len(cmd) == 1 && cmd[0] != "list" {
 				for _, e := range endpoints {
 					if e.Name == cmd[0] {
-						mustConnect(s, e, s)
+						mustConnect(s, e)
 						return // unreachable
 					}
 				}
@@ -99,15 +98,19 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, errch <-
 	}
 }
 
-func mustConnect(session ssh.Session, e *Endpoint, stdin io.Reader) {
-	// client := &remoteClient{session, stdin}
-	// if err := client.Connect(e); err != nil {
-	// 	fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
-	// 	_ = session.Exit(1)
-	// 	return // unreachable
-	// }
-	// fmt.Fprintf(session, "wishlist: closed connection to %q (%s)\n\r", e.Name, e.Address)
-	// _ = session.Exit(0)
-
-	// TODO: fix here
+func mustConnect(session ssh.Session, e *Endpoint) {
+	client := &remoteClient{session, newBlockingReader(session)}
+	cmd, err := client.Connect(e)
+	if err != nil {
+		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
+		_ = session.Exit(1)
+		return // unreachable
+	}
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
+		_ = session.Exit(1)
+		return // unreachable
+	}
+	fmt.Fprintf(session, "wishlist: closed connection to %q (%s)\n\r", e.Name, e.Address)
+	_ = session.Exit(0)
 }
