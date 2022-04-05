@@ -6,12 +6,13 @@ import (
 	"io"
 	"log"
 
+	tea "github.com/charmbracelet/bubbletea"
 	gossh "golang.org/x/crypto/ssh"
 )
 
 // SSHClient is a SSH client.
 type SSHClient interface {
-	Connect(e *Endpoint) error
+	Connect(e *Endpoint) (tea.ExecCommand, error)
 }
 
 func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *gossh.Client, closers, error) {

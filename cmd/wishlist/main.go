@@ -204,15 +204,9 @@ func workLocally(config wishlist.Config) error {
 			log.Println(err)
 		}
 	}()
-	m := wishlist.NewListing(config.Endpoints, nil)
+	m := wishlist.NewListing(config.Endpoints, nil, nil)
 	if err := tea.NewProgram(m).Start(); err != nil {
 		return err
 	}
-
-	if m.HandoffTo() == nil {
-		return nil
-	}
-
-	log.SetOutput(os.Stderr)
-	return wishlist.NewLocalSSHClient().Connect(m.HandoffTo())
+	return nil
 }

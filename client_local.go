@@ -3,11 +3,13 @@ package wishlist
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
@@ -20,32 +22,30 @@ func NewLocalSSHClient() SSHClient {
 
 type localClient struct{}
 
-func (c *localClient) Connect(e *Endpoint) error {
-	user, err := user.Current()
-	if err != nil {
-		return fmt.Errorf("failed to get current username: %w", err)
-	}
+type localSession struct {
+	endpoint *Endpoint
+	session  *ssh.Session
+	client   *ssh.Client
+	closers  closers
+}
 
-	methods, err := localBestAuthMethod(e)
-	if err != nil {
-		return fmt.Errorf("failed to setup a authentication method: %w", err)
-	}
-	conf := &ssh.ClientConfig{
-		User:            firstNonEmpty(e.User, user.Username),
-		Auth:            methods,
-		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
-	}
+func (s *localSession) SetStdin(r io.Reader) {
+	s.session.Stdin = r
+}
 
-	session, client, cls, err := createSession(conf, e)
-	defer cls.close()
-	if err != nil {
-		return fmt.Errorf("failed to create session: %w", err)
-	}
+func (s *localSession) SetStdout(w io.Writer) {
+	s.session.Stdout = w
+}
 
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	session.Stdin = os.Stdin
+func (s *localSession) SetStderr(w io.Writer) {
+	s.session.Stderr = w
+}
 
+func (s *localSession) Run() error {
+	defer s.closers.close()
+	e := s.endpoint
+	session := s.session
+	client := s.client
 	if e.ForwardAgent {
 		log.Println("forwarding SSH agent")
 		agt, err := getLocalAgent()
@@ -92,7 +92,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go c.notifyWindowChanges(ctx, session)
+		go s.notifyWindowChanges(ctx, session)
 	} else {
 		log.Println("did not request a tty")
 	}
@@ -101,4 +101,32 @@ func (c *localClient) Connect(e *Endpoint) error {
 		return shellAndWait(session)
 	}
 	return runAndWait(session, e.RemoteCommand)
+}
+
+func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
+	user, err := user.Current()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current username: %w", err)
+	}
+
+	methods, err := localBestAuthMethod(e)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup a authentication method: %w", err)
+	}
+	conf := &ssh.ClientConfig{
+		User:            firstNonEmpty(e.User, user.Username),
+		Auth:            methods,
+		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
+	}
+
+	session, client, cls, err := createSession(conf, e)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session: %w", err)
+	}
+	return &localSession{
+		endpoint: e,
+		session:  session,
+		client:   client,
+		closers:  cls,
+	}, err
 }
