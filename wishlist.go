@@ -115,7 +115,6 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.err
 			return m, tea.Quit
 		}
-
 	}
 
 	var cmd tea.Cmd
