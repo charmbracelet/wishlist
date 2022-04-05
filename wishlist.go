@@ -3,6 +3,7 @@ package wishlist
 import (
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -39,7 +40,6 @@ func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *Li
 	} else {
 		client = &remoteClient{
 			session: s,
-			stdin:   clientStdin,
 		}
 	}
 	return &ListModel{
@@ -116,6 +116,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
 	case errMsg:
 		if msg.err != nil {
+			log.Println("got an error:", msg.err)
 			m.err = msg.err
 			return m, tea.Quit
 		}

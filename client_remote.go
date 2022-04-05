@@ -14,7 +14,6 @@ import (
 
 type remoteClient struct {
 	session ssh.Session
-	stdin   io.Reader
 }
 
 type remoteSession struct {
@@ -27,7 +26,7 @@ type remoteSession struct {
 }
 
 func (s *remoteSession) SetStdin(r io.Reader) {
-	// noop, it is set in the Connect method
+	s.session.Stdin = r
 }
 
 func (s *remoteSession) SetStdout(w io.Writer) {
@@ -77,11 +76,7 @@ func (s *remoteSession) Run() error {
 func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 	resetPty(c.session)
 
-	// exhaust reader
-	_, _ = io.ReadAll(c.stdin)
-
 	method, agt, closers, err := remoteBestAuthMethod(c.session)
-	defer closers.close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to find an auth method: %w", err)
 	}
@@ -91,12 +86,11 @@ func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 		HostKeyCallback: hostKeyCallback(e, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
 	}, e)
-	defer cl.close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	session.Stdin = c.stdin
+	closers = append(closers, cl...)
 
 	log.Printf("%s connect to %q, %s", c.session.User(), e.Name, c.session.RemoteAddr().String())
 	return &remoteSession{
