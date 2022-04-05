@@ -30,7 +30,7 @@ func multiplex(r io.Reader, done <-chan bool) (io.Reader, io.Reader) {
 				n, err := r.Read(buf[:])
 				if err != nil {
 					if err != io.EOF {
-						log.Println("multiplex read error:", err)
+						log.Println("ignored multiplex read error:", err)
 					}
 					continue
 				}

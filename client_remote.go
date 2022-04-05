@@ -39,48 +39,46 @@ func (s *remoteSession) SetStderr(w io.Writer) {
 }
 
 func (s *remoteSession) Run() error {
-	e := s.endpoint
-	client := s.client
-	session := s.session
-	agt := s.agent
-
-	if e.ForwardAgent {
+	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
-		if agt == nil {
+		if s.agent == nil {
 			return fmt.Errorf("requested ForwardAgent, but no agent is available")
 		}
-		if err := agent.RequestAgentForwarding(session); err != nil {
+		if err := agent.RequestAgentForwarding(s.session); err != nil {
 			return fmt.Errorf("failed to forward agent: %w", err)
 		}
-		if err := agent.ForwardToAgent(client, agt); err != nil {
+		if err := agent.ForwardToAgent(s.client, s.agent); err != nil {
 			return fmt.Errorf("failed to forward agent: %w", err)
 		}
 	}
 
-	if e.RemoteCommand == "" || e.RequestTTY {
+	if s.endpoint.RemoteCommand == "" || s.endpoint.RequestTTY {
 		log.Println("requesting tty")
 		pty, winch, ok := s.parentSession.Pty()
 		if !ok {
 			return fmt.Errorf("requested a tty, but current session doesn't allow one")
 		}
 		w := pty.Window
-		if err := session.RequestPty(pty.Term, w.Height, w.Width, nil); err != nil {
+		if err := s.session.RequestPty(pty.Term, w.Height, w.Width, nil); err != nil {
 			return fmt.Errorf("failed to request pty: %w", err)
 		}
 
 		done := make(chan bool, 1)
 		defer func() { done <- true }()
-		go s.notifyWindowChanges(session, done, winch)
+		go s.notifyWindowChanges(s.session, done, winch)
 	}
 
-	if e.RemoteCommand == "" {
-		return shellAndWait(session)
+	if s.endpoint.RemoteCommand == "" {
+		return shellAndWait(s.session)
 	}
-	return runAndWait(session, e.RemoteCommand)
+	return runAndWait(s.session, s.endpoint.RemoteCommand)
 }
 
 func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 	resetPty(c.session)
+
+	// exhaust reader
+	_, _ = io.ReadAll(c.stdin)
 
 	method, agt, closers, err := remoteBestAuthMethod(c.session)
 	defer closers.close()
@@ -88,20 +86,16 @@ func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 		return nil, fmt.Errorf("failed to find an auth method: %w", err)
 	}
 
-	conf := &gossh.ClientConfig{
+	session, client, cl, err := createSession(&gossh.ClientConfig{
 		User:            firstNonEmpty(e.User, c.session.User()),
 		HostKeyCallback: hostKeyCallback(e, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
-	}
-
-	session, client, cl, err := createSession(conf, e)
+	}, e)
 	defer cl.close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	// exhaust reader
-	_, _ = io.ReadAll(c.stdin)
 	session.Stdin = c.stdin
 
 	log.Printf("%s connect to %q, %s", c.session.User(), e.Name, c.session.RemoteAddr().String())

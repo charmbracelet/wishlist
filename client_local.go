@@ -43,10 +43,8 @@ func (s *localSession) SetStderr(w io.Writer) {
 
 func (s *localSession) Run() error {
 	defer s.closers.close()
-	e := s.endpoint
-	session := s.session
-	client := s.client
-	if e.ForwardAgent {
+
+	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
 		agt, err := getLocalAgent()
 		if err != nil {
@@ -55,15 +53,15 @@ func (s *localSession) Run() error {
 		if agt == nil {
 			return fmt.Errorf("requested ForwardAgent, but no agent is available")
 		}
-		if err := agent.RequestAgentForwarding(session); err != nil {
+		if err := agent.RequestAgentForwarding(s.session); err != nil {
 			return fmt.Errorf("failed to forward agent: %w", err)
 		}
-		if err := agent.ForwardToAgent(client, agt); err != nil {
+		if err := agent.ForwardToAgent(s.client, agt); err != nil {
 			return fmt.Errorf("failed to forward agent: %w", err)
 		}
 	}
 
-	if e.RequestTTY || e.RemoteCommand == "" {
+	if s.endpoint.RequestTTY || s.endpoint.RemoteCommand == "" {
 		fd := int(os.Stdout.Fd())
 		if !term.IsTerminal(fd) {
 			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")
@@ -86,21 +84,21 @@ func (s *localSession) Run() error {
 			return fmt.Errorf("failed to get term size: %w", err)
 		}
 
-		if err := session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
+		if err := s.session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
 			return fmt.Errorf("failed to request a pty: %w", err)
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go s.notifyWindowChanges(ctx, session)
+		go s.notifyWindowChanges(ctx, s.session)
 	} else {
 		log.Println("did not request a tty")
 	}
 
-	if e.RemoteCommand == "" {
-		return shellAndWait(session)
+	if s.endpoint.RemoteCommand == "" {
+		return shellAndWait(s.session)
 	}
-	return runAndWait(session, e.RemoteCommand)
+	return runAndWait(s.session, s.endpoint.RemoteCommand)
 }
 
 func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
@@ -113,13 +111,12 @@ func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
-	conf := &ssh.ClientConfig{
+
+	session, client, cls, err := createSession(&ssh.ClientConfig{
 		User:            firstNonEmpty(e.User, user.Username),
 		Auth:            methods,
 		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
-	}
-
-	session, client, cls, err := createSession(conf, e)
+	}, e)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
