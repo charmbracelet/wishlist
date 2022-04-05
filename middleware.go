@@ -50,12 +50,16 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 		return func(s ssh.Session) {
 			lipgloss.SetColorProfile(termenv.ANSI256)
 
+			plexch := make(chan bool, 1)
+			defer func() { plexch <- true }()
+			listStdin, handoffStdin := multiplex(s, plexch)
+
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
-			model := NewListing(endpoints, s, s)
+			model := NewListing(endpoints, s, handoffStdin)
 			p := tea.NewProgram(
 				model,
-				tea.WithInput(newBlockingReader(s)),
+				tea.WithInput(newBlockingReader(listStdin)),
 				tea.WithOutput(s),
 				tea.WithAltScreen(),
 			)

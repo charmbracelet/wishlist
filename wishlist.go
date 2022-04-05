@@ -40,6 +40,7 @@ func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *Li
 	} else {
 		client = &remoteClient{
 			session: s,
+			stdin:   clientStdin,
 		}
 	}
 	return &ListModel{

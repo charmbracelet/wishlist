@@ -14,6 +14,7 @@ import (
 
 type remoteClient struct {
 	session ssh.Session
+	stdin   io.Reader
 }
 
 type remoteSession struct {
@@ -26,7 +27,7 @@ type remoteSession struct {
 }
 
 func (s *remoteSession) SetStdin(r io.Reader) {
-	s.session.Stdin = r
+	// noop
 }
 
 func (s *remoteSession) SetStdout(w io.Writer) {
@@ -38,6 +39,8 @@ func (s *remoteSession) SetStderr(w io.Writer) {
 }
 
 func (s *remoteSession) Run() error {
+	resetPty(s.session.Stdout)
+
 	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
 		if s.agent == nil {
@@ -74,7 +77,8 @@ func (s *remoteSession) Run() error {
 }
 
 func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
-	resetPty(c.session)
+	// exhaust stdin first
+	_, _ = io.ReadAll(c.stdin)
 
 	method, agt, closers, err := remoteBestAuthMethod(c.session)
 	if err != nil {
@@ -91,6 +95,7 @@ func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 	}
 
 	closers = append(closers, cl...)
+	session.Stdin = newBlockingReader(c.stdin)
 
 	log.Printf("%s connect to %q, %s", c.session.User(), e.Name, c.session.RemoteAddr().String())
 	return &remoteSession{
