@@ -19,12 +19,6 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
-// LocalListing creates a new listing model for local usage only.
-// Deprecated: use NewListing instead.
-func LocalListing(endpoints []*Endpoint) *ListModel {
-	return NewListing(endpoints, nil, nil)
-}
-
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If sessuion is nil, it is assume to be a local listing.
 func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *ListModel {
