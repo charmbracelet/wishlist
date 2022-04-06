@@ -17,7 +17,7 @@ require (
 	github.com/muesli/roff v0.1.0
 	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	github.com/stretchr/testify v1.7.1
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
