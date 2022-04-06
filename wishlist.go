@@ -19,6 +19,7 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
+
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If sessuion is nil, it is assume to be a local listing.
 func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *ListModel {
@@ -37,6 +38,7 @@ func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *Li
 			stdin:   clientStdin,
 		}
 	}
+
 	return &ListModel{
 		list:      l,
 		endpoints: endpoints,
@@ -61,6 +63,11 @@ type ListModel struct {
 	session   ssh.Session
 	client    SSHClient
 	err       error
+}
+
+// SetItems allows to update the listing items.
+func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
+	return m.list.SetItems(endpointsToListItems(endpoints))
 }
 
 // SetItems allows to update the listing items.
