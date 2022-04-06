@@ -84,11 +84,11 @@ var serverCmd = &coral.Command{
 		if err != nil {
 			return err
 		}
-		k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
+		k, err := keygen.New(".wishlist/server", nil, keygen.Ed25519)
 		if err != nil {
 			return err
 		}
-		if !k.IsKeyPairExists() {
+		if !k.KeyPairExists() {
 			if err := k.WriteKeys(); err != nil {
 				return err
 			}
@@ -98,7 +98,7 @@ var serverCmd = &coral.Command{
 			// nolint:wrapcheck
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
-				wish.WithHostKeyPath(filepath.Join(k.KeyDir, "server_ed25519")),
+				wish.WithHostKeyPath(".withlist/server_ed25519"),
 				wish.WithMiddleware(
 					append(
 						e.Middlewares,
