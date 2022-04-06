@@ -18,29 +18,27 @@ var enter = key.NewBinding(
 )
 
 // HandoffModel is a tea.Model that can tell where it should ssh into.
+// Deprecated: use *ListModel instead.
 type HandoffModel interface {
 	tea.Model
 	HandoffTo() *Endpoint
 }
 
 // LocalListing creates a new listing model for local usage only.
+// Deprecated: use NewListing instead.
 func LocalListing(endpoints []*Endpoint) HandoffModel {
-	return newListing(endpoints, nil)
+	return NewListing(endpoints, nil)
 }
 
-func newListing(endpoints []*Endpoint, s ssh.Session) *listModel {
-	var items []list.Item
-	for _, endpoint := range endpoints {
-		if endpoint.Valid() {
-			items = append(items, endpoint)
-		}
-	}
-	l := list.NewModel(items, list.NewDefaultDelegate(), 0, 0)
+// NewListing creates a new listing model for the given endpoints and SSH session.
+// If sessuion is nil, it is assume to be a local listing.
+func NewListing(endpoints []*Endpoint, s ssh.Session) *ListModel {
+	l := list.NewModel(endpointsToListItems(endpoints), list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
 	}
-	return &listModel{
+	return &ListModel{
 		list:      l,
 		endpoints: endpoints,
 		session:   s,
@@ -56,18 +54,36 @@ func (i *Endpoint) Description() string { return fmt.Sprintf("ssh://%s", i.Addre
 // FilterValue to abide the list.Item interface.
 func (i *Endpoint) FilterValue() string { return i.Name }
 
-type listModel struct {
+// ListModel main wishlist model.
+type ListModel struct {
 	list      list.Model
 	endpoints []*Endpoint
 	session   ssh.Session
 	handoff   *Endpoint
 }
 
-func (m *listModel) Init() tea.Cmd {
+// SetItems allows to update the listing items.
+func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
+	return m.list.SetItems(endpointsToListItems(endpoints))
+}
+
+func endpointsToListItems(endpoints []*Endpoint) []list.Item {
+	var items []list.Item
+	for _, endpoint := range endpoints {
+		if endpoint.Valid() {
+			items = append(items, endpoint)
+		}
+	}
+	return items
+}
+
+// Init comply with tea.Model interface.
+func (m *ListModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+// Update comply with tea.Model interface.
+func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if key.Matches(msg, enter) {
@@ -88,13 +104,15 @@ func (m *listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *listModel) View() string {
+// View comply with tea.Model interface.
+func (m *ListModel) View() string {
 	if m.handoff != nil {
 		return ""
 	}
 	return docStyle.Render(m.list.View())
 }
 
-func (m *listModel) HandoffTo() *Endpoint {
+// HandoffTo returns which endpoint the user wants to ssh into.
+func (m *ListModel) HandoffTo() *Endpoint {
 	return m.handoff
 }
