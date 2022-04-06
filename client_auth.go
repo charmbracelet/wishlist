@@ -122,17 +122,17 @@ func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, 
 // tryNewKey will create a .wishlist/client_ed25519 keypair if one does not exist.
 // It will return an auth method that uses the keypair if it exist or is successfully created.
 func tryNewKey() (gossh.AuthMethod, error) {
-	key, err := keygen.New(".wishlist", "client", nil, keygen.Ed25519)
+	key, err := keygen.New(".wishlist/client", nil, keygen.Ed25519)
 	if err != nil {
 		return nil, err // nolint:wrapcheck
 	}
 
-	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM)
+	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM())
 	if err != nil {
 		return nil, err // nolint:wrapcheck
 	}
 
-	if key.IsKeyPairExists() {
+	if key.KeyPairExists() {
 		return gossh.PublicKeys(signer), nil
 	}
 

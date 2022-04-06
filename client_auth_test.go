@@ -21,7 +21,7 @@ func TestUserKeys(t *testing.T) {
 		tb.Helper()
 		path := filepath.Join(tmp, ".ssh")
 		require.NoError(tb, os.MkdirAll(path, 0o765))
-		_, err := keygen.NewWithWrite(path, "id", nil, keygen.RSA)
+		_, err := keygen.NewWithWrite(path+"/id", nil, keygen.RSA)
 		require.NoError(tb, err)
 	}
 
