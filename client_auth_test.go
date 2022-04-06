@@ -20,8 +20,8 @@ func TestUserKeys(t *testing.T) {
 	sshKeygen := func(tb testing.TB, tmp string, algo keygen.KeyType) {
 		tb.Helper()
 		path := filepath.Join(tmp, ".ssh")
-		require.NoError(tb, os.MkdirAll(path, 0765))
-		_, err := keygen.NewWithWrite(path, "id", nil, keygen.RSA)
+		require.NoError(tb, os.MkdirAll(path, 0o765))
+		_, err := keygen.NewWithWrite(path+"/id", nil, keygen.RSA)
 		require.NoError(tb, err)
 	}
 
