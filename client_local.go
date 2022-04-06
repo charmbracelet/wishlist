@@ -23,10 +23,17 @@ func NewLocalSSHClient() SSHClient {
 type localClient struct{}
 
 type localSession struct {
+	// endpoint we are connecting to
 	endpoint *Endpoint
-	session  *ssh.Session
-	client   *ssh.Client
-	closers  closers
+
+	// current session
+	session *ssh.Session
+
+	//  client being used in this session
+	client *ssh.Client
+
+	// things we need to close
+	closers closers
 }
 
 func (s *localSession) SetStdin(r io.Reader) {
@@ -120,6 +127,7 @@ func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
+
 	return &localSession{
 		endpoint: e,
 		session:  session,
