@@ -99,13 +99,18 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, errch <-
 }
 
 func mustConnect(session ssh.Session, e *Endpoint) {
-	client := &remoteClient{session, newBlockingReader(session)}
+	client := &remoteClient{
+		session: session,
+		stdin:   session,
+	}
 	cmd, err := client.Connect(e)
 	if err != nil {
 		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
 		_ = session.Exit(1)
 		return // unreachable
 	}
+	cmd.SetStderr(session.Stderr())
+	cmd.SetStdout(session)
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
 		_ = session.Exit(1)

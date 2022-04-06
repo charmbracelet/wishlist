@@ -12,21 +12,40 @@ import (
 )
 
 type remoteClient struct {
+	// parent session
 	session ssh.Session
-	stdin   io.Reader
+
+	// stdin, which is usually multiplexed from the session stdin
+	stdin io.Reader
+
+	// whether to exhaust stdin first or not.
+	// if coming from the list, youll want to do that, otherwise you likely
+	// dont, as it might hang the connection waiting for something to read.
+	exhaust bool
 }
 
 type remoteSession struct {
-	endpoint      *Endpoint
+	// endpoint we are connecting to
+	endpoint *Endpoint
+
+	// the parent session (ie the session running the listing)
 	parentSession ssh.Session
-	session       *gossh.Session
-	client        *gossh.Client
-	closers       closers
-	agent         agent.Agent
+
+	// the current session
+	session *gossh.Session
+
+	// the client being used to interact with the session
+	client *gossh.Client
+
+	// things we need to close
+	closers closers
+
+	// ssh agent, if available
+	agent agent.Agent
 }
 
 func (s *remoteSession) SetStdin(r io.Reader) {
-	// noop
+	// noop, handled in the remoteClient.Connect method.
 }
 
 func (s *remoteSession) SetStdout(w io.Writer) {
@@ -39,6 +58,7 @@ func (s *remoteSession) SetStderr(w io.Writer) {
 
 func (s *remoteSession) Run() error {
 	defer s.closers.close()
+
 	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
 		if s.agent == nil {
@@ -75,8 +95,9 @@ func (s *remoteSession) Run() error {
 }
 
 func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
-	// exhaust stdin first
-	_, _ = io.ReadAll(c.stdin)
+	if c.exhaust {
+		_, _ = io.ReadAll(c.stdin)
+	}
 
 	method, agt, closers, err := remoteBestAuthMethod(c.session)
 	if err != nil {

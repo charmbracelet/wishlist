@@ -35,6 +35,7 @@ func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *Li
 		client = &remoteClient{
 			session: s,
 			stdin:   clientStdin,
+			exhaust: true,
 		}
 	}
 
