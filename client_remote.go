@@ -25,6 +25,39 @@ type remoteClient struct {
 	exhaust bool
 }
 
+func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
+	if c.exhaust {
+		_, _ = io.ReadAll(c.stdin)
+	}
+
+	method, agt, closers, err := remoteBestAuthMethod(c.session)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find an auth method: %w", err)
+	}
+
+	session, client, cl, err := createSession(&gossh.ClientConfig{
+		User:            firstNonEmpty(e.User, c.session.User()),
+		HostKeyCallback: hostKeyCallback(e, ".wishlist/known_hosts"),
+		Auth:            []gossh.AuthMethod{method},
+	}, e)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session: %w", err)
+	}
+
+	closers = append(closers, cl...)
+	session.Stdin = blocking.New(c.stdin)
+
+	log.Printf("%s connect to %q, %s", c.session.User(), e.Name, c.session.RemoteAddr().String())
+	return &remoteSession{
+		endpoint:      e,
+		parentSession: c.session,
+		session:       session,
+		client:        client,
+		closers:       closers,
+		agent:         agt,
+	}, nil
+}
+
 type remoteSession struct {
 	// endpoint we are connecting to
 	endpoint *Endpoint
@@ -93,39 +126,6 @@ func (s *remoteSession) Run() error {
 		return shellAndWait(s.session)
 	}
 	return runAndWait(s.session, s.endpoint.RemoteCommand)
-}
-
-func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
-	if c.exhaust {
-		_, _ = io.ReadAll(c.stdin)
-	}
-
-	method, agt, closers, err := remoteBestAuthMethod(c.session)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find an auth method: %w", err)
-	}
-
-	session, client, cl, err := createSession(&gossh.ClientConfig{
-		User:            firstNonEmpty(e.User, c.session.User()),
-		HostKeyCallback: hostKeyCallback(e, ".wishlist/known_hosts"),
-		Auth:            []gossh.AuthMethod{method},
-	}, e)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %w", err)
-	}
-
-	closers = append(closers, cl...)
-	session.Stdin = blocking.New(c.stdin)
-
-	log.Printf("%s connect to %q, %s", c.session.User(), e.Name, c.session.RemoteAddr().String())
-	return &remoteSession{
-		endpoint:      e,
-		parentSession: c.session,
-		session:       session,
-		client:        client,
-		closers:       closers,
-		agent:         agt,
-	}, nil
 }
 
 func (s *remoteSession) notifyWindowChanges(session *gossh.Session, done <-chan bool, winch <-chan ssh.Window) {

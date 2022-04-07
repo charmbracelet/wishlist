@@ -22,6 +22,34 @@ func NewLocalSSHClient() SSHClient {
 
 type localClient struct{}
 
+func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
+	user, err := user.Current()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current username: %w", err)
+	}
+
+	methods, err := localBestAuthMethod(e)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup a authentication method: %w", err)
+	}
+
+	session, client, closers, err := createSession(&ssh.ClientConfig{
+		User:            firstNonEmpty(e.User, user.Username),
+		Auth:            methods,
+		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
+	}, e)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session: %w", err)
+	}
+
+	return &localSession{
+		endpoint: e,
+		session:  session,
+		client:   client,
+		closers:  closers,
+	}, err
+}
+
 type localSession struct {
 	// endpoint we are connecting to
 	endpoint *Endpoint
@@ -106,32 +134,4 @@ func (s *localSession) Run() error {
 		return shellAndWait(s.session)
 	}
 	return runAndWait(s.session, s.endpoint.RemoteCommand)
-}
-
-func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
-	user, err := user.Current()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get current username: %w", err)
-	}
-
-	methods, err := localBestAuthMethod(e)
-	if err != nil {
-		return nil, fmt.Errorf("failed to setup a authentication method: %w", err)
-	}
-
-	session, client, closers, err := createSession(&ssh.ClientConfig{
-		User:            firstNonEmpty(e.User, user.Username),
-		Auth:            methods,
-		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
-	}, e)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %w", err)
-	}
-
-	return &localSession{
-		endpoint: e,
-		session:  session,
-		client:   client,
-		closers:  closers,
-	}, err
 }
