@@ -6,6 +6,7 @@ import (
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/wishlist/blocking"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -114,7 +115,7 @@ func (c *remoteClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 	}
 
 	closers = append(closers, cl...)
-	session.Stdin = newBlockingReader(c.stdin)
+	session.Stdin = blocking.New(c.stdin)
 
 	log.Printf("%s connect to %q, %s", c.session.User(), e.Name, c.session.RemoteAddr().String())
 	return &remoteSession{

@@ -8,6 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wishlist/blocking"
+	"github.com/charmbracelet/wishlist/multiplex"
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 )
@@ -51,14 +53,14 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 
 			plexch := make(chan bool, 1)
 			defer func() { plexch <- true }()
-			listStdin, handoffStdin := multiplex(s, plexch)
+			listStdin, handoffStdin := multiplex.Reader(s, plexch)
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
 			model := NewListing(endpoints, s, handoffStdin)
 			p := tea.NewProgram(
 				model,
-				tea.WithInput(newBlockingReader(listStdin)),
+				tea.WithInput(blocking.New(listStdin)),
 				tea.WithOutput(s),
 				tea.WithAltScreen(),
 			)

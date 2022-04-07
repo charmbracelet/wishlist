@@ -1,23 +1,24 @@
-package wishlist
+package blocking
 
 import (
 	"io"
 	"time"
 )
 
-// blockingReader is an io.Reader that blocks until the underlying reader
+// Reader is an io.Reader that blocks until the underlying reader until
 // returns something other than io.EOF.
 //
 // on EOF, it'll keep trying to read every 10ms.
 //
 // The purpose of this is to be used to "emulate a STDIN" (which never EOFs)
 // from another io.Reader, e.g. a bytes.Buffer.
-type blockingReader struct {
+type Reader struct {
 	r io.Reader
 }
 
-func newBlockingReader(r io.Reader) io.Reader {
-	return blockingReader{r}
+// New wraps a given io.Reader into a BlockingReader
+func New(r io.Reader) Reader {
+	return Reader{r: r}
 }
 
 type readResult struct {
@@ -25,7 +26,7 @@ type readResult struct {
 	e error
 }
 
-func (r blockingReader) Read(data []byte) (int, error) {
+func (r Reader) Read(data []byte) (int, error) {
 	readch := make(chan readResult, 1)
 
 	go func() {

@@ -204,6 +204,7 @@ func workLocally(config wishlist.Config) error {
 			log.Println(err)
 		}
 	}()
+
 	m := wishlist.NewListing(config.Endpoints, nil, nil)
 	if err := tea.NewProgram(m).Start(); err != nil {
 		return err
