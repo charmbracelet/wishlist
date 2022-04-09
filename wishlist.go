@@ -115,7 +115,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			log.Println("got an error:", msg.err)
 			m.err = msg.err
-			return m, tea.Quit
+			return m, nil
 		}
 	}
 
@@ -127,7 +127,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View comply with tea.Model interface.
 func (m *ListModel) View() string {
 	if m.err != nil {
-		return "something went wrong:" + m.err.Error()
+		return "something went wrong:" + m.err.Error() + "\npress q to quit"
 	}
 	return docStyle.Render(m.list.View())
 }
