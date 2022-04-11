@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/muesli/cancelreader"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
@@ -42,6 +43,13 @@ func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
+	closers = append(closers, func() error {
+		rc, ok := session.Stdin.(cancelreader.CancelReader)
+		if ok && !rc.Cancel() {
+			return fmt.Errorf("could not cancel reader")
+		}
+		return nil
+	})
 	return &localSession{
 		endpoint: e,
 		session:  session,
@@ -65,7 +73,11 @@ type localSession struct {
 }
 
 func (s *localSession) SetStdin(r io.Reader) {
-	s.session.Stdin = r
+	rr, err := cancelreader.NewReader(r)
+	if err != nil {
+		log.Println("failed to create cancel reader", err)
+	}
+	s.session.Stdin = rr
 }
 
 func (s *localSession) SetStdout(w io.Writer) {

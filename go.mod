@@ -12,6 +12,7 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kevinburke/ssh_config v1.2.0
+	github.com/muesli/cancelreader v0.2.0
 	github.com/muesli/coral v1.0.0
 	github.com/muesli/mango-coral v1.0.1
 	github.com/muesli/roff v0.1.0
