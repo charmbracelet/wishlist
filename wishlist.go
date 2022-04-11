@@ -89,6 +89,16 @@ type errMsg struct {
 	err error
 }
 
+func errCmd(err error) tea.Cmd {
+	return func() tea.Msg {
+		return errMsg{err}
+	}
+}
+
+type connectMsg struct {
+	endpoint *Endpoint
+}
+
 // Update comply with tea.Model interface.
 func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -98,24 +108,31 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if selectedItem == nil {
 				return m, nil
 			}
-			cmd, err := m.client.Connect(selectedItem.(*Endpoint))
-			if err != nil {
-				return m, func() tea.Msg {
-					return errMsg{err}
-				}
-			}
-			return m, tea.Exec(cmd, func(err error) tea.Msg {
+			return m, tea.Batch(tea.ReleaseTerminal(func(err error) tea.Msg {
 				return errMsg{err}
+			}), func() tea.Msg {
+				return connectMsg{selectedItem.(*Endpoint)}
 			})
 		}
+
+	case connectMsg:
+		cmd, err := m.client.Connect(msg.endpoint)
+		if err != nil {
+			return m, errCmd(err)
+		}
+		return m, tea.Exec(cmd, func(err error) tea.Msg {
+			return errMsg{err}
+		})
+
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
+
 	case errMsg:
 		if msg.err != nil {
 			log.Println("got an error:", msg.err)
 			m.err = msg.err
-			return m, nil
+			return m, tea.RestoreTerminal(nil)
 		}
 	}
 
