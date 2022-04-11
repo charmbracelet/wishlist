@@ -42,7 +42,6 @@ func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *Li
 	return &ListModel{
 		list:      l,
 		endpoints: endpoints,
-		session:   s,
 		client:    client,
 	}
 }
@@ -60,7 +59,6 @@ func (i *Endpoint) FilterValue() string { return i.Name }
 type ListModel struct {
 	list      list.Model
 	endpoints []*Endpoint
-	session   ssh.Session
 	client    SSHClient
 	err       error
 }
