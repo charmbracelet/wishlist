@@ -67,10 +67,10 @@ func (s *localSession) Run() error {
 	}
 
 	session, client, cls, err := createSession(conf, s.endpoint)
+	defer cls.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
-	defer cls.close()
 	defer closers{func() error {
 		rc, ok := session.Stdin.(cancelreader.CancelReader)
 		if ok && !rc.Cancel() {
@@ -79,13 +79,13 @@ func (s *localSession) Run() error {
 		return nil
 	}}.close()
 
-	rr, err := cancelreader.NewReader(s.stdin)
-	if err != nil {
-		log.Println("failed to create cancel reader", err)
-	}
-	session.Stdin = rr
-	session.Stderr = s.stderr
 	session.Stdout = s.stdout
+	session.Stderr = s.stderr
+	stdin, err := cancelreader.NewReader(s.stdin)
+	if err != nil {
+		return fmt.Errorf("could not create cancel reader")
+	}
+	session.Stdin = stdin
 
 	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
