@@ -29,11 +29,10 @@ func (c *remoteClient) For(e *Endpoint) tea.ExecCommand {
 	if c.exhaust {
 		_, _ = io.ReadAll(c.stdin)
 	}
-
 	return &remoteSession{
 		endpoint:      e,
 		parentSession: c.session,
-		stdin:         c.stdin,
+		stdin:         blocking.New(c.stdin),
 	}
 }
 
@@ -44,21 +43,12 @@ type remoteSession struct {
 	// the parent session (ie the session running the listing)
 	parentSession ssh.Session
 
-	stdin          io.Reader
-	stdout, stderr io.Writer
+	stdin io.Reader
 }
 
-func (s *remoteSession) SetStdin(r io.Reader) {
-	// noop, handled in the remoteClient.Connect method.
-}
-
-func (s *remoteSession) SetStdout(w io.Writer) {
-	s.stdout = w
-}
-
-func (s *remoteSession) SetStderr(w io.Writer) {
-	s.stderr = w
-}
+func (s *remoteSession) SetStdin(r io.Reader)  {}
+func (s *remoteSession) SetStdout(w io.Writer) {}
+func (s *remoteSession) SetStderr(w io.Writer) {}
 
 func (s *remoteSession) Run() error {
 	method, agt, closers, err := remoteBestAuthMethod(s.parentSession)
@@ -78,9 +68,9 @@ func (s *remoteSession) Run() error {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
 
-	session.Stdin = blocking.New(s.stdin)
-	session.Stderr = s.stderr
-	session.Stdout = s.stdout
+	session.Stdout = s.parentSession
+	session.Stderr = s.parentSession.Stderr()
+	session.Stdin = s.stdin
 
 	log.Printf("%s connect to %q, %s", s.parentSession.User(), s.endpoint.Name, s.parentSession.RemoteAddr().String())
 
