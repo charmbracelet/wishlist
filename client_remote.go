@@ -8,7 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wishlist/blocking"
 	"github.com/gliderlabs/ssh"
-	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
@@ -128,10 +127,4 @@ func (s *remoteSession) notifyWindowChanges(session *gossh.Session, done <-chan 
 			}
 		}
 	}
-}
-
-func resetPty(w io.Writer) {
-	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
-	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
-	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2) // nolint:gomnd
 }

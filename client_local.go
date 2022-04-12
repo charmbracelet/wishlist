@@ -50,6 +50,8 @@ func (s *localSession) SetStderr(w io.Writer) {
 }
 
 func (s *localSession) Run() error {
+	resetPty(s.stdout)
+
 	user, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("failed to get current username: %w", err)
