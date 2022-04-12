@@ -12,6 +12,10 @@ github.com/caarlos0/sshmarshal v0.0.0-20220308164159-9ddb9f83c6b3 h1:w2ANoiT4ubm
 github.com/caarlos0/sshmarshal v0.0.0-20220308164159-9ddb9f83c6b3/go.mod h1:7Pd/0mmq9x/JCzKauogNjSQEhivBclCQHfr9dlpDIyA=
 github.com/charmbracelet/bubbles v0.10.3 h1:fKarbRaObLn/DCsZO4Y3vKCwRUzynQD9L+gGev1E/ho=
 github.com/charmbracelet/bubbles v0.10.3/go.mod h1:jOA+DUF1rjZm7gZHcNyIVW+YrBPALKfpGVdJu8UiJsA=
+github.com/charmbracelet/bubbletea v0.19.3/go.mod h1:VuXF2pToRxDUHcBUcPmCRUHRvFATM4Ckb/ql1rBl3KA=
+github.com/charmbracelet/bubbletea v0.20.0/go.mod h1:zpkze1Rioo4rJELjRyGlm9T2YNou1Fm4LIJQSa5QMEM=
+github.com/charmbracelet/bubbletea v0.20.1-0.20220412142310-3795c036c451 h1:yCONEYndKfmJAirOLnG0MwAVqVUZurcZ6VZpxC/RnzU=
+github.com/charmbracelet/bubbletea v0.20.1-0.20220412142310-3795c036c451/go.mod h1:GgmJMec61d08zXsOhqRC/AiOx4K4pmz+VIcRIm1FKr4=
 github.com/charmbracelet/harmonica v0.1.0/go.mod h1:KSri/1RMQOZLbw7AHqgcBycp8pgJnQMYYT8QZRqZ1Ao=
 github.com/charmbracelet/keygen v0.3.0 h1:mXpsQcH7DDlST5TddmXNXjS0L7ECk4/kLQYyBcsan2Y=
 github.com/charmbracelet/keygen v0.3.0/go.mod h1:1ukgO8806O25lUZ5s0IrNur+RlwTBERlezdgW71F5rM=
@@ -20,6 +24,7 @@ github.com/charmbracelet/lipgloss v0.5.0 h1:lulQHuVeodSgDez+3rGiuxlPVXSnhth442DA
 github.com/charmbracelet/lipgloss v0.5.0/go.mod h1:EZLha/HbzEt7cYqdFPovlqy5FZPj0xFhg5SaqxScmgs=
 github.com/charmbracelet/wish v0.3.1 h1:B3GZop29tFf/Jh8oMyeTX+iSP3X2bR8AQduf/h4OdRQ=
 github.com/charmbracelet/wish v0.3.1/go.mod h1:+EgtczC00Oocx5Y237jSGpD/rOcSdq97Intl0ITHwos=
+github.com/containerd/console v1.0.2/go.mod h1:ytZPjGgY2oeTkAONYafi2kSj0aYggsf8acV1PGKCbzQ=
 github.com/containerd/console v1.0.3 h1:lIr7SlA5PxZyMV30bDW0MGbiOPXwc63yRuCP0ARubLw=
 github.com/containerd/console v1.0.3/go.mod h1:7LqA/THxQ86k76b8c/EMSiaJ3h1eZkMkXar0TQ1gf3U=
 github.com/cpuguy83/go-md2man/v2 v2.0.1/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=

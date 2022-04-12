@@ -101,7 +101,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			log.Println("got an error:", msg.err)
 			m.err = msg.err
-			return m, tea.Batch(m.list.SetItems(nil), tea.RestoreTerminal(nil))
+			return m, m.list.SetItems(nil)
 		}
 	}
 
