@@ -67,15 +67,16 @@ func (s *remoteSession) Run() error {
 	}
 	defer closers.close()
 
-	session, client, cl, err := createSession(&gossh.ClientConfig{
+	conf := &gossh.ClientConfig{
 		User:            firstNonEmpty(s.endpoint.User, s.parentSession.User()),
 		HostKeyCallback: hostKeyCallback(s.endpoint, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
-	}, s.endpoint)
+	}
+	session, client, cl, err := createSession(conf, s.endpoint)
+	defer cl.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
-	defer cl.close()
 
 	session.Stdin = blocking.New(s.stdin)
 	session.Stderr = s.stderr

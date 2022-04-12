@@ -60,23 +60,24 @@ func (s *localSession) Run() error {
 		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
 
-	session, client, closers, err := createSession(&ssh.ClientConfig{
+	conf := &ssh.ClientConfig{
 		User:            firstNonEmpty(s.endpoint.User, user.Username),
 		Auth:            methods,
 		HostKeyCallback: hostKeyCallback(s.endpoint, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
-	}, s.endpoint)
+	}
+
+	session, client, cls, err := createSession(conf, s.endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
-
-	closers = append(closers, func() error {
+	defer cls.close()
+	defer closers{func() error {
 		rc, ok := session.Stdin.(cancelreader.CancelReader)
 		if ok && !rc.Cancel() {
 			return fmt.Errorf("could not cancel reader")
 		}
 		return nil
-	})
-	defer closers.close()
+	}}.close()
 
 	rr, err := cancelreader.NewReader(s.stdin)
 	if err != nil {
