@@ -105,12 +105,7 @@ func mustConnect(session ssh.Session, e *Endpoint) {
 		session: session,
 		stdin:   session,
 	}
-	cmd, err := client.Connect(e)
-	if err != nil {
-		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
-		_ = session.Exit(1)
-		return // unreachable
-	}
+	cmd := client.For(e)
 	cmd.SetStderr(session.Stderr())
 	cmd.SetStdout(session)
 	if err := cmd.Run(); err != nil {

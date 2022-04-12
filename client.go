@@ -12,7 +12,7 @@ import (
 
 // SSHClient is a SSH client.
 type SSHClient interface {
-	Connect(e *Endpoint) (tea.ExecCommand, error)
+	For(e *Endpoint) tea.ExecCommand
 }
 
 func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *gossh.Client, closers, error) {

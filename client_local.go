@@ -23,24 +23,50 @@ func NewLocalSSHClient() SSHClient {
 
 type localClient struct{}
 
-func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
+func (c *localClient) For(e *Endpoint) tea.ExecCommand {
+	return &localSession{
+		endpoint: e,
+	}
+}
+
+type localSession struct {
+	// endpoint we are connecting to
+	endpoint *Endpoint
+
+	stdin          io.Reader
+	stdout, stderr io.Writer
+}
+
+func (s *localSession) SetStdin(r io.Reader) {
+	s.stdin = r
+}
+
+func (s *localSession) SetStdout(w io.Writer) {
+	s.stdout = w
+}
+
+func (s *localSession) SetStderr(w io.Writer) {
+	s.stderr = w
+}
+
+func (s *localSession) Run() error {
 	user, err := user.Current()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get current username: %w", err)
+		return fmt.Errorf("failed to get current username: %w", err)
 	}
 
-	methods, err := localBestAuthMethod(e)
+	methods, err := localBestAuthMethod(s.endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup a authentication method: %w", err)
+		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
 
 	session, client, closers, err := createSession(&ssh.ClientConfig{
-		User:            firstNonEmpty(e.User, user.Username),
+		User:            firstNonEmpty(s.endpoint.User, user.Username),
 		Auth:            methods,
-		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
-	}, e)
+		HostKeyCallback: hostKeyCallback(s.endpoint, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
+	}, s.endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %w", err)
+		return fmt.Errorf("failed to create session: %w", err)
 	}
 
 	closers = append(closers, func() error {
@@ -50,46 +76,15 @@ func (c *localClient) Connect(e *Endpoint) (tea.ExecCommand, error) {
 		}
 		return nil
 	})
-	return &localSession{
-		endpoint: e,
-		session:  session,
-		client:   client,
-		closers:  closers,
-	}, err
-}
+	defer closers.close()
 
-type localSession struct {
-	// endpoint we are connecting to
-	endpoint *Endpoint
-
-	// current session
-	session *ssh.Session
-
-	//  client being used in this session
-	client *ssh.Client
-
-	// things we need to close
-	closers closers
-}
-
-func (s *localSession) SetStdin(r io.Reader) {
-	rr, err := cancelreader.NewReader(r)
+	rr, err := cancelreader.NewReader(s.stdin)
 	if err != nil {
 		log.Println("failed to create cancel reader", err)
 	}
-	s.session.Stdin = rr
-}
-
-func (s *localSession) SetStdout(w io.Writer) {
-	s.session.Stdout = w
-}
-
-func (s *localSession) SetStderr(w io.Writer) {
-	s.session.Stderr = w
-}
-
-func (s *localSession) Run() error {
-	defer s.closers.close()
+	session.Stdin = rr
+	session.Stderr = s.stderr
+	session.Stdout = s.stdout
 
 	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
@@ -100,10 +95,10 @@ func (s *localSession) Run() error {
 		if agt == nil {
 			return fmt.Errorf("requested ForwardAgent, but no agent is available")
 		}
-		if err := agent.RequestAgentForwarding(s.session); err != nil {
+		if err := agent.RequestAgentForwarding(session); err != nil {
 			return fmt.Errorf("failed to forward agent: %w", err)
 		}
-		if err := agent.ForwardToAgent(s.client, agt); err != nil {
+		if err := agent.ForwardToAgent(client, agt); err != nil {
 			return fmt.Errorf("failed to forward agent: %w", err)
 		}
 	}
@@ -131,19 +126,19 @@ func (s *localSession) Run() error {
 			return fmt.Errorf("failed to get term size: %w", err)
 		}
 
-		if err := s.session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
+		if err := session.RequestPty(os.Getenv("TERM"), h, w, nil); err != nil {
 			return fmt.Errorf("failed to request a pty: %w", err)
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go s.notifyWindowChanges(ctx, s.session)
+		go s.notifyWindowChanges(ctx, session)
 	} else {
 		log.Println("did not request a tty")
 	}
 
 	if s.endpoint.RemoteCommand == "" {
-		return shellAndWait(s.session)
+		return shellAndWait(session)
 	}
-	return runAndWait(s.session, s.endpoint.RemoteCommand)
+	return runAndWait(session, s.endpoint.RemoteCommand)
 }
