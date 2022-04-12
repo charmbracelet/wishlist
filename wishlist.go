@@ -47,6 +47,7 @@ type ListModel struct {
 	list      list.Model
 	endpoints []*Endpoint
 	client    SSHClient
+	quitting  bool
 	err       error
 }
 
@@ -78,6 +79,9 @@ type errMsg struct {
 func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if key.Matches(msg, list.DefaultKeyMap().Quit) {
+			m.quitting = true
+		}
 		if key.Matches(msg, enter) {
 			selectedItem := m.list.SelectedItem()
 			if selectedItem == nil {
@@ -108,6 +112,9 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View comply with tea.Model interface.
 func (m *ListModel) View() string {
+	if m.quitting {
+		return ""
+	}
 	if m.err != nil {
 		return "something went wrong:" + m.err.Error() + "\npress q to quit"
 	}
