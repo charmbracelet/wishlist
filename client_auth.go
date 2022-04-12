@@ -81,7 +81,7 @@ func getLocalAgent() (agent.Agent, error) {
 	}
 	conn, err := net.Dial("unix", socket)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connecto to SSH_AUTH_SOCK: %w", err)
+		return nil, fmt.Errorf("failed to connect to SSH_AUTH_SOCK: %w", err)
 	}
 	return agent.NewClient(conn), nil
 }
