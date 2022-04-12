@@ -2,14 +2,12 @@ package wishlist
 
 import (
 	"fmt"
-	"io"
 	"log"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gliderlabs/ssh"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2) // nolint:gomnd
@@ -21,22 +19,11 @@ var enter = key.NewBinding(
 
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If sessuion is nil, it is assume to be a local listing.
-func NewListing(endpoints []*Endpoint, s ssh.Session, clientStdin io.Reader) *ListModel {
+func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 	l := list.NewModel(endpointsToListItems(endpoints), list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
-	}
-
-	var client SSHClient
-	if s == nil {
-		client = &localClient{}
-	} else {
-		client = &remoteClient{
-			session: s,
-			stdin:   clientStdin,
-			exhaust: true,
-		}
 	}
 
 	return &ListModel{

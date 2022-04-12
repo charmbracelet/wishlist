@@ -205,6 +205,6 @@ func workLocally(config wishlist.Config) error {
 		}
 	}()
 
-	m := wishlist.NewListing(config.Endpoints, nil, nil)
+	m := wishlist.NewListing(config.Endpoints, wishlist.NewLocalSSHClient())
 	return tea.NewProgram(m).Start()
 }
