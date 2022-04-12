@@ -23,6 +23,7 @@ var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
 func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
+	// TODO: we should probably make password protected keys work here too
 	method, agt, cls, err := tryRemoteAuthAgent(s)
 	if err != nil {
 		return nil, nil, nil, err
