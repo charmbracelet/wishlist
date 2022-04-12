@@ -68,11 +68,11 @@ func (s *remoteSession) Run() error {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
 
+	log.Printf("%s connect to %q, %s", s.parentSession.User(), s.endpoint.Name, s.parentSession.RemoteAddr().String())
+
 	session.Stdout = s.parentSession
 	session.Stderr = s.parentSession.Stderr()
 	session.Stdin = s.stdin
-
-	log.Printf("%s connect to %q, %s", s.parentSession.User(), s.endpoint.Name, s.parentSession.RemoteAddr().String())
 
 	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
