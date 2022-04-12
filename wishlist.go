@@ -74,12 +74,6 @@ type errMsg struct {
 	err error
 }
 
-func errCmd(err error) tea.Cmd {
-	return func() tea.Msg {
-		return errMsg{err}
-	}
-}
-
 // Update comply with tea.Model interface.
 func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
