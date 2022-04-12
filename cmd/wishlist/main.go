@@ -98,7 +98,7 @@ var serverCmd = &coral.Command{
 			// nolint:wrapcheck
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
-				wish.WithHostKeyPath(".withlist/server_ed25519"),
+				wish.WithHostKeyPath(".wishlist/server_ed25519"),
 				wish.WithMiddleware(
 					append(
 						e.Middlewares,
