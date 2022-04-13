@@ -18,9 +18,9 @@ import (
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
-	"github.com/muesli/coral"
-	mcoral "github.com/muesli/mango-coral"
+	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,7 +32,7 @@ var (
 	Version = "devel"
 )
 
-var rootCmd = &coral.Command{
+var rootCmd = &cobra.Command{
 	Use:   "wishlist",
 	Short: "The SSH Directory",
 	Long: `Wishlist is a SSH directory.
@@ -44,11 +44,11 @@ It's also possible to serve the TUI over SSH using the server command.
 `,
 	Version:      Version,
 	SilenceUsage: true,
-	Args:         coral.MaximumNArgs(1),
-	CompletionOptions: coral.CompletionOptions{
+	Args:         cobra.MaximumNArgs(1),
+	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
-	RunE: func(cmd *coral.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := getConfig(configFile)
 		if err != nil {
 			return err
@@ -57,14 +57,14 @@ It's also possible to serve the TUI over SSH using the server command.
 	},
 }
 
-var manCmd = &coral.Command{
+var manCmd = &cobra.Command{
 	Use:          "man",
-	Args:         coral.NoArgs,
+	Args:         cobra.NoArgs,
 	Short:        "generate man pages",
 	Hidden:       true,
 	SilenceUsage: true,
-	RunE: func(cmd *coral.Command, args []string) error {
-		manPage, err := mcoral.NewManPage(1, rootCmd)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		manPage, err := mcobra.NewManPage(1, rootCmd)
 		if err != nil {
 			return err
 		}
@@ -75,12 +75,12 @@ var manCmd = &coral.Command{
 	},
 }
 
-var serverCmd = &coral.Command{
+var serverCmd = &cobra.Command{
 	Use:     "serve",
 	Aliases: []string{"server", "s"},
-	Args:    coral.NoArgs,
+	Args:    cobra.NoArgs,
 	Short:   "Serve the TUI over SSH.",
-	RunE: func(cmd *coral.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		config, err := getConfig(configFile)
 		if err != nil {
 			return err
