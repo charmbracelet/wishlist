@@ -21,13 +21,14 @@ func TestEndointToListItems(t *testing.T) {
 
 func TestNewWishlist(t *testing.T) {
 	t.Run("local", func(t *testing.T) {
+		cl := NewLocalSSHClient()
 		lm := NewListing([]*Endpoint{
 			{
 				Name:    "name",
 				Address: "anything",
 			},
-		}, nil, nil)
+		}, cl)
 		require.Len(t, lm.endpoints, 1)
-		require.Nil(t, lm.session)
+		require.Equal(t, lm.client, cl)
 	})
 }
