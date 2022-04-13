@@ -44,6 +44,7 @@ It's also possible to serve the TUI over SSH using the server command.
 `,
 	Version:      Version,
 	SilenceUsage: true,
+	Args:         coral.MaximumNArgs(1),
 	CompletionOptions: coral.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
@@ -52,7 +53,7 @@ It's also possible to serve the TUI over SSH using the server command.
 		if err != nil {
 			return err
 		}
-		return workLocally(config)
+		return workLocally(config, args)
 	},
 }
 
@@ -194,7 +195,7 @@ func getSSHConfig(path string) (wishlist.Config, error) {
 }
 
 // nolint: wrapcheck
-func workLocally(config wishlist.Config) error {
+func workLocally(config wishlist.Config, args []string) error {
 	f, err := tea.LogToFile("wishlist.log", "")
 	if err != nil {
 		return err
@@ -205,6 +206,26 @@ func workLocally(config wishlist.Config) error {
 		}
 	}()
 
-	m := wishlist.NewListing(config.Endpoints, wishlist.NewLocalSSHClient())
-	return tea.NewProgram(m).Start()
+	// either no args or arg is a list
+	if len(args) == 0 || args[0] == "list" {
+		m := wishlist.NewListing(config.Endpoints, wishlist.NewLocalSSHClient())
+		return tea.NewProgram(m).Start()
+	}
+
+	// ssh directly into something by its name
+	for _, e := range config.Endpoints {
+		if e.Name == args[0] {
+			return connect(e)
+		}
+	}
+
+	return fmt.Errorf("invalid endpoint name: %q", args[0])
+}
+
+func connect(e *wishlist.Endpoint) error {
+	cmd := wishlist.NewLocalSSHClient().For(e)
+	cmd.SetStdout(os.Stdout)
+	cmd.SetStderr(os.Stderr)
+	cmd.SetStdin(os.Stdin)
+	return cmd.Run()
 }
