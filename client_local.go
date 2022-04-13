@@ -3,11 +3,14 @@ package wishlist
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/muesli/cancelreader"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
@@ -20,33 +23,73 @@ func NewLocalSSHClient() SSHClient {
 
 type localClient struct{}
 
-func (c *localClient) Connect(e *Endpoint) error {
+func (c *localClient) For(e *Endpoint) tea.ExecCommand {
+	return &localSession{
+		endpoint: e,
+	}
+}
+
+type localSession struct {
+	// endpoint we are connecting to
+	endpoint *Endpoint
+
+	stdin          io.Reader
+	stdout, stderr io.Writer
+}
+
+func (s *localSession) SetStdin(r io.Reader) {
+	s.stdin = r
+}
+
+func (s *localSession) SetStdout(w io.Writer) {
+	s.stdout = w
+}
+
+func (s *localSession) SetStderr(w io.Writer) {
+	s.stderr = w
+}
+
+func (s *localSession) Run() error {
+	resetPty(s.stdout)
+
 	user, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("failed to get current username: %w", err)
 	}
 
-	methods, err := localBestAuthMethod(e)
+	methods, err := localBestAuthMethod(s.endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
+
 	conf := &ssh.ClientConfig{
-		User:            firstNonEmpty(e.User, user.Username),
+		User:            firstNonEmpty(s.endpoint.User, user.Username),
 		Auth:            methods,
-		HostKeyCallback: hostKeyCallback(e, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
+		HostKeyCallback: hostKeyCallback(s.endpoint, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
 	}
 
-	session, client, cls, err := createSession(conf, e)
+	session, client, cls, err := createSession(conf, s.endpoint)
 	defer cls.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
+	defer closers{func() error {
+		rc, ok := session.Stdin.(cancelreader.CancelReader)
+		if ok && !rc.Cancel() {
+			return fmt.Errorf("could not cancel reader")
+		}
+		return nil
+	}}.close()
 
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	session.Stdin = os.Stdin
+	session.Stdout = s.stdout
+	session.Stderr = s.stderr
+	stdin, err := cancelreader.NewReader(s.stdin)
+	if err != nil {
+		return fmt.Errorf("could not create cancel reader")
+	}
+	session.Stdin = stdin
 
-	if e.ForwardAgent {
+	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
 		agt, err := getLocalAgent()
 		if err != nil {
@@ -63,7 +106,7 @@ func (c *localClient) Connect(e *Endpoint) error {
 		}
 	}
 
-	if e.RequestTTY || e.RemoteCommand == "" {
+	if s.endpoint.RequestTTY || s.endpoint.RemoteCommand == "" {
 		fd := int(os.Stdout.Fd())
 		if !term.IsTerminal(fd) {
 			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")
@@ -92,13 +135,13 @@ func (c *localClient) Connect(e *Endpoint) error {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go c.notifyWindowChanges(ctx, session)
+		go s.notifyWindowChanges(ctx, session)
 	} else {
 		log.Println("did not request a tty")
 	}
 
-	if e.RemoteCommand == "" {
+	if s.endpoint.RemoteCommand == "" {
 		return shellAndWait(session)
 	}
-	return runAndWait(session, e.RemoteCommand)
+	return runAndWait(session, s.endpoint.RemoteCommand)
 }

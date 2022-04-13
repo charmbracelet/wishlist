@@ -8,7 +8,10 @@ import (
 
 func TestEndointToListItems(t *testing.T) {
 	result := endpointsToListItems([]*Endpoint{
-		{Name: "name", Address: "anything"},
+		{
+			Name:    "name",
+			Address: "anything",
+		},
 	})
 
 	require.Len(t, result, 1)
@@ -18,9 +21,14 @@ func TestEndointToListItems(t *testing.T) {
 
 func TestNewWishlist(t *testing.T) {
 	t.Run("local", func(t *testing.T) {
-		lm := NewListing([]*Endpoint{{Name: "name", Address: "anything"}}, nil)
+		cl := NewLocalSSHClient()
+		lm := NewListing([]*Endpoint{
+			{
+				Name:    "name",
+				Address: "anything",
+			},
+		}, cl)
 		require.Len(t, lm.endpoints, 1)
-		require.Nil(t, lm.session)
-		require.Nil(t, lm.handoff)
+		require.Equal(t, lm.client, cl)
 	})
 }

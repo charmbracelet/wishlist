@@ -6,12 +6,14 @@ import (
 	"io"
 	"log"
 
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
 )
 
 // SSHClient is a SSH client.
 type SSHClient interface {
-	Connect(e *Endpoint) error
+	For(e *Endpoint) tea.ExecCommand
 }
 
 func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *gossh.Client, closers, error) {
@@ -71,4 +73,10 @@ func firstNonEmpty(ss ...string) string {
 		}
 	}
 	return ""
+}
+
+func resetPty(w io.Writer) {
+	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
+	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
+	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2) // nolint:gomnd
 }

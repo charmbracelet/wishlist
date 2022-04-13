@@ -1,4 +1,4 @@
-package wishlist
+package multiplex
 
 import (
 	"bytes"
@@ -6,9 +6,9 @@ import (
 	"log"
 )
 
-// multiplex keeps reading r and writing to 2 other readers, which are returned.
-// it stops only when the done channel is notified.
-func multiplex(r io.Reader, done <-chan bool) (io.Reader, io.Reader) {
+// Reader keeps reading r and writing to 2 other readers, which are returned.
+// It stops only when the done channel is notified.
+func Reader(r io.Reader, done <-chan bool) (io.Reader, io.Reader) {
 	var r1 bytes.Buffer
 	var r2 bytes.Buffer
 
@@ -30,7 +30,7 @@ func multiplex(r io.Reader, done <-chan bool) (io.Reader, io.Reader) {
 				n, err := r.Read(buf[:])
 				if err != nil {
 					if err != io.EOF {
-						log.Println("multiplex read error:", err)
+						log.Println("ignored multiplex read error:", err)
 					}
 					continue
 				}

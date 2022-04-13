@@ -98,7 +98,7 @@ var serverCmd = &coral.Command{
 			// nolint:wrapcheck
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
-				wish.WithHostKeyPath(".withlist/server_ed25519"),
+				wish.WithHostKeyPath(".wishlist/server_ed25519"),
 				wish.WithMiddleware(
 					append(
 						e.Middlewares,
@@ -204,15 +204,7 @@ func workLocally(config wishlist.Config) error {
 			log.Println(err)
 		}
 	}()
-	m := wishlist.NewListing(config.Endpoints, nil)
-	if err := tea.NewProgram(m).Start(); err != nil {
-		return err
-	}
 
-	if m.HandoffTo() == nil {
-		return nil
-	}
-
-	log.SetOutput(os.Stderr)
-	return wishlist.NewLocalSSHClient().Connect(m.HandoffTo())
+	m := wishlist.NewListing(config.Endpoints, wishlist.NewLocalSSHClient())
+	return tea.NewProgram(m).Start()
 }

@@ -2,13 +2,14 @@ package wishlist
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wishlist/blocking"
+	"github.com/charmbracelet/wishlist/multiplex"
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 )
@@ -31,7 +32,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 			if len(cmd) == 1 && cmd[0] != "list" {
 				for _, e := range endpoints {
 					if e.Name == cmd[0] {
-						mustConnect(s, e, s)
+						mustConnect(s, e)
 						return // unreachable
 					}
 				}
@@ -52,25 +53,24 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 
 			plexch := make(chan bool, 1)
 			defer func() { plexch <- true }()
-			listStdin, handoffStdin := multiplex(s, plexch)
+			listStdin, handoffStdin := multiplex.Reader(s, plexch)
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
-			model := NewListing(endpoints, s)
+			model := NewListing(endpoints, &remoteClient{
+				session: s,
+				stdin:   handoffStdin,
+				exhaust: true,
+			})
 			p := tea.NewProgram(
 				model,
-				tea.WithInput(newBlockingReader(listStdin)),
+				tea.WithInput(blocking.New(listStdin)),
 				tea.WithOutput(s),
 				tea.WithAltScreen(),
 			)
 			go listenAppEvents(s, p, appch, errch)
 			errch <- p.Start()
 			appch <- true
-
-			if endpoint := model.handoff; endpoint != nil {
-				_, _ = io.ReadAll(handoffStdin) // exhaust the handoff stdin first
-				mustConnect(s, endpoint, newBlockingReader(handoffStdin))
-			}
 		}
 	}
 }
@@ -104,9 +104,15 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, errch <-
 	}
 }
 
-func mustConnect(session ssh.Session, e *Endpoint, stdin io.Reader) {
-	client := &remoteClient{session, stdin}
-	if err := client.Connect(e); err != nil {
+func mustConnect(session ssh.Session, e *Endpoint) {
+	client := &remoteClient{
+		session: session,
+		stdin:   session,
+	}
+	cmd := client.For(e)
+	cmd.SetStderr(session.Stderr())
+	cmd.SetStdout(session)
+	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
 		_ = session.Exit(1)
 		return // unreachable

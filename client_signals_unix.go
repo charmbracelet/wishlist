@@ -14,7 +14,7 @@ import (
 	"golang.org/x/term"
 )
 
-func (c *localClient) notifyWindowChanges(ctx context.Context, session *ssh.Session) {
+func (s *localSession) notifyWindowChanges(ctx context.Context, session *ssh.Session) {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGWINCH)
 	defer func() {

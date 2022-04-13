@@ -23,6 +23,7 @@ var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
 func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
+	// TODO: we should probably make password protected keys work here too
 	method, agt, cls, err := tryRemoteAuthAgent(s)
 	if err != nil {
 		return nil, nil, nil, err
@@ -47,7 +48,7 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers
 // It'll return a nil list if none of the methods is available.
 func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod
-	if method, err := tryLocalAgent(); err != nil || method != nil {
+	if method, err := tryLocalAgent(); err == nil && method != nil {
 		methods = append(methods, method)
 	}
 
@@ -80,7 +81,7 @@ func getLocalAgent() (agent.Agent, error) {
 	}
 	conn, err := net.Dial("unix", socket)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connecto to SSH_AUTH_SOCK: %w", err)
+		return nil, fmt.Errorf("failed to connect to SSH_AUTH_SOCK: %w", err)
 	}
 	return agent.NewClient(conn), nil
 }

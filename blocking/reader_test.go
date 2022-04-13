@@ -1,4 +1,4 @@
-package wishlist
+package blocking
 
 import (
 	"io"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestBlockingReader(t *testing.T) {
-	r := newBlockingReader(&testReader{
+	r := New(&testReader{
 		results: []readResult{
 			{n: 0, e: io.EOF},              // EOF should be ignored
 			{n: 12, e: nil},                // return normally
