@@ -46,9 +46,9 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers
 //
 // If any of the methods fails, it returns an error.
 // It'll return a nil list if none of the methods is available.
-func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
+func localBestAuthMethod(agt agent.Agent, e *Endpoint) ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod
-	if method, err := tryLocalAgent(); err == nil && method != nil {
+	if method, err := tryLocalAgent(agt); err == nil && method != nil {
 		methods = append(methods, method)
 	}
 
@@ -62,11 +62,7 @@ func localBestAuthMethod(e *Endpoint) ([]gossh.AuthMethod, error) {
 
 // tryLocalAgent checks if there's a local agent at $SSH_AUTH_SOCK and, if so,
 // uses it to authenticate.
-func tryLocalAgent() (gossh.AuthMethod, error) {
-	agt, err := getLocalAgent()
-	if err != nil {
-		return nil, err
-	}
+func tryLocalAgent(agt agent.Agent) (gossh.AuthMethod, error) {
 	if agt == nil {
 		return nil, nil
 	}
@@ -74,16 +70,16 @@ func tryLocalAgent() (gossh.AuthMethod, error) {
 	return gossh.PublicKeysCallback(agt.Signers), nil
 }
 
-func getLocalAgent() (agent.Agent, error) {
+func getLocalAgent() (agent.Agent, closers, error) {
 	socket := os.Getenv("SSH_AUTH_SOCK")
 	if socket == "" {
-		return nil, nil
+		return nil, nil, nil
 	}
 	conn, err := net.Dial("unix", socket)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to SSH_AUTH_SOCK: %w", err)
+		return nil, nil, fmt.Errorf("failed to connect to SSH_AUTH_SOCK: %w", err)
 	}
-	return agent.NewClient(conn), nil
+	return agent.NewClient(conn), closers{conn.Close}, nil
 }
 
 func getRemoteAgent(s ssh.Session) (agent.Agent, closers, error) {

@@ -57,7 +57,13 @@ func (s *localSession) Run() error {
 		return fmt.Errorf("failed to get current username: %w", err)
 	}
 
-	methods, err := localBestAuthMethod(s.endpoint)
+	agt, cls, err := getLocalAgent()
+	if err != nil {
+		return err
+	}
+	defer cls.close()
+
+	methods, err := localBestAuthMethod(agt, s.endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
@@ -91,10 +97,6 @@ func (s *localSession) Run() error {
 
 	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")
-		agt, err := getLocalAgent()
-		if err != nil {
-			return err
-		}
 		if agt == nil {
 			return fmt.Errorf("requested ForwardAgent, but no agent is available")
 		}
