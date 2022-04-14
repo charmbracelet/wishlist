@@ -23,7 +23,6 @@ var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
 func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
-	// TODO: we should probably make password protected keys work here too
 	method, agt, cls, err := tryRemoteAuthAgent(s)
 	if err != nil {
 		return nil, nil, nil, err
@@ -165,8 +164,6 @@ func tryUserKeys() ([]gossh.AuthMethod, error) {
 
 // https://github.com/openssh/openssh-portable/blob/8a0848cdd3b25c049332cd56034186b7853ae754/readconf.c#L2534-L2546
 // https://github.com/openssh/openssh-portable/blob/2dc328023f60212cd29504fc05d849133ae47355/pathnames.h#L71-L81
-// TODO: ideally the password should be asked only on use, in order to
-//   avoid asking the password of all user keys to use only one of them.
 func tryUserKeysInternal(pathResolver func(string) (string, error)) ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod // nolint: prealloc
 	for _, name := range []string{
