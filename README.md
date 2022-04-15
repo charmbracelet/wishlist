@@ -32,6 +32,9 @@ yay -S wishlist-bin (or wishlist)
 
 # Windows (with Scoop)
 scoop install wishlist
+
+# Nix
+nix-env -iA nixpkgs.wishlist
 ```
 
 Or download a pre-compiled binary or package from the [releases][releases] page.
