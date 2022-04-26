@@ -28,8 +28,6 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers
 		return method, agt, cls, err
 	}
 
-	log.Println("aa")
-
 	method, err = tryNewKey()
 	return method, nil, nil, err
 }
