@@ -47,14 +47,22 @@ func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers
 // It'll return a nil list if none of the methods is available.
 func localBestAuthMethod(agt agent.Agent, e *Endpoint) ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod
+	if len(e.IdentityFiles) > 0 {
+		ids, err := tryIdendityFiles(e)
+		if err != nil {
+			return methods, err
+		}
+		methods = append(methods, ids...)
+	}
+
 	if method := agentAuthMethod(agt); method != nil {
 		methods = append(methods, method)
 	}
 
-	if len(e.IdentityFiles) > 0 {
-		ids, err := tryIdendityFiles(e)
-		return append(methods, ids...), err
+	if len(methods) > 0 {
+		return methods, nil
 	}
+
 	keys, err := tryUserKeys()
 	return append(methods, keys...), err
 }
