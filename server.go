@@ -11,13 +11,14 @@ import (
 	"syscall"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 )
 
 // Serve serves wishlist with the given config.
-func Serve(config *Config) error {
+func Serve(config *Config, msgch <-chan tea.Msg) error {
 	var closes []func() error
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -44,7 +45,7 @@ func Serve(config *Config) error {
 			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
 			Middlewares: []wish.Middleware{
-				listingMiddleware(config.Endpoints),
+				listingMiddleware(config.Endpoints, msgch),
 				cmdsMiddleware(config.Endpoints),
 			},
 		},

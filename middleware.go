@@ -46,7 +46,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 }
 
 // handles the listing and handoff of apps.
-func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
+func listingMiddleware(endpoints []*Endpoint, msgch <-chan tea.Msg) wish.Middleware {
 	return func(h ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			lipgloss.SetColorProfile(termenv.ANSI256)
@@ -57,6 +57,9 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
+			if msgch == nil {
+				msgch = make(chan tea.Msg)
+			}
 			model := NewListing(endpoints, &remoteClient{
 				session: s,
 				stdin:   handoffStdin,
@@ -68,7 +71,7 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 				tea.WithOutput(s),
 				tea.WithAltScreen(),
 			)
-			go listenAppEvents(s, p, appch, errch)
+			go listenAppEvents(s, p, appch, msgch, errch)
 			errch <- p.Start()
 			appch <- true
 		}
@@ -81,7 +84,7 @@ func listingMiddleware(endpoints []*Endpoint) wish.Middleware {
 // - session's context done: when the session is terminated by either party
 // - winch: when the terminal is resized
 // and handles them accordingly.
-func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, errch <-chan error) {
+func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-chan tea.Msg, errch <-chan error) {
 	_, winch, _ := s.Pty()
 	for {
 		select {
@@ -95,6 +98,10 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, errch <-
 		case w := <-winch:
 			if p != nil {
 				p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+			}
+		case m := <-msgch:
+			if p != nil {
+				p.Send(m)
 			}
 		case err := <-errch:
 			if err != nil {
