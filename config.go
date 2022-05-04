@@ -43,7 +43,7 @@ type Config struct {
 	Endpoints []*Endpoint                         `yaml:"endpoints"` // Endpoints to list.
 	Factory   func(Endpoint) (*ssh.Server, error) `yaml:"-"`         // Factory used to create the SSH server for the given endpoint.
 	Users     []User                              `yaml:"users"`     // Users allowed to access the list.
-	MsgChan   <-chan tea.Msg                      `yaml:"-"`         // Message channel to send messages to. Mainly used to update endpoints.
+	MsgChan   chan tea.Msg                        `yaml:"-"`         // Message channel to send messages to. Mainly used to update endpoints.
 
 	lastPort int64
 }
