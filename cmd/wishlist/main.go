@@ -110,7 +110,7 @@ var serverCmd = &cobra.Command{
 			)
 		}
 
-		return wishlist.Serve(&config, nil)
+		return wishlist.Serve(&config)
 	},
 }
 
