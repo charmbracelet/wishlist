@@ -3,7 +3,6 @@ package wishlist
 import (
 	"fmt"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
@@ -38,12 +37,12 @@ func (e Endpoint) ShouldListen() bool {
 
 // Config represents the wishlist configuration.
 type Config struct {
-	Listen    string                              `yaml:"listen"`    // Address to listen on.
-	Port      int64                               `yaml:"port"`      // Port to start the first server on.
-	Endpoints []*Endpoint                         `yaml:"endpoints"` // Endpoints to list.
-	Factory   func(Endpoint) (*ssh.Server, error) `yaml:"-"`         // Factory used to create the SSH server for the given endpoint.
-	Users     []User                              `yaml:"users"`     // Users allowed to access the list.
-	MsgChan   chan tea.Msg                        `yaml:"-"`         // Message channel to send messages to. Mainly used to update endpoints.
+	Listen       string                              `yaml:"listen"`    // Address to listen on.
+	Port         int64                               `yaml:"port"`      // Port to start the first server on.
+	Endpoints    []*Endpoint                         `yaml:"endpoints"` // Endpoints to list.
+	Factory      func(Endpoint) (*ssh.Server, error) `yaml:"-"`         // Factory used to create the SSH server for the given endpoint.
+	Users        []User                              `yaml:"users"`     // Users allowed to access the list.
+	EndpointChan chan []*Endpoint                    `yaml:"-"`         // Channel to update the endpoints. Used only in server mode.
 
 	lastPort int64
 }

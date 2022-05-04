@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/wishlist/multiplex"
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
+	"github.com/teivah/broadcast"
 )
 
 // handles ssh host -t appname.
@@ -46,7 +47,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 }
 
 // handles the listing and handoff of apps.
-func listingMiddleware(endpoints []*Endpoint, msgch <-chan tea.Msg) wish.Middleware {
+func listingMiddleware(endpoints []*Endpoint, endpointRelay *broadcast.Relay[[]*Endpoint]) wish.Middleware {
 	return func(h ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			lipgloss.SetColorProfile(termenv.ANSI256)
@@ -55,11 +56,11 @@ func listingMiddleware(endpoints []*Endpoint, msgch <-chan tea.Msg) wish.Middlew
 			defer func() { plexch <- true }()
 			listStdin, handoffStdin := multiplex.Reader(s, plexch)
 
+			endpointL := endpointRelay.Listener(0)
+			defer endpointL.Close()
+
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
-			if msgch == nil {
-				msgch = make(chan tea.Msg)
-			}
 			model := NewListing(endpoints, &remoteClient{
 				session: s,
 				stdin:   handoffStdin,
@@ -71,7 +72,7 @@ func listingMiddleware(endpoints []*Endpoint, msgch <-chan tea.Msg) wish.Middlew
 				tea.WithOutput(s),
 				tea.WithAltScreen(),
 			)
-			go listenAppEvents(s, p, appch, msgch, errch)
+			go listenAppEvents(s, p, appch, endpointL.Ch(), errch)
 			errch <- p.Start()
 			appch <- true
 		}
@@ -84,7 +85,7 @@ func listingMiddleware(endpoints []*Endpoint, msgch <-chan tea.Msg) wish.Middlew
 // - session's context done: when the session is terminated by either party
 // - winch: when the terminal is resized
 // and handles them accordingly.
-func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-chan tea.Msg, errch <-chan error) {
+func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-chan []*Endpoint, errch <-chan error) {
 	_, winch, _ := s.Pty()
 	for {
 		select {
@@ -101,7 +102,7 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-
 			}
 		case m := <-msgch:
 			if p != nil {
-				p.Send(m)
+				p.Send(SetEndpointsMsg{Endpoints: m})
 			}
 		case err := <-errch:
 			if err != nil {
