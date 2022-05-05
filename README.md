@@ -36,7 +36,7 @@ scoop install wishlist
 
 Or download a pre-compiled binary or package from the [releases][releases] page.
 
-Or just build it yourself (requires Go 1.16+):
+Or just build it yourself (requires Go 1.18+):
 
 ```bash
 git clone https://github.com/charmbracelet/wishlist.git
