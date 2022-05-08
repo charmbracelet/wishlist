@@ -47,7 +47,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 }
 
 // handles the listing and handoff of apps.
-func listingMiddleware(endpoints []*Endpoint, endpointRelay *broadcast.Relay[[]*Endpoint]) wish.Middleware {
+func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoint]) wish.Middleware {
 	return func(h ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			lipgloss.SetColorProfile(termenv.ANSI256)
@@ -61,7 +61,7 @@ func listingMiddleware(endpoints []*Endpoint, endpointRelay *broadcast.Relay[[]*
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
-			model := NewListing(endpoints, &remoteClient{
+			model := NewListing(config.Endpoints, &remoteClient{
 				session: s,
 				stdin:   handoffStdin,
 				exhaust: true,

@@ -43,6 +43,7 @@ func Serve(config *Config) error {
 	if config.EndpointChan != nil {
 		go func() {
 			for endpoints := range config.EndpointChan {
+				config.Endpoints = endpoints
 				relay.Broadcast(endpoints)
 			}
 		}()
@@ -54,7 +55,7 @@ func Serve(config *Config) error {
 			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
 			Middlewares: []wish.Middleware{
-				listingMiddleware(config.Endpoints, relay),
+				listingMiddleware(config, relay),
 				cmdsMiddleware(config.Endpoints),
 			},
 		},
