@@ -24,11 +24,8 @@ var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
 func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
 	method, agt, cls, err := tryRemoteAuthAgent(s)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	if method != nil {
-		return method, agt, cls, nil
+	if err != nil || method != nil {
+		return method, agt, cls, err
 	}
 
 	method, err = tryNewKey()
@@ -72,7 +69,11 @@ func agentAuthMethod(agt agent.Agent) gossh.AuthMethod {
 	if agt == nil {
 		return nil
 	}
-	log.Println("using SSH agent")
+
+	signers, _ := agt.Signers()
+	for _, signer := range signers {
+		log.Printf("offering public key via ssh agent: %s %s", signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
+	}
 	return gossh.PublicKeysCallback(agt.Signers)
 }
 
@@ -121,13 +122,22 @@ func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, 
 		return nil, nil, closers, err
 	}
 
+	signers, _ := agent.Signers()
+	for _, signer := range signers {
+		log.Printf("offering public key via ssh agent: %s %s", signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
+	}
 	return gossh.PublicKeysCallback(agent.Signers), agent, closers, nil
 }
 
 // tryNewKey will create a .wishlist/client_ed25519 keypair if one does not exist.
 // It will return an auth method that uses the keypair if it exist or is successfully created.
 func tryNewKey() (gossh.AuthMethod, error) {
-	key, err := keygen.New(".wishlist/client", nil, keygen.Ed25519)
+	path, err := filepath.Abs(".wishlist/client")
+	if err != nil {
+		return nil, fmt.Errorf("could not create client key: %w", err)
+	}
+
+	key, err := keygen.New(path, nil, keygen.Ed25519)
 	if err != nil {
 		return nil, err // nolint:wrapcheck
 	}
@@ -136,6 +146,8 @@ func tryNewKey() (gossh.AuthMethod, error) {
 	if err != nil {
 		return nil, err // nolint:wrapcheck
 	}
+
+	log.Printf("offering public key: %s %s %s", path, signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
 
 	if key.KeyPairExists() {
 		return gossh.PublicKeys(signer), nil
@@ -200,10 +212,16 @@ func tryUserKeysInternal(pathResolver func(string) (string, error)) ([]gossh.Aut
 }
 
 func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not find key: %q: %w", path, err)
+	}
+
 	bts, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read key: %q: %w", path, err)
 	}
+
 	var signer gossh.Signer
 	if len(password) == 0 {
 		signer, err = gossh.ParsePrivateKey(bts)
@@ -223,7 +241,8 @@ func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 		}
 		return nil, fmt.Errorf("failed to parse private key: %q: %w", path, err)
 	}
-	log.Printf("using %q", path)
+
+	log.Printf("offering public key: %s %s %s", path, signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
 	return gossh.PublicKeys(signer), nil
 }
 
