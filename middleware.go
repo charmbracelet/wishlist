@@ -37,8 +37,7 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 						return // unreachable
 					}
 				}
-				fmt.Fprintf(s.Stderr(), "wishlist: command %q not found, valid commands are %s.\n\r", cmd[0], strings.Join(valid, ", "))
-				_ = s.Exit(1)
+				wish.Fatal(s, fmt.Errorf("wishlist: command %q not found, valid commands are %s", cmd[0], strings.Join(valid, ", ")))
 				return // unreachable
 			}
 			h(s)
@@ -121,8 +120,7 @@ func mustConnect(session ssh.Session, e *Endpoint) {
 	cmd.SetStderr(session.Stderr())
 	cmd.SetStdout(session)
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(session, "wishlist: %s\n\r", err.Error())
-		_ = session.Exit(1)
+		wish.Fatal(session, fmt.Errorf("wishlist: %w", err))
 		return // unreachable
 	}
 	fmt.Fprintf(session, "wishlist: closed connection to %q (%s)\n\r", e.Name, e.Address)
