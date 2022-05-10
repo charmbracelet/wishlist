@@ -16,7 +16,7 @@ type Reader struct {
 	r io.Reader
 }
 
-// New wraps a given io.Reader into a BlockingReader
+// New wraps a given io.Reader into a BlockingReader.
 func New(r io.Reader) Reader {
 	return Reader{r: r}
 }
