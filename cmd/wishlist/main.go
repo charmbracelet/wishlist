@@ -66,7 +66,7 @@ var manCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		manPage, err := mcobra.NewManPage(1, rootCmd)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not generate man pages: %w", err)
 		}
 		manPage = manPage.WithSection("Copyright", "(C) 2022 Charmbracelet, Inc.\n"+
 			"Released under MIT license.")
@@ -87,11 +87,11 @@ var serverCmd = &cobra.Command{
 		}
 		k, err := keygen.New(".wishlist/server", nil, keygen.Ed25519)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not create keypair: %w", err)
 		}
 		if !k.KeyPairExists() {
 			if err := k.WriteKeys(); err != nil {
-				return err
+				return fmt.Errorf("could not write key pair: %w", err)
 			}
 		}
 
@@ -110,7 +110,10 @@ var serverCmd = &cobra.Command{
 			)
 		}
 
-		return wishlist.Serve(&config)
+		if err := wishlist.Serve(&config); err != nil {
+			return fmt.Errorf("could not serve wishlist: %w", err)
+		}
+		return nil
 	},
 }
 
@@ -227,5 +230,8 @@ func connect(e *wishlist.Endpoint) error {
 	cmd.SetStdout(os.Stdout)
 	cmd.SetStderr(os.Stderr)
 	cmd.SetStdin(os.Stdin)
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("connection failed: %w", err)
+	}
+	return nil
 }

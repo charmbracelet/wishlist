@@ -155,10 +155,10 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 			continue
 		}
 		if _, err := rb.Write(line); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse: %w", err)
 		}
 		if _, err := rb.Write([]byte("\n")); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse: %w", err)
 		}
 	}
 

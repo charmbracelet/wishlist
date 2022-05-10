@@ -108,6 +108,7 @@ func (s *localSession) Run() error {
 		}
 	}
 
+	// nolint:nestif
 	if s.endpoint.RequestTTY || s.endpoint.RemoteCommand == "" {
 		fd := int(os.Stdout.Fd())
 		if !term.IsTerminal(fd) {
