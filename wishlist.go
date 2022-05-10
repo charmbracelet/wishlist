@@ -75,6 +75,11 @@ type errMsg struct {
 	err error
 }
 
+// SetEndpointsMsg can be used to update the listed wishlist endpoints.
+type SetEndpointsMsg struct {
+	Endpoints []*Endpoint
+}
+
 // Update comply with tea.Model interface.
 func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -96,6 +101,11 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
+
+	case SetEndpointsMsg:
+		if cmd := m.SetItems(msg.Endpoints); cmd != nil {
+			return m, cmd
+		}
 
 	case errMsg:
 		if msg.err != nil {

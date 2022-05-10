@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
+	"github.com/teivah/broadcast"
 )
 
 // Serve serves wishlist with the given config.
@@ -38,13 +39,23 @@ func Serve(config *Config) error {
 		return fmt.Errorf("could not create .wishlist dir: %w", err)
 	}
 
+	relay := broadcast.NewRelay[[]*Endpoint]()
+	if config.EndpointChan != nil {
+		go func() {
+			for endpoints := range config.EndpointChan {
+				config.Endpoints = endpoints
+				relay.Broadcast(endpoints)
+			}
+		}()
+	}
+
 	config.lastPort = config.Port
 	for _, endpoint := range append([]*Endpoint{
 		{
 			Name:    "list",
 			Address: toAddress(config.Listen, config.Port),
 			Middlewares: []wish.Middleware{
-				listingMiddleware(config.Endpoints),
+				listingMiddleware(config, relay),
 				cmdsMiddleware(config.Endpoints),
 			},
 		},
