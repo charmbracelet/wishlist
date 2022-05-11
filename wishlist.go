@@ -120,13 +120,17 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+var boldStyle = lipgloss.NewStyle().Bold(true)
+
 // View comply with tea.Model interface.
 func (m *ListModel) View() string {
 	if m.quitting {
 		return ""
 	}
 	if m.err != nil {
-		return "something went wrong:" + m.err.Error() + "\npress q to quit"
+		return boldStyle.Render("Something went wrong:") + "\n\n" +
+			m.err.Error() + "\n\n" +
+			boldStyle.Render("Press 'q' to quit.") + "\n"
 	}
 	return docStyle.Render(m.list.View())
 }
