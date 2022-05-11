@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/home"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -116,7 +117,7 @@ func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, 
 	agent, closers, err := getRemoteAgent(s)
 	if err != nil {
 		if errors.Is(err, errNoRemoteAgent) {
-			fmt.Fprintf(s.Stderr(), "wishlist: ssh agent not available\n\r")
+			wish.Error(s, fmt.Errorf("wishlist: ssh agent not available"))
 			return nil, nil, closers, nil
 		}
 		return nil, nil, closers, err
