@@ -21,6 +21,13 @@ endpoints:
   # Endpoint's address in the host:port format.
   address: foo.local:2234
 
+  # An URL to be printed in the list.
+  # links:
+  #   - name: GitHub
+  #     url: https://github.com/charmbracelet/wishlist
+  #
+  # description: "single-line short description of this app."
+
   # User to use to connect.
   # Defaults to the current remote user.
   user: notme
@@ -36,6 +43,16 @@ endpoints:
   # requests a TTY.
   # Defaults to true if remote_command is empty.
   request_tty: true
+
+- name: another2
+  address: foo.local:2235
+  description: "another apps description.\nalala\naaaaaaaaaaaa"
+- name: another
+  address: foo.local:2235
+  description: "another apps description."
+  # links:
+  #   - url: https://github.com/charmbracelet/wish
+  #   - url: https://github.com/charmbracelet/wishlist
 
 # users to allow access to the list
 users:

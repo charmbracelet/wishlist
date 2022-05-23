@@ -3,6 +3,7 @@ package wishlist
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -37,7 +38,23 @@ func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 func (i *Endpoint) Title() string { return i.Name }
 
 // Description to abide the list.Item interface.
-func (i *Endpoint) Description() string { return fmt.Sprintf("ssh://%s", i.Address) }
+func (i *Endpoint) Description() string {
+	var lines []string
+	if i.Desc != "" {
+		lines = append(lines, i.Desc)
+	}
+	for _, l := range append(
+		i.Links,
+		Link{
+			URL: fmt.Sprintf("ssh://%s", i.Address),
+		},
+	) {
+		if s := l.String(); s != "" {
+			lines = append(lines, s)
+		}
+	}
+	return strings.Join(lines, "\n")
+}
 
 // FilterValue to abide the list.Item interface.
 func (i *Endpoint) FilterValue() string { return i.Name }

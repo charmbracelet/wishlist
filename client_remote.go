@@ -108,6 +108,7 @@ func (s *remoteSession) Run() error {
 	if s.endpoint.RemoteCommand == "" {
 		return shellAndWait(session)
 	}
+
 	return runAndWait(session, s.endpoint.RemoteCommand)
 }
 
