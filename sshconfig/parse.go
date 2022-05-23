@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -219,12 +218,6 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					infos.set(name, info)
 					infos = merge(infos, included)
 					info, _ = infos.get(name)
-				case "SendEnv":
-					log.Println("AAAAAAAAAAA", key, value)
-				case "SetEnv":
-					log.Println("BBBBBBBBBB", key, value)
-				default:
-					log.Println("unhandled", key)
 				}
 			}
 
