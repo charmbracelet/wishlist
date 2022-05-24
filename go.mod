@@ -3,7 +3,7 @@ module github.com/charmbracelet/wishlist
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbles v0.10.4-0.20220524020702-e8b9aeb14922
+	github.com/charmbracelet/bubbles v0.10.4-0.20220524150156-128d4264d000
 	github.com/charmbracelet/bubbletea v0.20.1-0.20220412142310-3795c036c451
 	github.com/charmbracelet/keygen v0.3.0
 	github.com/charmbracelet/lipgloss v0.5.0
