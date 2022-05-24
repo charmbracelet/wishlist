@@ -31,7 +31,7 @@ type Endpoint struct {
 	RequestTTY    bool              `yaml:"request_tty"`    // RequestTTY defines wether to request a TTY. Anologous to SSH's config RequestTTY.
 	RemoteCommand string            `yaml:"remote_command"` // RemoteCommand defines wether to request a TTY. Anologous to SSH's config RemoteCommand.
 	Desc          string            `yaml:"description"`    // Description describes an optional description of the item.
-	Links         []Link            `yaml:"links"`          // Links can be used to add a link to the item description using OSC8.
+	Link          Link              `yaml:"link"`           // Links can be used to add a link to the item description using OSC8.
 	IdentityFiles []string          `yaml:"-"`              // IdentityFiles is only set when parsing from a SSH Config file, and used only on local mode.
 	Middlewares   []wish.Middleware `yaml:"-"`              // wish middlewares you can use in the factory method.
 }

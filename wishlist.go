@@ -1,9 +1,7 @@
 package wishlist
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -21,7 +19,10 @@ var enter = key.NewBinding(
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If sessuion is nil, it is assume to be a local listing.
 func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
-	l := list.NewModel(endpointsToListItems(endpoints), list.NewDefaultDelegate(), 0, 0)
+	d := list.NewDefaultDelegate()
+	d.SetHeight(5)
+
+	l := list.NewModel(endpointsToListItems(endpoints), d, 0, 0)
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
@@ -43,17 +44,12 @@ func (i *Endpoint) Description() string {
 	if i.Desc != "" {
 		lines = append(lines, i.Desc)
 	}
-	for _, l := range append(
-		i.Links,
-		Link{
-			URL: fmt.Sprintf("ssh://%s", i.Address),
-		},
-	) {
+	for _, l := range []Link{i.Link, {URL: "ssh://" + i.Address}} {
 		if s := l.String(); s != "" {
 			lines = append(lines, s)
 		}
 	}
-	return strings.Join(lines, "\n")
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
 // FilterValue to abide the list.Item interface.
