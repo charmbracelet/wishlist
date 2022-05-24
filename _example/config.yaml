@@ -21,6 +21,14 @@ endpoints:
   # Endpoint's address in the host:port format.
   address: foo.local:2234
 
+  # An URL to be printed in the list.
+  link:
+    name: Optional link name
+    url: https://github.com/charmbracelet/wishlist
+
+  # A descripton of the item.
+  description: "A description of this endpoint.\nCan have multiple lines."
+
   # User to use to connect.
   # Defaults to the current remote user.
   user: notme
