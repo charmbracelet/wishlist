@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/termenv"
@@ -17,7 +16,7 @@ type SSHClient interface {
 	For(e *Endpoint) tea.ExecCommand
 }
 
-func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *gossh.Client, closers, error) {
+func createSession(conf *gossh.ClientConfig, e *Endpoint, env ...string) (*gossh.Session, *gossh.Client, closers, error) {
 	var cl closers
 	conn, err := gossh.Dial("tcp", e.Address, conf)
 	if err != nil {
@@ -31,14 +30,11 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *goss
 		return nil, conn, cl, fmt.Errorf("failed to open session: %w", err)
 	}
 	cl = append(cl, session.Close)
-	for _, env := range e.Environment {
-		k, v, ok := strings.Cut(env, "=")
-		if ok && k != "" && v != "" {
-			if err := session.Setenv(k, v); err != nil {
-				return session, conn, cl, fmt.Errorf("could not set env: %q: %w", env, err)
-			}
-			log.Println("setenv", k)
+	for k, v := range e.Environment(env...) {
+		if err := session.Setenv(k, v); err != nil {
+			return session, conn, cl, fmt.Errorf("could not set env: %q: %w", env, err)
 		}
+		log.Println("setenv", k)
 	}
 	return session, conn, cl, nil
 }

@@ -2,6 +2,7 @@ package wishlist
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
@@ -32,9 +33,30 @@ type Endpoint struct {
 	RemoteCommand string            `yaml:"remote_command"` // RemoteCommand defines wether to request a TTY. Anologous to SSH's config RemoteCommand.
 	Desc          string            `yaml:"description"`    // Description describes an optional description of the item.
 	Link          Link              `yaml:"link"`           // Links can be used to add a link to the item description using OSC8.
-	Environment   []string          `yaml:"environment"`    // Environment variables to be used with SendEnv and SetEnv
+	SendEnv       []string          `yaml:"send_env"`       // Anologous to SSH's SendEnv
+	SetEnv        []string          `yaml:"set_env"`        // Anologous to SSH's SetEnv
 	IdentityFiles []string          `yaml:"-"`              // IdentityFiles is only set when parsing from a SSH Config file, and used only on local mode.
 	Middlewares   []wish.Middleware `yaml:"-"`              // wish middlewares you can use in the factory method.
+}
+
+// Environment evaluates SendEnv and SetEnv into the env map that should be
+// set into the session.
+// Optionally you can pass a list of extra SetEnv as an argument.
+func (e Endpoint) Environment(extraSet ...string) map[string]string {
+	env := map[string]string{}
+	for _, set := range append(e.SetEnv, extraSet...) {
+		k, v, ok := strings.Cut(set, "=")
+		if !ok {
+			continue
+		}
+		for _, send := range e.SendEnv {
+			// TODO: patterns
+			if send == k {
+				env[k] = v
+			}
+		}
+	}
+	return env
 }
 
 // String returns the endpoint in a friendly string format.

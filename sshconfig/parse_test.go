@@ -25,9 +25,15 @@ func TestParseFile(t *testing.T) {
 				Name:    "supernova",
 				Address: "supernova.local:22",
 				User:    "notme",
-				Environment: []string{
+				SendEnv: []string{
+					"FOO",
+					"BAR",
+					"NOPE",
+				},
+				SetEnv: []string{
 					"FOO=foo",
 					"BAR=bar",
+					"IGNR=nope",
 				},
 			},
 			{
@@ -42,25 +48,47 @@ func TestParseFile(t *testing.T) {
 				ForwardAgent:  true,
 			},
 			{
-				Name:        "multiple1",
-				Address:     "multi1.foo.local:22",
-				User:        "multi",
-				Environment: []string{"FOO=foobar"},
+				Name:    "multiple1",
+				Address: "multi1.foo.local:22",
+				User:    "multi",
+				SendEnv: []string{
+					"FOO",
+				},
+				SetEnv: []string{
+					"FOO=foobar",
+					"FOOS=foobar",
+				},
 			},
 			{
 				Name:    "multiple2",
 				Address: "multi2.foo.local:2223",
 				User:    "multi",
+				SendEnv: []string{
+					"FOO",
+				},
+				SetEnv: []string{
+					"FOOS=foobar",
+				},
 			},
 			{
 				Name:    "multiple3",
 				Address: "multi3.foo.local:22",
 				User:    "overridden",
+				SendEnv: []string{
+					"FOO",
+					"AAA",
+				},
+				SetEnv: []string{
+					"AAA",
+				},
 			},
 			{
 				Name:         "no.hostname",
 				Address:      "no.hostname:23231",
 				ForwardAgent: true,
+				SendEnv: []string{
+					"AAA",
+				},
 			},
 			{
 				Name:    "only.host",
@@ -80,6 +108,44 @@ func TestParseFile(t *testing.T) {
 		require.Empty(t, endpoints)
 		require.ErrorIs(t, err, os.ErrNotExist)
 	})
+}
+
+func TestEnvironment(t *testing.T) {
+	type testcase struct {
+		name     string
+		env      map[string]string
+		endpoint *wishlist.Endpoint
+	}
+	for _, tt := range []testcase{
+		{
+			name:     "no env",
+			endpoint: &wishlist.Endpoint{},
+			env:      map[string]string{},
+		},
+		{
+			name: "some env",
+			endpoint: &wishlist.Endpoint{
+				SendEnv: []string{
+					"FOO",
+					"BAR",
+					"NOPE",
+				},
+				SetEnv: []string{
+					"FOO=foo",
+					"BAR=bar",
+					"IGNR=nope",
+				},
+			},
+			env: map[string]string{
+				"BAR": "bar",
+				"FOO": "foo",
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.env, tt.endpoint.Environment())
+		})
+	}
 }
 
 func TestParseReader(t *testing.T) {
