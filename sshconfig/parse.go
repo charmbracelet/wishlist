@@ -56,6 +56,18 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			return err
 		}
 
+		var env []string
+		for _, set := range info.SetEnv {
+			k, _, ok := strings.Cut(set, "=")
+			if !ok {
+				continue
+			}
+			for _, send := range info.SendEnv {
+				if send == k {
+					env = append(env, set)
+				}
+			}
+		}
 		endpoints = append(endpoints, &wishlist.Endpoint{
 			Name: name,
 			Address: net.JoinHostPort(
@@ -67,6 +79,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			ForwardAgent:  stringToBool(info.ForwardAgent),
 			RequestTTY:    stringToBool(info.RequestTTY),
 			RemoteCommand: info.RemoteCommand,
+			Environment:   env,
 		})
 		return nil
 	}); err != nil {
@@ -98,6 +111,8 @@ type hostinfo struct {
 	ForwardAgent  string
 	RequestTTY    string
 	RemoteCommand string
+	SendEnv       []string
+	SetEnv        []string
 }
 
 type hostinfoMap struct {
@@ -206,6 +221,10 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					info.RequestTTY = value
 				case "RemoteCommand":
 					info.RemoteCommand = value
+				case "SendEnv":
+					info.SendEnv = append(info.SendEnv, value)
+				case "SetEnv":
+					info.SetEnv = append(info.SetEnv, value)
 				case "Include":
 					path, err := home.ExpandPath(value)
 					if err != nil {
@@ -285,6 +304,8 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	if h1.RemoteCommand != "" {
 		h2.RemoteCommand = h1.RemoteCommand
 	}
+	h2.SendEnv = append(h2.SendEnv, h1.SendEnv...)
+	h2.SetEnv = append(h2.SetEnv, h1.SetEnv...)
 	return h2
 }
 

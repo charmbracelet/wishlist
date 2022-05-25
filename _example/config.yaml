@@ -45,6 +45,11 @@ endpoints:
   # Defaults to true if remote_command is empty.
   request_tty: true
 
+  # Set environment variables into the connection.
+  environment:
+    - FOO=bar
+    - BAR=baz
+
 # users to allow access to the list
 users:
   -
