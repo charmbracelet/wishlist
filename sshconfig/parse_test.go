@@ -25,6 +25,10 @@ func TestParseFile(t *testing.T) {
 				Name:    "supernova",
 				Address: "supernova.local:22",
 				User:    "notme",
+				Environment: []string{
+					"FOO=foo",
+					"BAR=bar",
+				},
 			},
 			{
 				Name:    "app1",
@@ -38,9 +42,10 @@ func TestParseFile(t *testing.T) {
 				ForwardAgent:  true,
 			},
 			{
-				Name:    "multiple1",
-				Address: "multi1.foo.local:22",
-				User:    "multi",
+				Name:        "multiple1",
+				Address:     "multi1.foo.local:22",
+				User:        "multi",
+				Environment: []string{"FOO=foobar"},
 			},
 			{
 				Name:    "multiple2",

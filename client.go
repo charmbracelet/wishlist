@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/termenv"
@@ -30,6 +31,15 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint) (*gossh.Session, *goss
 		return nil, conn, cl, fmt.Errorf("failed to open session: %w", err)
 	}
 	cl = append(cl, session.Close)
+	for _, env := range e.Environment {
+		k, v, ok := strings.Cut(env, "=")
+		if ok && k != "" && v != "" {
+			if err := session.Setenv(k, v); err != nil {
+				return session, conn, cl, fmt.Errorf("could not set env: %q: %w", env, err)
+			}
+			log.Println("setenv", k)
+		}
+	}
 	return session, conn, cl, nil
 }
 
