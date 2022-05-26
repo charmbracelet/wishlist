@@ -20,10 +20,6 @@ func TestParseFile(t *testing.T) {
 			{
 				Name:    "darkstar",
 				Address: "darkstar.local:22",
-				SendEnv: []string{
-					"LC_*",
-					"LANG",
-				},
 			},
 			{
 				Name:    "supernova",
@@ -33,8 +29,6 @@ func TestParseFile(t *testing.T) {
 					"FOO",
 					"BAR",
 					"NOPE",
-					"LC_*",
-					"LANG",
 				},
 				SetEnv: []string{
 					"FOO=foo",
@@ -45,10 +39,6 @@ func TestParseFile(t *testing.T) {
 			{
 				Name:    "app1",
 				Address: "app.foo.local:2222",
-				SendEnv: []string{
-					"LC_*",
-					"LANG",
-				},
 			},
 			{
 				Name:          "app2",
@@ -56,10 +46,6 @@ func TestParseFile(t *testing.T) {
 				User:          "someoneelse",
 				IdentityFiles: []string{"./testdata/key"},
 				ForwardAgent:  true,
-				SendEnv: []string{
-					"LC_*",
-					"LANG",
-				},
 			},
 			{
 				Name:    "multiple1",
@@ -67,8 +53,6 @@ func TestParseFile(t *testing.T) {
 				User:    "multi",
 				SendEnv: []string{
 					"FOO",
-					"LC_*",
-					"LANG",
 				},
 				SetEnv: []string{
 					"FOO=foobar",
@@ -81,8 +65,6 @@ func TestParseFile(t *testing.T) {
 				User:    "multi",
 				SendEnv: []string{
 					"FOO",
-					"LC_*",
-					"LANG",
 				},
 				SetEnv: []string{
 					"FOOS=foobar",
@@ -95,8 +77,6 @@ func TestParseFile(t *testing.T) {
 				SendEnv: []string{
 					"FOO",
 					"AAA",
-					"LC_*",
-					"LANG",
 				},
 				SetEnv: []string{
 					"AAA",
@@ -108,17 +88,11 @@ func TestParseFile(t *testing.T) {
 				ForwardAgent: true,
 				SendEnv: []string{
 					"AAA",
-					"LC_*",
-					"LANG",
 				},
 			},
 			{
 				Name:    "only.host",
 				Address: "only.host:22",
-				SendEnv: []string{
-					"LC_*",
-					"LANG",
-				},
 			},
 		}, endpoints)
 	})
