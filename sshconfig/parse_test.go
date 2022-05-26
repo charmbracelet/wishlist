@@ -15,7 +15,7 @@ func TestParseFile(t *testing.T) {
 		endpoints, err := ParseFile("testdata/good")
 		require.NoError(t, err)
 
-		require.Len(t, endpoints, 9)
+		require.Len(t, endpoints, 11)
 
 		results := map[string]*wishlist.Endpoint{
 			"darkstar": {
@@ -83,6 +83,18 @@ func TestParseFile(t *testing.T) {
 			"only.host": {
 				Name:    "only.host",
 				Address: "only.host:22",
+			},
+
+			"req.tty": {
+				Name:       "req.tty",
+				Address:    "req.tty:22",
+				RequestTTY: true,
+			},
+
+			"remote.cmd": {
+				Name:          "remote.cmd",
+				Address:       "remote.cmd:22",
+				RemoteCommand: "tmux",
 			},
 		}
 

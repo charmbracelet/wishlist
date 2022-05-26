@@ -48,6 +48,12 @@ Host no.hostname
 	Port 23231
 	ForwardAgent yes
 
+Host req.tty
+	RequestTTY yes
+
+Host remote.cmd
+	RemoteCommand tmux
+
 Host only.host
 
 
