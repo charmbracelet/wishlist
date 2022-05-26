@@ -123,6 +123,24 @@ func TestEnvironment(t *testing.T) {
 			env:      map[string]string{},
 		},
 		{
+			name: "some invalid env",
+			endpoint: &wishlist.Endpoint{
+				SendEnv: []string{
+					"FOO",
+					"BAR",
+					"NOPE",
+				},
+				SetEnv: []string{
+					"FOO=foo",
+					"BAR",
+					"IGNR=",
+				},
+			},
+			env: map[string]string{
+				"FOO": "foo",
+			},
+		},
+		{
 			name: "some env",
 			endpoint: &wishlist.Endpoint{
 				SendEnv: []string{
