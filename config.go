@@ -74,7 +74,7 @@ func (e Endpoint) Environment(hostenv ...string) map[string]string {
 }
 
 func (e Endpoint) shouldSend(k string) bool {
-	for _, send := range e.SendEnv {
+	for _, send := range append(e.SendEnv, "LC_*", "LANG") { // append default OpenSSH SendEnv's
 		glob, err := glob.Compile(send)
 		if err != nil {
 			continue
