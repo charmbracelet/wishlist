@@ -52,7 +52,7 @@ func (e Endpoint) Environment(hostenv ...string) map[string]string {
 
 	for _, set := range hostenv {
 		k, v, ok := strings.Cut(set, "=")
-		if !ok {
+		if !ok || k == "" {
 			continue
 		}
 		if e.shouldSend(k) {
@@ -64,7 +64,7 @@ func (e Endpoint) Environment(hostenv ...string) map[string]string {
 
 	for _, set := range e.SetEnv {
 		k, v, ok := strings.Cut(set, "=")
-		if !ok {
+		if !ok || k == "" {
 			continue
 		}
 		env[k] = v

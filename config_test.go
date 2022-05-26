@@ -63,35 +63,34 @@ func TestEnvironment(t *testing.T) {
 		{
 			name:     "no env",
 			endpoint: &Endpoint{},
-			env:      map[string]string{},
+			env: map[string]string{
+				"LC_ALL": "en_US.UTF-8",
+				"LANG":   "en_US",
+			},
 		},
 		{
 			name: "some invalid env",
 			endpoint: &Endpoint{
-				SendEnv: []string{
-					"FOO",
-					"BAR",
-					"NOPE",
-				},
+				SendEnv: []string{},
 				SetEnv: []string{
 					"FOO=foo",
 					"BAR",
 					"IGNR=",
+					"=ignr",
 				},
 			},
 			env: map[string]string{
-				"FOO":  "foo",
-				"IGNR": "",
+				"FOO":    "foo",
+				"IGNR":   "",
+				"LC_ALL": "en_US.UTF-8",
+				"LANG":   "en_US",
 			},
 		},
 		{
 			name: "some env",
 			endpoint: &Endpoint{
 				SendEnv: []string{
-					"FOO",
-					"BAR",
-					"NOPE",
-					"LC_*",
+					"FOO_*",
 				},
 				SetEnv: []string{
 					"FOO=foo",
@@ -99,14 +98,20 @@ func TestEnvironment(t *testing.T) {
 				},
 			},
 			env: map[string]string{
-				"BAR":    "bar",
-				"FOO":    "foo",
-				"LC_ALL": "en_US.UTF-8",
+				"BAR":     "bar",
+				"FOO":     "foo",
+				"LC_ALL":  "en_US.UTF-8",
+				"FOO_BAR": "foobar",
+				"LANG":    "en_US",
 			},
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.env, tt.endpoint.Environment("LC_ALL=en_US.UTF-8"))
+			require.Equal(t, tt.env, tt.endpoint.Environment(
+				"LC_ALL=en_US.UTF-8",
+				"LANG=en_US",
+				"FOO_BAR=foobar",
+			))
 		})
 	}
 }

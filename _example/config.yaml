@@ -54,7 +54,7 @@ endpoints:
   # Environments from the environment that match these keys will also be set
   # into the connection.
   # Analogous to SSH's SendEnv.
-  # Defaults to LC_* and LANG.
+  # Defaults to ["LC_*", "LANG"].
   send_env:
     - LC_*
     - LANG

@@ -16,38 +16,35 @@ func TestParseFile(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, endpoints, 9)
-		require.Equal(t, []*wishlist.Endpoint{
-			{
+
+		results := map[string]*wishlist.Endpoint{
+			"darkstar": {
 				Name:    "darkstar",
 				Address: "darkstar.local:22",
 			},
-			{
+			"supernova": {
 				Name:    "supernova",
 				Address: "supernova.local:22",
 				User:    "notme",
 				SendEnv: []string{
 					"FOO",
-					"BAR",
-					"NOPE",
 				},
 				SetEnv: []string{
-					"FOO=foo",
 					"BAR=bar",
-					"IGNR=nope",
 				},
 			},
-			{
+			"app1": {
 				Name:    "app1",
 				Address: "app.foo.local:2222",
 			},
-			{
+			"app2": {
 				Name:          "app2",
 				Address:       "app.foo.local:2223",
 				User:          "someoneelse",
 				IdentityFiles: []string{"./testdata/key"},
 				ForwardAgent:  true,
 			},
-			{
+			"multiple1": {
 				Name:    "multiple1",
 				Address: "multi1.foo.local:22",
 				User:    "multi",
@@ -55,11 +52,10 @@ func TestParseFile(t *testing.T) {
 					"FOO",
 				},
 				SetEnv: []string{
-					"FOO=foobar",
 					"FOOS=foobar",
 				},
 			},
-			{
+			"multiple2": {
 				Name:    "multiple2",
 				Address: "multi2.foo.local:2223",
 				User:    "multi",
@@ -70,7 +66,7 @@ func TestParseFile(t *testing.T) {
 					"FOOS=foobar",
 				},
 			},
-			{
+			"multiple3": {
 				Name:    "multiple3",
 				Address: "multi3.foo.local:22",
 				User:    "overridden",
@@ -78,23 +74,23 @@ func TestParseFile(t *testing.T) {
 					"FOO",
 					"AAA",
 				},
-				SetEnv: []string{
-					"AAA",
-				},
 			},
-			{
+			"no.hostname": {
 				Name:         "no.hostname",
 				Address:      "no.hostname:23231",
 				ForwardAgent: true,
-				SendEnv: []string{
-					"AAA",
-				},
 			},
-			{
+			"only.host": {
 				Name:    "only.host",
 				Address: "only.host:22",
 			},
-		}, endpoints)
+		}
+
+		for _, e := range endpoints {
+			t.Run(e.Name, func(t *testing.T) {
+				require.Equal(t, results[e.Name], e)
+			})
+		}
 	})
 
 	t.Run("invalid node", func(t *testing.T) {
