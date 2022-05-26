@@ -34,7 +34,7 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint, env ...string) (*gossh
 		if err := session.Setenv(k, v); err != nil {
 			return session, conn, cl, fmt.Errorf("could not set env: %q: %w", env, err)
 		}
-		log.Printf("setting env: %q=%q", k, v)
+		log.Printf("setting env %s = %q", k, v)
 	}
 	return session, conn, cl, nil
 }

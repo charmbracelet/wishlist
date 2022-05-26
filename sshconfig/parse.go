@@ -68,7 +68,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			RequestTTY:    stringToBool(info.RequestTTY),
 			RemoteCommand: info.RemoteCommand,
 			SetEnv:        info.SetEnv,
-			SendEnv:       info.SendEnv,
+			SendEnv:       append(info.SendEnv, "LC_*", "LANG"), // append default OpenSSH SendEnv's
 		})
 		return nil
 	}); err != nil {

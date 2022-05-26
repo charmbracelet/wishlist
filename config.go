@@ -2,10 +2,12 @@ package wishlist
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
+	"github.com/gobwas/glob"
 )
 
 // Link defines an item link.
@@ -41,22 +43,47 @@ type Endpoint struct {
 
 // Environment evaluates SendEnv and SetEnv into the env map that should be
 // set into the session.
-// Optionally you can pass a list of extra SetEnv as an argument.
-func (e Endpoint) Environment(extraSet ...string) map[string]string {
+// Optionally you can pass a list existing environment variables
+// (e.g. os.Environ()), and the ones allowed by SendEnv will be set as well.
+// As on OpenSSH, envs set via SetEnv take precedence over the ones from
+// hostenv.
+func (e Endpoint) Environment(hostenv ...string) map[string]string {
 	env := map[string]string{}
-	for _, set := range append(e.SetEnv, extraSet...) {
+
+	for _, set := range hostenv {
 		k, v, ok := strings.Cut(set, "=")
 		if !ok {
 			continue
 		}
-		for _, send := range e.SendEnv {
-			// TODO: patterns
-			if send == k {
-				env[k] = v
-			}
+		if e.shouldSend(k) {
+			env[k] = v
+		} else {
+			log.Printf("ignored env %s", k)
 		}
 	}
+
+	for _, set := range e.SetEnv {
+		k, v, ok := strings.Cut(set, "=")
+		if !ok {
+			continue
+		}
+		env[k] = v
+	}
+
 	return env
+}
+
+func (e Endpoint) shouldSend(k string) bool {
+	for _, send := range e.SendEnv {
+		glob, err := glob.Compile(send)
+		if err != nil {
+			continue
+		}
+		if glob.Match(k) {
+			return true
+		}
+	}
+	return false
 }
 
 // String returns the endpoint in a friendly string format.

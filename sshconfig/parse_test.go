@@ -20,6 +20,10 @@ func TestParseFile(t *testing.T) {
 			{
 				Name:    "darkstar",
 				Address: "darkstar.local:22",
+				SendEnv: []string{
+					"LC_*",
+					"LANG",
+				},
 			},
 			{
 				Name:    "supernova",
@@ -29,6 +33,8 @@ func TestParseFile(t *testing.T) {
 					"FOO",
 					"BAR",
 					"NOPE",
+					"LC_*",
+					"LANG",
 				},
 				SetEnv: []string{
 					"FOO=foo",
@@ -39,6 +45,10 @@ func TestParseFile(t *testing.T) {
 			{
 				Name:    "app1",
 				Address: "app.foo.local:2222",
+				SendEnv: []string{
+					"LC_*",
+					"LANG",
+				},
 			},
 			{
 				Name:          "app2",
@@ -46,6 +56,10 @@ func TestParseFile(t *testing.T) {
 				User:          "someoneelse",
 				IdentityFiles: []string{"./testdata/key"},
 				ForwardAgent:  true,
+				SendEnv: []string{
+					"LC_*",
+					"LANG",
+				},
 			},
 			{
 				Name:    "multiple1",
@@ -53,6 +67,8 @@ func TestParseFile(t *testing.T) {
 				User:    "multi",
 				SendEnv: []string{
 					"FOO",
+					"LC_*",
+					"LANG",
 				},
 				SetEnv: []string{
 					"FOO=foobar",
@@ -65,6 +81,8 @@ func TestParseFile(t *testing.T) {
 				User:    "multi",
 				SendEnv: []string{
 					"FOO",
+					"LC_*",
+					"LANG",
 				},
 				SetEnv: []string{
 					"FOOS=foobar",
@@ -77,6 +95,8 @@ func TestParseFile(t *testing.T) {
 				SendEnv: []string{
 					"FOO",
 					"AAA",
+					"LC_*",
+					"LANG",
 				},
 				SetEnv: []string{
 					"AAA",
@@ -88,11 +108,17 @@ func TestParseFile(t *testing.T) {
 				ForwardAgent: true,
 				SendEnv: []string{
 					"AAA",
+					"LC_*",
+					"LANG",
 				},
 			},
 			{
 				Name:    "only.host",
 				Address: "only.host:22",
+				SendEnv: []string{
+					"LC_*",
+					"LANG",
+				},
 			},
 		}, endpoints)
 	})
@@ -108,62 +134,6 @@ func TestParseFile(t *testing.T) {
 		require.Empty(t, endpoints)
 		require.ErrorIs(t, err, os.ErrNotExist)
 	})
-}
-
-func TestEnvironment(t *testing.T) {
-	type testcase struct {
-		name     string
-		env      map[string]string
-		endpoint *wishlist.Endpoint
-	}
-	for _, tt := range []testcase{
-		{
-			name:     "no env",
-			endpoint: &wishlist.Endpoint{},
-			env:      map[string]string{},
-		},
-		{
-			name: "some invalid env",
-			endpoint: &wishlist.Endpoint{
-				SendEnv: []string{
-					"FOO",
-					"BAR",
-					"NOPE",
-				},
-				SetEnv: []string{
-					"FOO=foo",
-					"BAR",
-					"IGNR=",
-				},
-			},
-			env: map[string]string{
-				"FOO": "foo",
-			},
-		},
-		{
-			name: "some env",
-			endpoint: &wishlist.Endpoint{
-				SendEnv: []string{
-					"FOO",
-					"BAR",
-					"NOPE",
-				},
-				SetEnv: []string{
-					"FOO=foo",
-					"BAR=bar",
-					"IGNR=nope",
-				},
-			},
-			env: map[string]string{
-				"BAR": "bar",
-				"FOO": "foo",
-			},
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.env, tt.endpoint.Environment())
-		})
-	}
 }
 
 func TestParseReader(t *testing.T) {
