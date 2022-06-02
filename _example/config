@@ -16,6 +16,14 @@ Host *.bar
 	# Command to run on the connection. By default, it'll require a shell.
 	RemoteCommand tmux a
 
+	# Send environment variables matching, if set.
+	SendEnv FOO_*
+	SendEnv BAR_*
+
+	# Set environment variables and their values.
+	SetEnv HELLO=world
+	SetEnv BYE=world
+
 # Host will be endpoint's name
 Host foo
 	# HostName will be used as the host part of the address
