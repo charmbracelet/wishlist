@@ -7,8 +7,8 @@ github.com/caarlos0/sshmarshal v0.1.0/go.mod h1:7Pd/0mmq9x/JCzKauogNjSQEhivBclCQ
 github.com/charmbracelet/bubbles v0.10.4-0.20220524180035-cd2593cfb77c h1:uY5gWGsKwuUaWNxN0rp8MlgbpXIbhHUu2VVV4AvG+QU=
 github.com/charmbracelet/bubbles v0.10.4-0.20220524180035-cd2593cfb77c/go.mod h1:jOA+DUF1rjZm7gZHcNyIVW+YrBPALKfpGVdJu8UiJsA=
 github.com/charmbracelet/bubbletea v0.19.3/go.mod h1:VuXF2pToRxDUHcBUcPmCRUHRvFATM4Ckb/ql1rBl3KA=
-github.com/charmbracelet/bubbletea v0.20.1-0.20220516164627-a5f28a3a04bb h1:bRxIjkw9/Bd7ppM/w04SWLxfytUwKRvwP3TPkMooUnI=
-github.com/charmbracelet/bubbletea v0.20.1-0.20220516164627-a5f28a3a04bb/go.mod h1:GgmJMec61d08zXsOhqRC/AiOx4K4pmz+VIcRIm1FKr4=
+github.com/charmbracelet/bubbletea v0.21.0 h1:f3y+kanzgev5PA916qxmDybSHU3N804uOnKnhRPXTcI=
+github.com/charmbracelet/bubbletea v0.21.0/go.mod h1:GgmJMec61d08zXsOhqRC/AiOx4K4pmz+VIcRIm1FKr4=
 github.com/charmbracelet/harmonica v0.1.0/go.mod h1:KSri/1RMQOZLbw7AHqgcBycp8pgJnQMYYT8QZRqZ1Ao=
 github.com/charmbracelet/keygen v0.3.0 h1:mXpsQcH7DDlST5TddmXNXjS0L7ECk4/kLQYyBcsan2Y=
 github.com/charmbracelet/keygen v0.3.0/go.mod h1:1ukgO8806O25lUZ5s0IrNur+RlwTBERlezdgW71F5rM=
