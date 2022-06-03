@@ -2,9 +2,12 @@ package wishlist
 
 import (
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
+	"github.com/gobwas/glob"
 )
 
 // Link defines an item link.
@@ -32,9 +35,55 @@ type Endpoint struct {
 	RemoteCommand string            `yaml:"remote_command"` // RemoteCommand defines wether to request a TTY. Anologous to SSH's config RemoteCommand.
 	Desc          string            `yaml:"description"`    // Description describes an optional description of the item.
 	Link          Link              `yaml:"link"`           // Links can be used to add a link to the item description using OSC8.
-	Environment   []string          `yaml:"environment"`    // Environment variables to be used with SendEnv and SetEnv
+	SendEnv       []string          `yaml:"send_env"`       // Anologous to SSH's SendEnv
+	SetEnv        []string          `yaml:"set_env"`        // Anologous to SSH's SetEnv
 	IdentityFiles []string          `yaml:"-"`              // IdentityFiles is only set when parsing from a SSH Config file, and used only on local mode.
 	Middlewares   []wish.Middleware `yaml:"-"`              // wish middlewares you can use in the factory method.
+}
+
+// Environment evaluates SendEnv and SetEnv into the env map that should be
+// set into the session.
+// Optionally you can pass a list existing environment variables
+// (e.g. os.Environ()), and the ones allowed by SendEnv will be set as well.
+// As on OpenSSH, envs set via SetEnv take precedence over the ones from
+// hostenv.
+func (e Endpoint) Environment(hostenv ...string) map[string]string {
+	env := map[string]string{}
+
+	for _, set := range hostenv {
+		k, v, ok := strings.Cut(set, "=")
+		if !ok || k == "" {
+			continue
+		}
+		if e.shouldSend(k) {
+			env[k] = v
+		} else {
+			log.Printf("ignored env %s", k)
+		}
+	}
+
+	for _, set := range e.SetEnv {
+		k, v, ok := strings.Cut(set, "=")
+		if !ok || k == "" {
+			continue
+		}
+		env[k] = v
+	}
+
+	return env
+}
+
+func (e Endpoint) shouldSend(k string) bool {
+	for _, send := range append(e.SendEnv, "LC_*", "LANG") { // append default OpenSSH SendEnv's
+		glob, err := glob.Compile(send)
+		if err != nil {
+			continue
+		}
+		if glob.Match(k) {
+			return true
+		}
+	}
+	return false
 }
 
 // String returns the endpoint in a friendly string format.

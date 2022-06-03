@@ -15,58 +15,94 @@ func TestParseFile(t *testing.T) {
 		endpoints, err := ParseFile("testdata/good")
 		require.NoError(t, err)
 
-		require.Len(t, endpoints, 9)
-		require.Equal(t, []*wishlist.Endpoint{
-			{
+		require.Len(t, endpoints, 11)
+
+		results := map[string]*wishlist.Endpoint{
+			"darkstar": {
 				Name:    "darkstar",
 				Address: "darkstar.local:22",
 			},
-			{
+			"supernova": {
 				Name:    "supernova",
 				Address: "supernova.local:22",
 				User:    "notme",
-				Environment: []string{
-					"FOO=foo",
+				SendEnv: []string{
+					"FOO",
+				},
+				SetEnv: []string{
 					"BAR=bar",
 				},
 			},
-			{
+			"app1": {
 				Name:    "app1",
 				Address: "app.foo.local:2222",
 			},
-			{
+			"app2": {
 				Name:          "app2",
 				Address:       "app.foo.local:2223",
 				User:          "someoneelse",
 				IdentityFiles: []string{"./testdata/key"},
 				ForwardAgent:  true,
 			},
-			{
-				Name:        "multiple1",
-				Address:     "multi1.foo.local:22",
-				User:        "multi",
-				Environment: []string{"FOO=foobar"},
+			"multiple1": {
+				Name:    "multiple1",
+				Address: "multi1.foo.local:22",
+				User:    "multi",
+				SendEnv: []string{
+					"FOO",
+				},
+				SetEnv: []string{
+					"FOOS=foobar",
+				},
 			},
-			{
+			"multiple2": {
 				Name:    "multiple2",
 				Address: "multi2.foo.local:2223",
 				User:    "multi",
+				SendEnv: []string{
+					"FOO",
+				},
+				SetEnv: []string{
+					"FOOS=foobar",
+				},
 			},
-			{
+			"multiple3": {
 				Name:    "multiple3",
 				Address: "multi3.foo.local:22",
 				User:    "overridden",
+				SendEnv: []string{
+					"FOO",
+					"AAA",
+				},
 			},
-			{
+			"no.hostname": {
 				Name:         "no.hostname",
 				Address:      "no.hostname:23231",
 				ForwardAgent: true,
 			},
-			{
+			"only.host": {
 				Name:    "only.host",
 				Address: "only.host:22",
 			},
-		}, endpoints)
+
+			"req.tty": {
+				Name:       "req.tty",
+				Address:    "req.tty:22",
+				RequestTTY: true,
+			},
+
+			"remote.cmd": {
+				Name:          "remote.cmd",
+				Address:       "remote.cmd:22",
+				RemoteCommand: "tmux",
+			},
+		}
+
+		for _, e := range endpoints {
+			t.Run(e.Name, func(t *testing.T) {
+				require.Equal(t, results[e.Name], e)
+			})
+		}
 	})
 
 	t.Run("invalid node", func(t *testing.T) {

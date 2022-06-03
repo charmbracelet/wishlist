@@ -46,9 +46,19 @@ endpoints:
   request_tty: true
 
   # Set environment variables into the connection.
-  environment:
+  # Analogous to SSH's SetEnv.
+  set_env:
     - FOO=bar
     - BAR=baz
+
+  # Environments from the environment that match these keys will also be set
+  # into the connection.
+  # Analogous to SSH's SendEnv.
+  # Defaults to ["LC_*", "LANG"].
+  send_env:
+    - LC_*
+    - LANG
+    - SOME_ENV
 
 # users to allow access to the list
 users:

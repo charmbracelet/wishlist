@@ -64,7 +64,7 @@ func (s *remoteSession) Run() error {
 		HostKeyCallback: hostKeyCallback(s.endpoint, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
 	}
-	session, client, cl, err := createSession(conf, s.endpoint)
+	session, client, cl, err := createSession(conf, s.endpoint, s.parentSession.Environ()...)
 	defer cl.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)

@@ -74,7 +74,7 @@ func (s *localSession) Run() error {
 		HostKeyCallback: hostKeyCallback(s.endpoint, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
 	}
 
-	session, client, cls, err := createSession(conf, s.endpoint)
+	session, client, cls, err := createSession(conf, s.endpoint, os.Environ()...)
 	defer cls.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)

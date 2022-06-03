@@ -8,11 +8,7 @@ Host supernova
 	User notme
 	ForwardAgent does-not-matter
 	SendEnv FOO
-	SendEnv BAR
-	SendEnv NOPE
-	SetEnv FOO=foo
 	SetEnv BAR=bar
-	SetEnv IGNR=nope
 
 Host app1
 	HostName app.foo.local
@@ -31,7 +27,6 @@ Host multiple1 multiple2 multiple3
 
 Host multiple1
 	HostName multi1.foo.local
-	SetEnv FOO=foobar
 	SetEnv FOOS=foobar
 
 Host multiple2
@@ -47,13 +42,17 @@ Host multiple2
 Host multiple3
 	HostName multi3.foo.local
 	User overridden
-	SetEnv AAA
 	SendEnv AAA
 
 Host no.hostname
 	Port 23231
 	ForwardAgent yes
-	SendEnv AAA
+
+Host req.tty
+	RequestTTY yes
+
+Host remote.cmd
+	RemoteCommand tmux
 
 Host only.host
 

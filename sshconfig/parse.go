@@ -56,18 +56,6 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			return err
 		}
 
-		var env []string
-		for _, set := range info.SetEnv {
-			k, _, ok := strings.Cut(set, "=")
-			if !ok {
-				continue
-			}
-			for _, send := range info.SendEnv {
-				if send == k {
-					env = append(env, set)
-				}
-			}
-		}
 		endpoints = append(endpoints, &wishlist.Endpoint{
 			Name: name,
 			Address: net.JoinHostPort(
@@ -79,7 +67,8 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			ForwardAgent:  stringToBool(info.ForwardAgent),
 			RequestTTY:    stringToBool(info.RequestTTY),
 			RemoteCommand: info.RemoteCommand,
-			Environment:   env,
+			SetEnv:        info.SetEnv,
+			SendEnv:       info.SendEnv,
 		})
 		return nil
 	}); err != nil {
