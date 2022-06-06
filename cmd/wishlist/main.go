@@ -120,7 +120,7 @@ var serverCmd = &cobra.Command{
 var configFile string
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: $PWD/.wishlist/config.yaml, $PWD/.wishlist/config.yml, $HOME/.ssh/config, $HOME/config.yaml, $HOME/config.yml, /etc/ssh/ssh_config")
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: $PWD/.wishlist/config.yaml, $PWD/.wishlist/config.yml, $HOME/config.yaml, $HOME/config.yml, $HOME/.ssh/config, /etc/ssh/ssh_config")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
