@@ -2,6 +2,7 @@ package home
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,4 +18,13 @@ func ExpandPath(p string) (string, error) {
 		return "", fmt.Errorf("failed to expand path: %q: %w", p, err)
 	}
 	return filepath.Join(home, strings.TrimPrefix(p, "~/")), nil
+}
+
+// MustExpandPath expands the given path and panics on error.
+func MustExpandPath(p string) string {
+	path, err := ExpandPath(p)
+	if err != nil {
+		log.Fatalln("unexpected error:", err)
+	}
+	return path
 }

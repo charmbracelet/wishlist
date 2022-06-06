@@ -120,7 +120,7 @@ var serverCmd = &cobra.Command{
 var configFile string
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: $PWD/.wishlist/config.yaml, $PWD/.wishlist/config.yml, $HOME/.ssh/config, /etc/ssh/ssh_config")
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: $PWD/.wishlist/config.yaml, $PWD/.wishlist/config.yml, $HOME/.ssh/config, $HOME/config.yaml. $HOME/config.yml, /etc/ssh/ssh_config")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -133,20 +133,18 @@ func main() {
 	}
 }
 
-func getConfig(path string) (wishlist.Config, error) {
+func getConfig(configFile string) (wishlist.Config, error) {
 	var allErrs error
-	for _, fn := range []func() string{
-		func() string { return path },
-		func() string { return ".wishlist/config.yaml" },
-		func() string { return ".wishlist/config.yml" },
-		func() string { return ".wishlist/config" },
-		func() string {
-			s, _ := home.ExpandPath("~/.ssh/config")
-			return s
-		},
-		func() string { return "/etc/ssh/ssh_config" },
+	for _, path := range []string{
+		configFile,
+		".wishlist/config.yaml",
+		".wishlist/config.yml",
+		".wishlist/config",
+		home.MustExpandPath("~/.ssh/config.yaml"),
+		home.MustExpandPath("~/.ssh/config.yml"),
+		home.MustExpandPath("~/.ssh/config"),
+		"/etc/ssh/ssh_config",
 	} {
-		path := fn()
 		if path == "" {
 			continue
 		}
