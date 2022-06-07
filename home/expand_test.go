@@ -25,13 +25,4 @@ func TestExpandPath(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, p, path)
 	})
-
-	t.Run("must", func(t *testing.T) {
-		path := MustExpandPath("~/.ssh/foo")
-
-		home, err := os.UserHomeDir()
-		require.NoError(t, err)
-
-		require.Equal(t, filepath.Join(home, ".ssh/foo"), path)
-	})
 }
