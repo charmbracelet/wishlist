@@ -130,8 +130,14 @@ The config files are tried in the following order:
 - the `-config` flag in either YAML or SSH config formats
 - `.wishlist/config.yaml`
 - `.wishlist/config.yml`
+- `.wishlist/config`
+- `[[user config dir]]/wishlist/config.yaml`[^1]
+- `[[user config dir]]/wishlist/config.yml`[^1]
+- `[[user config dir]]/wishlist/config`[^1]
 - `$HOME/.ssh/config`
 - `/etc/ssh/ssh_config`
+
+[^1]: i.e. `[[user config dir]]`: On Unix systems, it will be `$XDG_CONFIG_HOME` as specified by https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html if non-empty, else `$HOME/.config`. On Darwin, it will be `$HOME/Library/Application Support`. On Windows, it will be `%AppData%`. On Plan 9, it will be `$home/lib`.
 
 The first one that is loaded and parsed without errors will be used.
 This means that if you have your common used hosts in your `~/.ssh/config`, you can simply run `wishlist` and get it running right away.
