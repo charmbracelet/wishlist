@@ -71,9 +71,9 @@ func TestAllPossibleConfigPaths(t *testing.T) {
 		".wishlist/config.yaml",
 		".wishlist/config.yml",
 		".wishlist/config",
-		filepath.Join(cfg, "wishlist", "config.yaml"),
-		filepath.Join(cfg, "wishlist", "config.yml"),
-		filepath.Join(cfg, "wishlist", "config"),
+		filepath.Join(cfg, "wishlist.yaml"),
+		filepath.Join(cfg, "wishlist.yml"),
+		filepath.Join(cfg, "wishlist"),
 		filepath.Join(home, ".ssh", "config"),
 		"/etc/ssh/ssh_config",
 	}, paths)
