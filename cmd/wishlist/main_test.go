@@ -56,3 +56,25 @@ func TestGetConfig(t *testing.T) {
 		})
 	})
 }
+
+func TestAllPossibleConfigPaths(t *testing.T) {
+	cfg, err := os.UserConfigDir()
+	require.NoError(t, err)
+
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+
+	paths, err := userConfigPaths()
+	require.NoError(t, err)
+	require.Len(t, paths, 8)
+	require.Equal(t, []string{
+		".wishlist/config.yaml",
+		".wishlist/config.yml",
+		".wishlist/config",
+		filepath.Join(cfg, "wishlist", "config.yaml"),
+		filepath.Join(cfg, "wishlist", "config.yml"),
+		filepath.Join(cfg, "wishlist", "config"),
+		filepath.Join(home, ".ssh", "config"),
+		"/etc/ssh/ssh_config",
+	}, paths)
+}

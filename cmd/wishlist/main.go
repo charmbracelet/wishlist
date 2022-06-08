@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
@@ -14,7 +15,6 @@ import (
 	"github.com/charmbracelet/wish/activeterm"
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
-	"github.com/charmbracelet/wishlist/home"
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
@@ -120,7 +120,8 @@ var serverCmd = &cobra.Command{
 var configFile string
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: $PWD/.wishlist/config.yaml, $PWD/.wishlist/config.yml, $HOME/.ssh/config, /etc/ssh/ssh_config")
+	paths, _ := userConfigPaths()
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: "+strings.Join(paths, ", "))
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -133,20 +134,37 @@ func main() {
 	}
 }
 
-func getConfig(path string) (wishlist.Config, error) {
+func userConfigPaths() ([]string, error) {
+	cfg, err := os.UserConfigDir()
+	if err != nil {
+		return nil, fmt.Errorf("could not get user config dir: %w", err)
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("could not get user home dir: %w", err)
+	}
+
+	cfg = filepath.Join(cfg, "wishlist")
+	return []string{
+		".wishlist/config.yaml",
+		".wishlist/config.yml",
+		".wishlist/config",
+		filepath.Join(cfg, "config.yaml"),
+		filepath.Join(cfg, "config.yml"),
+		filepath.Join(cfg, "config"),
+		filepath.Join(home, ".ssh", "config"),
+		"/etc/ssh/ssh_config",
+	}, nil
+}
+
+func getConfig(configFile string) (wishlist.Config, error) {
 	var allErrs error
-	for _, fn := range []func() string{
-		func() string { return path },
-		func() string { return ".wishlist/config.yaml" },
-		func() string { return ".wishlist/config.yml" },
-		func() string { return ".wishlist/config" },
-		func() string {
-			s, _ := home.ExpandPath("~/.ssh/config")
-			return s
-		},
-		func() string { return "/etc/ssh/ssh_config" },
-	} {
-		path := fn()
+	paths, err := userConfigPaths()
+	if err != nil {
+		return wishlist.Config{}, err
+	}
+	for _, path := range append([]string{configFile}, paths...) {
 		if path == "" {
 			continue
 		}
