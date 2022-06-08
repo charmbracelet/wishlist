@@ -145,14 +145,13 @@ func userConfigPaths() ([]string, error) {
 		return nil, fmt.Errorf("could not get user home dir: %w", err)
 	}
 
-	cfg = filepath.Join(cfg, "wishlist")
 	return []string{
 		".wishlist/config.yaml",
 		".wishlist/config.yml",
 		".wishlist/config",
-		filepath.Join(cfg, "config.yaml"),
-		filepath.Join(cfg, "config.yml"),
-		filepath.Join(cfg, "config"),
+		filepath.Join(cfg, "wishlist.yaml"),
+		filepath.Join(cfg, "wishlist.yml"),
+		filepath.Join(cfg, "wishlist"),
 		filepath.Join(home, ".ssh", "config"),
 		"/etc/ssh/ssh_config",
 	}, nil
