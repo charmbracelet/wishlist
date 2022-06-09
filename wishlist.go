@@ -19,9 +19,7 @@ var enter = key.NewBinding(
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If sessuion is nil, it is assume to be a local listing.
 func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
-	d := list.NewDefaultDelegate()
-
-	l := list.NewModel(nil, d, 0, 0)
+	l := list.NewModel(nil, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
@@ -29,7 +27,6 @@ func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 
 	m := &ListModel{
 		list:      l,
-		delegate:  d,
 		endpoints: endpoints,
 		client:    client,
 	}
@@ -40,32 +37,27 @@ func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 // ListModel main wishlist model.
 type ListModel struct {
 	list      list.Model
-	delegate  list.DefaultDelegate
 	endpoints []*Endpoint
 	client    SSHClient
 	quitting  bool
 	err       error
 }
 
-const defaultHeigth = 2
-
 // SetItems allows to update the listing items.
 func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
-	hasLink, hasDesc := features(endpoints)
-	h := defaultHeigth
-	if hasLink {
-		h++
-	}
-	if hasDesc {
-		h++
-	}
-	m.delegate.SetHeight(h)
-	m.list.SetDelegate(m.delegate)
+	descriptors := features(endpoints)
+	h := len(descriptors) + 1 // desc lines + title
+	d := list.NewDefaultDelegate()
+	d.SetHeight(h)
+	m.list.SetDelegate(d)
 	log.Println("setting delegate height:", h)
-	return m.list.SetItems(endpointsToListItems(endpoints, hasLink, hasDesc))
+	return m.list.SetItems(endpointsToListItems(endpoints, descriptors))
 }
 
-func features(endpoints []*Endpoint) (hasLink bool, hasDesc bool) {
+func features(endpoints []*Endpoint) []descriptor {
+	log.Println("features()")
+	var hasDesc bool
+	var hasLink bool
 	for _, endpoint := range endpoints {
 		if !endpoint.Valid() {
 			continue
@@ -80,23 +72,23 @@ func features(endpoints []*Endpoint) (hasLink bool, hasDesc bool) {
 			break
 		}
 	}
-	return
+
+	var descriptors []descriptor
+	if hasDesc {
+		descriptors = append(descriptors, withDescription)
+	}
+	if hasLink {
+		descriptors = append(descriptors, withLink)
+	}
+	return append(descriptors, withSSHURL)
 }
 
-func endpointsToListItems(endpoints []*Endpoint, hasLink, hasDesc bool) []list.Item {
+func endpointsToListItems(endpoints []*Endpoint, descriptors []descriptor) []list.Item {
 	var items []list.Item
 	for _, endpoint := range endpoints {
 		if !endpoint.Valid() {
 			continue
 		}
-		var descriptors []descriptor
-		if hasDesc {
-			descriptors = append(descriptors, withDescription)
-		}
-		if hasLink {
-			descriptors = append(descriptors, withLink)
-		}
-		descriptors = append(descriptors, withSSHURL)
 		items = append(items, ItemWrapper{
 			endpoint:    endpoint,
 			descriptors: descriptors,
