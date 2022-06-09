@@ -11,6 +11,7 @@ var noContentStyle = lipgloss.NewStyle().Faint(true).Italic(true)
 
 var _ list.Item = ItemWrapper{}
 
+// ItemWrapper wrappes an Endpoint and a set of descriptors and acts as a list.Item.
 type ItemWrapper struct {
 	endpoint    *Endpoint
 	descriptors []descriptor
