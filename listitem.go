@@ -3,10 +3,13 @@ package wishlist
 import (
 	"strings"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var noContentStyle = lipgloss.NewStyle().Faint(true).Italic(true)
+
+var _ list.Item = ItemWrapper{}
 
 type ItemWrapper struct {
 	endpoint    *Endpoint
@@ -25,7 +28,7 @@ func (i ItemWrapper) Description() string {
 	for _, desc := range i.descriptors {
 		lines = append(lines, desc(i.endpoint))
 	}
-	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+	return strings.Join(lines, "\n")
 }
 
 type descriptor func(e *Endpoint) string

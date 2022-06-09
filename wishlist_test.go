@@ -12,7 +12,10 @@ func TestEndointToListItems(t *testing.T) {
 			Name:    "name",
 			Address: "anything",
 		},
-	})
+		{
+			// invalid
+		},
+	}, nil)
 
 	require.Len(t, result, 1)
 	item := result[0]
@@ -30,5 +33,72 @@ func TestNewWishlist(t *testing.T) {
 		}, cl)
 		require.Len(t, lm.endpoints, 1)
 		require.Equal(t, lm.client, cl)
+	})
+}
+
+func TestFeatures(t *testing.T) {
+	t.Run("complete", func(t *testing.T) {
+		descriptors := features([]*Endpoint{
+			{
+				// invalid
+				Desc: "desc",
+			},
+			{
+				Name:    "foo",
+				Address: "foo:22",
+			},
+			{
+				Name:    "foo",
+				Address: "foo:22",
+				Desc:    "desc",
+			},
+			{
+				Name:    "foo",
+				Address: "foo:22",
+				Link: Link{
+					URL: "link",
+				},
+			},
+		})
+
+		require.Len(t, descriptors, 3)
+	})
+
+	t.Run("simple", func(t *testing.T) {
+		descriptors := features([]*Endpoint{
+			{
+				// invalid
+				Desc: "desc",
+			},
+			{
+				Name:    "foo",
+				Address: "foo:22",
+			},
+		})
+		require.Len(t, descriptors, 1)
+	})
+
+	t.Run("with desc", func(t *testing.T) {
+		descriptors := features([]*Endpoint{
+			{
+				Name:    "foo",
+				Address: "foo:22",
+				Desc:    "desc",
+			},
+		})
+		require.Len(t, descriptors, 2)
+	})
+
+	t.Run("with link", func(t *testing.T) {
+		descriptors := features([]*Endpoint{
+			{
+				Name:    "foo",
+				Address: "foo:22",
+				Link: Link{
+					URL: "url",
+				},
+			},
+		})
+		require.Len(t, descriptors, 2)
 	})
 }

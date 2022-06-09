@@ -55,7 +55,6 @@ func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
 }
 
 func features(endpoints []*Endpoint) []descriptor {
-	log.Println("features()")
 	var hasDesc bool
 	var hasLink bool
 	for _, endpoint := range endpoints {
