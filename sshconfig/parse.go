@@ -48,7 +48,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			if err != nil {
 				return fmt.Errorf("invalid Host: %q: %w", k, err)
 			}
-			if g.Match(name) || (info.Hostname != "" && g.Match(info.Hostname)) {
+			if g.Match(name) {
 				info = mergeHostinfo(info, v)
 			}
 			return nil
