@@ -122,7 +122,12 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if selectedItem == nil {
 				return m, nil
 			}
-			cmd := m.client.For(selectedItem.(*ItemWrapper).endpoint)
+			w, ok := selectedItem.(ItemWrapper)
+			if !ok {
+				// this should never happen
+				return m, nil
+			}
+			cmd := m.client.For(w.endpoint)
 			return m, tea.Exec(cmd, func(err error) tea.Msg {
 				return errMsg{err}
 			})
