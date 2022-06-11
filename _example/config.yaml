@@ -13,6 +13,15 @@ port: 2223
 
 # Endpoints to list in the UI.
 endpoints:
+- name: foo
+  address: foo:222
+- name: fooba
+  address: foo:222
+  description: desc
+- name: foobarrr
+  address: foo:3322
+  link:
+    url: https://fooo.bar
 -
   # Endpoint's name.
   # Recommended to avoid spaces so users can `ssh -t appname`.
@@ -37,9 +46,15 @@ endpoints:
   # Defaults to asking for a shell.
   remote_command: uptime -a
 
-  # Wether to forward the SSH agent.
+  # Whether to forward the SSH agent.
   # Will cause the connection to fail if no agent is available.
   forward_agent: true # forwards the ssh agent
+
+  # IdentityFiles to try to use to authorize.
+  # Only used in local mode.
+  identity_files:
+    - ~/.ssh/id_rsa
+    - ~/.ssh/id_ed25519
 
   # requests a TTY.
   # Defaults to true if remote_command is empty.

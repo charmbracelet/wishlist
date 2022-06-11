@@ -16,46 +16,23 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
-const listItemLines = 5
-
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If sessuion is nil, it is assume to be a local listing.
 func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
-	d := list.NewDefaultDelegate()
-	d.SetHeight(listItemLines)
-
-	l := list.NewModel(endpointsToListItems(endpoints), d, 0, 0)
+	l := list.NewModel(nil, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
 	}
 
-	return &ListModel{
+	m := &ListModel{
 		list:      l,
 		endpoints: endpoints,
 		client:    client,
 	}
+	m.SetItems(endpoints)
+	return m
 }
-
-// Title to abide the list.Item interface.
-func (i *Endpoint) Title() string { return i.Name }
-
-// Description to abide the list.Item interface.
-func (i *Endpoint) Description() string {
-	var lines []string
-	if i.Desc != "" {
-		lines = append(lines, i.Desc)
-	}
-	for _, l := range []Link{i.Link, {URL: "ssh://" + i.Address}} {
-		if s := l.String(); s != "" {
-			lines = append(lines, s)
-		}
-	}
-	return lipgloss.JoinVertical(lipgloss.Left, lines...)
-}
-
-// FilterValue to abide the list.Item interface.
-func (i *Endpoint) FilterValue() string { return i.Name }
 
 // ListModel main wishlist model.
 type ListModel struct {
@@ -68,15 +45,53 @@ type ListModel struct {
 
 // SetItems allows to update the listing items.
 func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
-	return m.list.SetItems(endpointsToListItems(endpoints))
+	descriptors := features(endpoints)
+	h := len(descriptors) + 1 // desc lines + title
+	d := list.NewDefaultDelegate()
+	d.SetHeight(h)
+	m.list.SetDelegate(d)
+	log.Println("setting delegate height:", h)
+	return m.list.SetItems(endpointsToListItems(endpoints, descriptors))
 }
 
-func endpointsToListItems(endpoints []*Endpoint) []list.Item {
+func features(endpoints []*Endpoint) []descriptor {
+	var hasDesc bool
+	var hasLink bool
+	for _, endpoint := range endpoints {
+		if !endpoint.Valid() {
+			continue
+		}
+		if endpoint.Desc != "" {
+			hasDesc = true
+		}
+		if endpoint.Link.URL != "" {
+			hasLink = true
+		}
+		if hasDesc && hasLink {
+			break
+		}
+	}
+
+	var descriptors []descriptor
+	if hasDesc {
+		descriptors = append(descriptors, withDescription)
+	}
+	if hasLink {
+		descriptors = append(descriptors, withLink)
+	}
+	return append(descriptors, withSSHURL)
+}
+
+func endpointsToListItems(endpoints []*Endpoint, descriptors []descriptor) []list.Item {
 	var items []list.Item
 	for _, endpoint := range endpoints {
-		if endpoint.Valid() {
-			items = append(items, endpoint)
+		if !endpoint.Valid() {
+			continue
 		}
+		items = append(items, ItemWrapper{
+			endpoint:    endpoint,
+			descriptors: descriptors,
+		})
 	}
 	return items
 }
@@ -107,7 +122,12 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if selectedItem == nil {
 				return m, nil
 			}
-			cmd := m.client.For(selectedItem.(*Endpoint))
+			w, ok := selectedItem.(ItemWrapper)
+			if !ok {
+				// this should never happen
+				return m, nil
+			}
+			cmd := m.client.For(w.endpoint)
 			return m, tea.Exec(cmd, func(err error) tea.Msg {
 				return errMsg{err}
 			})
