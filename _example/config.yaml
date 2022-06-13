@@ -13,15 +13,6 @@ port: 2223
 
 # Endpoints to list in the UI.
 endpoints:
-- name: foo
-  address: foo:222
-- name: fooba
-  address: foo:222
-  description: desc
-- name: foobarrr
-  address: foo:3322
-  link:
-    url: https://fooo.bar
 -
   # Endpoint's name.
   # Recommended to avoid spaces so users can `ssh -t appname`.

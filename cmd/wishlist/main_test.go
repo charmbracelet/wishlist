@@ -9,6 +9,62 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParseExampleYaml(t *testing.T) {
+	cfg, err := getConfig("../../_example/config.yaml")
+	require.NoError(t, err)
+	require.Equal(t, "127.0.0.1", cfg.Listen)
+	require.Equal(t, int64(2223), cfg.Port)
+	require.Len(t, cfg.Endpoints, 1)
+	require.Equal(t, wishlist.Endpoint{
+		Name:    "appname",
+		Address: "foo.local:2234",
+		Link: wishlist.Link{
+			Name: "Optional link name",
+			URL:  "https://github.com/charmbracelet/wishlist",
+		},
+		Desc:          "A description of this endpoint.\nCan have multiple lines.",
+		User:          "notme",
+		RemoteCommand: "uptime -a",
+		ForwardAgent:  true,
+		IdentityFiles: []string{"~/.ssh/id_rsa", "~/.ssh/id_ed25519"},
+		RequestTTY:    true,
+		SetEnv:        []string{"FOO=bar", "BAR=baz"},
+		SendEnv:       []string{"LC_*", "LANG", "SOME_ENV"},
+	}, *cfg.Endpoints[0])
+	require.Len(t, cfg.Users, 1)
+	require.Equal(t, wishlist.User{
+		Name: "carlos",
+		PublicKeys: []string{
+			"ssh-rsa AAAAB3Nz...",
+			"ssh-ed25519 AAAA...",
+		},
+	}, cfg.Users[0])
+}
+
+func TestParseExampleSSHConfig(t *testing.T) {
+	cfg, err := getConfig("../../_example/config")
+	require.NoError(t, err)
+	require.NoError(t, err)
+	require.Empty(t, cfg.Listen)
+	require.Empty(t, cfg.Port)
+	require.Len(t, cfg.Endpoints, 2)
+	require.Equal(t, wishlist.Endpoint{
+		Name:          "foo",
+		Address:       "foo.bar:2223",
+		User:          "notme",
+		IdentityFiles: []string{"~/.ssh/foo_ed25519"},
+		ForwardAgent:  true,
+		RequestTTY:    true,
+		RemoteCommand: "tmux a",
+		SendEnv:       []string{"FOO_*", "BAR_*"},
+		SetEnv:        []string{"HELLO=world", "BYE=world"},
+	}, *cfg.Endpoints[0])
+	require.Equal(t, wishlist.Endpoint{
+		Name:    "ssh.example.com",
+		Address: "ssh.example.com:22",
+	}, *cfg.Endpoints[1])
+}
+
 func TestGetConfig(t *testing.T) {
 	tmp := t.TempDir()
 	dir, err := os.Getwd()

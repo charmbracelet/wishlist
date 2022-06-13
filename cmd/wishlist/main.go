@@ -176,6 +176,9 @@ func getConfig(configFile string) (wishlist.Config, error) {
 		default:
 			cfg, err = getSSHConfig(path)
 		}
+		if err != nil {
+			log.Println("Not using", path, ":", err)
+		}
 		if err == nil {
 			log.Println("Using config from", path)
 			return cfg, nil
