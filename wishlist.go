@@ -83,7 +83,7 @@ func features(endpoints []*Endpoint) []descriptor {
 }
 
 func endpointsToListItems(endpoints []*Endpoint, descriptors []descriptor) []list.Item {
-	var items []list.Item
+	var items []list.Item // nolint: prealloc
 	for _, endpoint := range endpoints {
 		if !endpoint.Valid() {
 			continue
