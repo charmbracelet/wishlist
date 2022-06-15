@@ -25,7 +25,7 @@ func (i ItemWrapper) Title() string { return i.endpoint.Name }
 
 // Description to abide the list.Item interface.
 func (i ItemWrapper) Description() string {
-	var lines []string
+	lines := make([]string, 0, len(i.descriptors))
 	for _, desc := range i.descriptors {
 		lines = append(lines, desc(i.endpoint))
 	}
