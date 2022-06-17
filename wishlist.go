@@ -16,6 +16,11 @@ var enter = key.NewBinding(
 	key.WithHelp("Enter", "Connect"),
 )
 
+var keyO = key.NewBinding(
+	key.WithKeys("o"),
+	key.WithHelp("o", "Connect"),
+)
+
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If sessuion is nil, it is assume to be a local listing.
 func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
@@ -23,6 +28,9 @@ func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
+	}
+	l.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{keyO}
 	}
 
 	m := &ListModel{
@@ -117,7 +125,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if key.Matches(msg, list.DefaultKeyMap().Quit) {
 			m.quitting = true
 		}
-		if key.Matches(msg, enter) {
+		if key.Matches(msg, enter) || key.Matches(msg, keyO) {
 			selectedItem := m.list.SelectedItem()
 			if selectedItem == nil {
 				return m, nil
