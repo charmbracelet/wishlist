@@ -19,20 +19,15 @@ type remoteClient struct {
 	// stdin, which is usually multiplexed from the session stdin
 	stdin io.Reader
 
-	// whether to exhaust stdin first or not.
-	// if coming from the list, youll want to do that, otherwise you likely
-	// dont, as it might hang the connection waiting for something to read.
-	exhaust bool
+	cleanup func()
 }
 
 func (c *remoteClient) For(e *Endpoint) tea.ExecCommand {
-	if c.exhaust {
-		_, _ = io.ReadAll(c.stdin)
-	}
 	return &remoteSession{
 		endpoint:      e,
 		parentSession: c.session,
-		stdin:         blocking.New(c.stdin),
+		stdin:         c.stdin,
+		cleanup:       c.cleanup,
 	}
 }
 
@@ -43,7 +38,8 @@ type remoteSession struct {
 	// the parent session (ie the session running the listing)
 	parentSession ssh.Session
 
-	stdin io.Reader
+	stdin   io.Reader
+	cleanup func()
 }
 
 func (s *remoteSession) SetStdin(r io.Reader)  {}
@@ -51,6 +47,10 @@ func (s *remoteSession) SetStdout(w io.Writer) {}
 func (s *remoteSession) SetStderr(w io.Writer) {}
 
 func (s *remoteSession) Run() error {
+	if s.cleanup != nil {
+		s.cleanup()
+		defer s.cleanup()
+	}
 	resetPty(s.parentSession)
 
 	method, agt, closers, err := remoteBestAuthMethod(s.parentSession)
@@ -74,7 +74,7 @@ func (s *remoteSession) Run() error {
 
 	session.Stdout = s.parentSession
 	session.Stderr = s.parentSession.Stderr()
-	session.Stdin = s.stdin
+	session.Stdin = blocking.New(s.stdin)
 
 	if s.endpoint.ForwardAgent {
 		log.Println("forwarding SSH agent")

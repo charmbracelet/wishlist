@@ -46,3 +46,5 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 )
+
+replace github.com/muesli/cancelreader => github.com/caarlos0/cancelreader v0.2.1-0.20220617174327-42fdcc558116
