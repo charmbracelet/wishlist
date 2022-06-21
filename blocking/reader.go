@@ -25,8 +25,11 @@ func (r Reader) Read(data []byte) (int, error) {
 	for {
 		n, err := r.r.Read(data)
 		if err == nil || err != io.EOF {
+			// nolint:wrapcheck
 			return n, err
 		}
+		// 10ms is not that much a magic number, more like a guess.
+		// nolint:gomnd
 		time.Sleep(10 * time.Millisecond)
 	}
 }
