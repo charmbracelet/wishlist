@@ -12,8 +12,8 @@ import (
 var docStyle = lipgloss.NewStyle().Margin(1, 2) // nolint:gomnd
 
 var enter = key.NewBinding(
-	key.WithKeys("enter"),
-	key.WithHelp("Enter", "Connect"),
+	key.WithKeys("enter", "o"),
+	key.WithHelp("enter/o", "connect"),
 )
 
 // NewListing creates a new listing model for the given endpoints and SSH session.
