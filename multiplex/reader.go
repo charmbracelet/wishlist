@@ -6,9 +6,16 @@ import (
 	"log"
 )
 
+// ResetableReader is an io.Reader that can be "reset", i.e.: cleared of
+// everything that was not yet read.
+type ResetableReader interface {
+	io.Reader
+	Reset()
+}
+
 // Reader keeps reading r and writing to 2 other readers, which are returned.
 // It stops only when the done channel is notified.
-func Reader(r io.Reader, done <-chan bool) (io.Reader, io.Reader) {
+func Reader(r io.Reader, done <-chan bool) (ResetableReader, ResetableReader) {
 	var r1 bytes.Buffer
 	var r2 bytes.Buffer
 

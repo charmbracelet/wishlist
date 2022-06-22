@@ -51,9 +51,9 @@ func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoin
 		return func(s ssh.Session) {
 			lipgloss.SetColorProfile(termenv.ANSI256)
 
-			plexch := make(chan bool, 1)
-			defer func() { plexch <- true }()
-			listStdin, handoffStdin := multiplex.Reader(s, plexch)
+			multiplexDoneCh := make(chan bool, 1)
+			defer func() { multiplexDoneCh <- true }()
+			listStdin, handoffStdin := multiplex.Reader(s, multiplexDoneCh)
 
 			endpointL := endpointRelay.Listener(0)
 			defer endpointL.Close()
@@ -63,7 +63,10 @@ func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoin
 			model := NewListing(config.Endpoints, &remoteClient{
 				session: s,
 				stdin:   handoffStdin,
-				exhaust: true,
+				cleanup: func() {
+					listStdin.Reset()
+					handoffStdin.Reset()
+				},
 			})
 			p := tea.NewProgram(
 				model,
