@@ -9,9 +9,3 @@ variables:
   maintainer: "Carlos A Becker <carlos@charm.sh>"
   brew_commit_author_name: "Carlos A Becker"
   brew_commit_author_email: "carlos@charm.sh"
-
-before:
-  hooks:
-    - ./scripts/manpages.sh
-    - ./scripts/completions.sh
-
