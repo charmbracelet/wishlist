@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/muesli/cancelreader v0.2.0
-	github.com/muesli/mango-cobra v1.1.0
+	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
 	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	github.com/spf13/cobra v1.5.0
