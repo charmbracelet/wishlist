@@ -1,6 +1,7 @@
 package wishlist
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -101,4 +102,23 @@ func TestFeatures(t *testing.T) {
 		})
 		require.Len(t, descriptors, 2)
 	})
+}
+
+func TestRootCause(t *testing.T) {
+	require.Equal(
+		t,
+		rootCause(
+			fmt.Errorf(
+				"foo bar: %w",
+				fmt.Errorf(
+					"foo bar 2: %w",
+					fmt.Errorf(
+						"foo bar 3: %w",
+						fmt.Errorf("the root cause"),
+					),
+				),
+			),
+		).Error(),
+		"the root cause",
+	)
 }

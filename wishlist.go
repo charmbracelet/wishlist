@@ -1,6 +1,7 @@
 package wishlist
 
 import (
+	"errors"
 	"log"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -114,6 +115,10 @@ type SetEndpointsMsg struct {
 func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.err != nil {
+			m.err = nil
+			return m, nil
+		}
 		if key.Matches(msg, list.DefaultKeyMap().Quit) {
 			m.quitting = true
 		}
@@ -146,7 +151,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			log.Println("got an error:", msg.err)
 			m.err = msg.err
-			return m, m.list.SetItems(nil)
+			return m, nil
 		}
 	}
 
@@ -155,17 +160,40 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-var boldStyle = lipgloss.NewStyle().Bold(true)
+var (
+	cream     = lipgloss.AdaptiveColor{Light: "#FFFDF5", Dark: "#FFFDF5"}
+	logoStyle = lipgloss.NewStyle().
+			Foreground(cream).
+			Background(lipgloss.Color("#5A56E0")).
+			Padding(0, 1).
+			SetString("Wishlist")
+	boldStyle   = lipgloss.NewStyle().Bold(true)
+	errStyle    = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.AdaptiveColor{Light: "#FF4672", Dark: "#ED567A"})
+	footerStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"})
+)
 
 // View comply with tea.Model interface.
 func (m *ListModel) View() string {
 	if m.quitting {
 		return ""
 	}
+
 	if m.err != nil {
-		return boldStyle.Render("Something went wrong:") + "\n\n" +
-			m.err.Error() + "\n\n" +
-			boldStyle.Render("Press 'q' to quit.") + "\n"
+		return logoStyle.String() + "\n\n" +
+			"Something went wrong:" + "\n\n" +
+			errStyle.Render(rootCause(m.err).Error()) + "\n\n" +
+			footerStyle.Render("Press any key to go back to the list.") + "\n"
 	}
 	return docStyle.Render(m.list.View())
+}
+
+func rootCause(err error) error {
+	for {
+		e := errors.Unwrap(err)
+		if e == nil {
+			return err
+		}
+		err = e
+	}
 }
