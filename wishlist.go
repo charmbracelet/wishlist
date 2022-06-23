@@ -161,14 +161,14 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 var (
-	cream     = lipgloss.AdaptiveColor{Light: "#FFFDF5", Dark: "#FFFDF5"}
 	logoStyle = lipgloss.NewStyle().
-			Foreground(cream).
+			Foreground(lipgloss.AdaptiveColor{Light: "#FFFDF5", Dark: "#FFFDF5"}).
 			Background(lipgloss.Color("#5A56E0")).
 			Padding(0, 1).
 			SetString("Wishlist")
-	boldStyle   = lipgloss.NewStyle().Bold(true)
-	errStyle    = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.AdaptiveColor{Light: "#FF4672", Dark: "#ED567A"})
+	errStyle = lipgloss.NewStyle().
+			Italic(true).
+			Foreground(lipgloss.AdaptiveColor{Light: "#FF4672", Dark: "#ED567A"})
 	footerStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"})
 )
