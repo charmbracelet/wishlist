@@ -35,3 +35,8 @@ func (r *testReader) Read(data []byte) (int, error) {
 	res := r.results[atomic.AddInt32(&r.last, 1)-1]
 	return res.n, res.e
 }
+
+type readResult struct {
+	n int
+	e error
+}
