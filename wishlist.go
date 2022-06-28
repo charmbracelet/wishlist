@@ -119,7 +119,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = nil
 			return m, nil
 		}
-		if key.Matches(msg, list.DefaultKeyMap().Quit) {
+		if key.Matches(msg, list.DefaultKeyMap().Quit) && !m.list.SettingFilter() {
 			m.quitting = true
 		}
 		if key.Matches(msg, enter) {
