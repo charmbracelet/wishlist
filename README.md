@@ -10,7 +10,7 @@ Wishlist
 
 The SSH directory ✨
 
-![screencast](https://user-images.githubusercontent.com/245435/148814423-2a3b05b4-fb79-4ff9-a475-1942d6ffb363.gif)
+![screencast](https://user-images.githubusercontent.com/42545625/176265745-1749c5ae-bf8d-460f-865c-fae0e45cb448.gif)
 
 With Wishlist you can have a single entrypoint for multiple SSH endpoints, whether they are [Wish](https://github.com/charmbracelet/wish) apps or not.
 
