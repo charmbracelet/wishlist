@@ -12,9 +12,14 @@ import (
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2) // nolint:gomnd
 
-var enter = key.NewBinding(
-	key.WithKeys("enter", "o"),
-	key.WithHelp("enter/o", "connect"),
+var (
+	enter = key.NewBinding(
+		key.WithKeys("enter", "o"),
+		key.WithHelp("enter/o", "connect"),
+	)
+	keyO = key.NewBinding(
+		key.WithKeys("o"),
+	)
 )
 
 // NewListing creates a new listing model for the given endpoints and SSH session.
@@ -123,6 +128,9 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 		}
 		if key.Matches(msg, enter) {
+			if key.Matches(msg, keyO) && m.list.SettingFilter() {
+				break
+			}
 			selectedItem := m.list.SelectedItem()
 			if selectedItem == nil {
 				return m, nil
