@@ -27,7 +27,7 @@ func TestItemWrapper(t *testing.T) {
 	require.Equal(t, "name", s.FilterValue())
 	require.Equal(
 		t,
-		"desc\n\x1b]8;;https://example.com\x1b\\https://example.com\x1b]8;;\x1b\\\n\x1b]8;;ssh://foo.bar:22\x1b\\ssh://foo.bar:22\x1b]8;;\x1b\\",
+		"desc\nhttps://example.com\nssh://foo.bar:22",
 		s.Description(),
 	)
 }
@@ -35,7 +35,7 @@ func TestItemWrapper(t *testing.T) {
 func TestWithSSHURL(t *testing.T) {
 	require.Equal(
 		t,
-		"\x1b]8;;ssh://localhost:22\x1b\\ssh://localhost:22\x1b]8;;\x1b\\",
+		"ssh://localhost:22",
 		withSSHURL(&Endpoint{
 			Address: "localhost:22",
 		}),
@@ -81,7 +81,7 @@ func TestWithLink(t *testing.T) {
 	t.Run("url only", func(t *testing.T) {
 		require.Equal(
 			t,
-			"\x1b]8;;https://example.com\x1b\\https://example.com\x1b]8;;\x1b\\",
+			"https://example.com",
 			withLink(&Endpoint{
 				Link: Link{
 					URL: "https://example.com",
@@ -92,7 +92,7 @@ func TestWithLink(t *testing.T) {
 	t.Run("url and name", func(t *testing.T) {
 		require.Equal(
 			t,
-			"\x1b]8;;https://example.com\x1b\\example\x1b]8;;\x1b\\",
+			"example https://example.com",
 			withLink(&Endpoint{
 				Link: Link{
 					Name: "example",

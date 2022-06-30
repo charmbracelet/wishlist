@@ -20,9 +20,12 @@ func (l Link) String() string {
 	if l.URL == "" {
 		return ""
 	}
-	// nolint: godox
-	// TODO: move to new termenv when released.
-	return fmt.Sprintf("\x1b]8;;%s\x1b\\%s\x1b]8;;\x1b\\", l.URL, firstNonEmpty(l.Name, l.URL))
+
+	if l.Name == "" {
+		return l.URL
+	}
+
+	return fmt.Sprintf("%s %s", l.Name, l.URL)
 }
 
 // Endpoint represents an endpoint to list.
