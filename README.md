@@ -35,6 +35,18 @@ scoop install wishlist
 
 # Nix
 nix-env -iA nixpkgs.wishlist
+
+# Debian/Ubuntu
+echo 'deb [trusted=yes] https://repo.charm.sh/apt/ /' | sudo tee /etc/apt/sources.list.d/charm.list
+sudo apt update && sudo apt install wishlist
+
+# Fedora
+echo '[charm]
+name=Charm
+baseurl=https://repo.charm.sh/yum/
+enabled=1
+gpgcheck=0' | sudo tee /etc/yum.repos.d/charm.repo
+sudo yum install wishlist
 ```
 
 Or download a pre-compiled binary or package from the [releases][releases] page.
