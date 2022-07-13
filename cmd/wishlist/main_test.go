@@ -113,24 +113,38 @@ func TestGetConfig(t *testing.T) {
 	})
 }
 
-func TestAllPossibleConfigPaths(t *testing.T) {
-	cfg, err := os.UserConfigDir()
-	require.NoError(t, err)
+func TestUserConfigPaths(t *testing.T) {
+	t.Run("all", func(t *testing.T) {
+		cfg, err := os.UserConfigDir()
+		require.NoError(t, err)
 
-	home, err := os.UserHomeDir()
-	require.NoError(t, err)
+		home, err := os.UserHomeDir()
+		require.NoError(t, err)
+		paths := userConfigPaths()
+		require.Len(t, paths, 8)
+		require.Equal(t, []string{
+			".wishlist/config.yaml",
+			".wishlist/config.yml",
+			".wishlist/config",
+			filepath.Join(cfg, "wishlist.yaml"),
+			filepath.Join(cfg, "wishlist.yml"),
+			filepath.Join(cfg, "wishlist"),
+			filepath.Join(home, ".ssh", "config"),
+			"/etc/ssh/ssh_config",
+		}, paths)
+	})
 
-	paths, err := userConfigPaths()
-	require.NoError(t, err)
-	require.Len(t, paths, 8)
-	require.Equal(t, []string{
-		".wishlist/config.yaml",
-		".wishlist/config.yml",
-		".wishlist/config",
-		filepath.Join(cfg, "wishlist.yaml"),
-		filepath.Join(cfg, "wishlist.yml"),
-		filepath.Join(cfg, "wishlist"),
-		filepath.Join(home, ".ssh", "config"),
-		"/etc/ssh/ssh_config",
-	}, paths)
+	t.Run("no config dir", func(t *testing.T) {
+		_ = os.Unsetenv("XDG_CONFIG_HOME")
+		_ = os.Unsetenv("HOME")
+
+		paths := userConfigPaths()
+		require.Len(t, paths, 4)
+		require.Equal(t, []string{
+			".wishlist/config.yaml",
+			".wishlist/config.yml",
+			".wishlist/config",
+			"/etc/ssh/ssh_config",
+		}, paths)
+	})
 }
