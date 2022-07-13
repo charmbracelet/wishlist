@@ -120,7 +120,7 @@ var serverCmd = &cobra.Command{
 var configFile string
 
 func init() {
-	paths, _ := userConfigPaths()
+	paths := userConfigPaths()
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: "+strings.Join(paths, ", "))
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
@@ -134,36 +134,32 @@ func main() {
 	}
 }
 
-func userConfigPaths() ([]string, error) {
-	cfg, err := os.UserConfigDir()
-	if err != nil {
-		return nil, fmt.Errorf("could not get user config dir: %w", err)
-	}
-
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("could not get user home dir: %w", err)
-	}
-
-	return []string{
+func userConfigPaths() []string {
+	paths := []string{
 		".wishlist/config.yaml",
 		".wishlist/config.yml",
 		".wishlist/config",
-		filepath.Join(cfg, "wishlist.yaml"),
-		filepath.Join(cfg, "wishlist.yml"),
-		filepath.Join(cfg, "wishlist"),
-		filepath.Join(home, ".ssh", "config"),
-		"/etc/ssh/ssh_config",
-	}, nil
+	}
+
+	if cfg, err := os.UserConfigDir(); err == nil {
+		paths = append(
+			paths,
+			filepath.Join(cfg, "wishlist.yaml"),
+			filepath.Join(cfg, "wishlist.yml"),
+			filepath.Join(cfg, "wishlist"),
+		)
+	}
+
+	if home, err := os.UserHomeDir(); err == nil {
+		paths = append(paths, filepath.Join(home, ".ssh", "config"))
+	}
+
+	return append(paths, "/etc/ssh/ssh_config")
 }
 
 func getConfig(configFile string) (wishlist.Config, error) {
 	var allErrs error
-	paths, err := userConfigPaths()
-	if err != nil {
-		return wishlist.Config{}, err
-	}
-	for _, path := range append([]string{configFile}, paths...) {
+	for _, path := range append([]string{configFile}, userConfigPaths()...) {
 		if path == "" {
 			continue
 		}
