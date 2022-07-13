@@ -137,6 +137,7 @@ func TestUserConfigPaths(t *testing.T) {
 	t.Run("no config dir", func(t *testing.T) {
 		_ = os.Unsetenv("XDG_CONFIG_HOME")
 		_ = os.Unsetenv("HOME")
+		_ = os.Unsetenv("AppData")
 
 		paths := userConfigPaths()
 		require.Len(t, paths, 4)
