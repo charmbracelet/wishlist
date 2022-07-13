@@ -157,25 +157,38 @@ func userConfigPaths() ([]string, error) {
 	}, nil
 }
 
+func readConfig(path string) (cfg wishlist.Config, err error) {
+	switch filepath.Ext(path) {
+	case ".yaml", ".yml":
+		cfg, err = getYAMLConfig(path)
+	default:
+		cfg, err = getSSHConfig(path)
+	}
+	return cfg, err
+}
+
 func getConfig(configFile string) (wishlist.Config, error) {
+	cfg, err := readConfig(configFile)
+	if err != nil {
+		log.Println("Not using", configFile, ":", err)
+	}
+	if err == nil {
+		log.Println("Using config from", configFile)
+		return cfg, nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return wishlist.Config{}, err
+	}
 	var allErrs error
 	paths, err := userConfigPaths()
 	if err != nil {
 		return wishlist.Config{}, err
 	}
-	for _, path := range append([]string{configFile}, paths...) {
+	for _, path := range paths {
 		if path == "" {
 			continue
 		}
-
-		var cfg wishlist.Config
-		var err error
-		switch filepath.Ext(path) {
-		case ".yaml", ".yml":
-			cfg, err = getYAMLConfig(path)
-		default:
-			cfg, err = getSSHConfig(path)
-		}
+		cfg, err = readConfig(path)
 		if err != nil {
 			log.Println("Not using", path, ":", err)
 		}
