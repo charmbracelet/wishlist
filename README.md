@@ -89,14 +89,23 @@ Note that not all options are supported at this moment. Check the [commented exa
 
 ### Library
 
-Wishlist is also available as a library which allows you to start several apps within the same process.
+Wishlist is also available as a library, which allows you to start several apps within the same process.
 Check out the `_example` folder for a working example.
 
 ## Auth
 
-* if ssh agent forwarding is available, it will be used
-* otherwise, each session will create a new ed25519 key and use it, in which case your app will be to allow access to any public key
-* password-based auth is not supported
+### Local mode
+
+When running in local mode, wishlist will first see if the current endpoint has an `IdentityFile` specified.
+If so, it'll try to use that.
+If not, it'll see if there's a SSH Agent available, and use it.
+Otherwise, it'll try the common key names in `~/.ssh`.
+
+### Server mode
+
+When running as a server, wishlist will first try to forward the current SSH Agent.
+If there's no agent, it'll create or use an existing ed25519 key present in `.wishlist/client_ed25519`.
+Password authentication is not supported at this moment.
 
 ### Agent forwarding example
 
@@ -153,7 +162,7 @@ The config files are tried in the following order:
 
 The first one that is loaded and parsed without errors will be used.
 This means that if you have your common used hosts in your `~/.ssh/config`, you can simply run `wishlist` and get it running right away.
-It also means that if you don't want that, you can pass a path to `-config`, and it can be either a YAML or a SSH config file.
+It also means that if you don't want that, you can pass a path to `-config`, and it can be either a YAML, or a SSH config file.
 
 ### Using the binary
 
