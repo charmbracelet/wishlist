@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/home"
@@ -104,7 +105,7 @@ type hostinfo struct {
 	RemoteCommand string
 	SendEnv       []string
 	SetEnv        []string
-	Timeout       int
+	Timeout       time.Duration
 }
 
 type hostinfoMap struct {
@@ -216,7 +217,7 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 				case "ConnectTimeout":
 					timeout, _ := strconv.Atoi(value)
 					// TODO: handle errors?
-					info.Timeout = timeout
+					info.Timeout = time.Second * time.Duration(timeout)
 				case "SendEnv":
 					info.SendEnv = append(info.SendEnv, value)
 				case "SetEnv":

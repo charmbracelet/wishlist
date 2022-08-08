@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 	"testing/iotest"
+	"time"
 
 	"github.com/charmbracelet/wishlist"
 	"github.com/stretchr/testify/require"
@@ -26,7 +27,7 @@ func TestParseFile(t *testing.T) {
 				Name:    "supernova",
 				Address: "supernova.local:22",
 				User:    "notme",
-				Timeout: 20,
+				Timeout: 20 * time.Second,
 				SendEnv: []string{
 					"FOO",
 				},
@@ -49,7 +50,7 @@ func TestParseFile(t *testing.T) {
 				Name:    "multiple1",
 				Address: "multi1.foo.local:22",
 				User:    "multi",
-				Timeout: 12,
+				Timeout: time.Second * 12,
 				SendEnv: []string{
 					"FOO",
 				},
@@ -61,7 +62,7 @@ func TestParseFile(t *testing.T) {
 				Name:    "multiple2",
 				Address: "multi2.foo.local:2223",
 				User:    "multi",
-				Timeout: 12,
+				Timeout: time.Second * 12,
 				SendEnv: []string{
 					"FOO",
 				},
@@ -73,7 +74,7 @@ func TestParseFile(t *testing.T) {
 				Name:    "multiple3",
 				Address: "multi3.foo.local:22",
 				User:    "overridden",
-				Timeout: 12,
+				Timeout: time.Second * 12,
 				SendEnv: []string{
 					"FOO",
 					"AAA",

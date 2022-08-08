@@ -51,8 +51,8 @@ endpoints:
   # Defaults to true if remote_command is empty.
   request_tty: true
 
-  # Connection timeout in seconds.
-  connect_timeout: 10
+  # Connection timeout.
+  connect_timeout: 10s
 
   # Set environment variables into the connection.
   # Analogous to SSH's SetEnv.

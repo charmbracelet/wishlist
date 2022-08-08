@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
@@ -42,7 +43,7 @@ type Endpoint struct {
 	SendEnv       []string          `yaml:"send_env"`        // Anologous to SSH's SendEnv
 	SetEnv        []string          `yaml:"set_env"`         // Anologous to SSH's SetEnv
 	IdentityFiles []string          `yaml:"identity_files"`  // IdentityFiles is only used when in local mode.
-	Timeout       int               `yaml:"connect_timeout"` // Connection timeout in seconds.
+	Timeout       time.Duration     `yaml:"connect_timeout"` // Connection timeout.
 	Middlewares   []wish.Middleware `yaml:"-"`               // wish middlewares you can use in the factory method.
 }
 
