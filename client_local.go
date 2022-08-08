@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 
@@ -52,6 +53,13 @@ func (s *localSession) SetStderr(w io.Writer) {
 func (s *localSession) Run() error {
 	resetPty(s.stdout)
 
+	abort := make(chan os.Signal, 1)
+	signal.Notify(abort, os.Interrupt)
+	defer func() {
+		signal.Stop(abort)
+		close(abort)
+	}()
+
 	user, err := user.Current()
 	if err != nil {
 		return fmt.Errorf("failed to get current username: %w", err)
@@ -74,7 +82,7 @@ func (s *localSession) Run() error {
 		HostKeyCallback: hostKeyCallback(s.endpoint, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
 	}
 
-	session, client, cls, err := createSession(conf, s.endpoint, os.Environ()...)
+	session, client, cls, err := createSession(conf, s.endpoint, abort, os.Environ()...)
 	defer cls.close()
 	if err != nil {
 		return fmt.Errorf("failed to create session: %w", err)
