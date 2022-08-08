@@ -47,9 +47,12 @@ endpoints:
     - ~/.ssh/id_rsa
     - ~/.ssh/id_ed25519
 
-  # requests a TTY.
+  # Requests a TTY.
   # Defaults to true if remote_command is empty.
   request_tty: true
+
+  # Connection timeout in seconds.
+  connect_timeout: 10
 
   # Set environment variables into the connection.
   # Analogous to SSH's SetEnv.
@@ -66,10 +69,10 @@ endpoints:
     - LANG
     - SOME_ENV
 
-# users to allow access to the list
+# Users to allow access to the list
 users:
   -
-    # user login
+    # User login
     name: carlos
 
     # User's public keys.

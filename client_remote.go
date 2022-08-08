@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wishlist/blocking"
@@ -63,6 +64,7 @@ func (s *remoteSession) Run() error {
 		User:            firstNonEmpty(s.endpoint.User, s.parentSession.User()),
 		HostKeyCallback: hostKeyCallback(s.endpoint, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
+		Timeout:         time.Second * time.Duration(s.endpoint.Timeout),
 	}
 	session, client, cl, err := createSession(conf, s.endpoint, s.parentSession.Environ()...)
 	defer cl.close()
