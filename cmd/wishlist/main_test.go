@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/charmbracelet/wishlist"
 	"github.com/stretchr/testify/require"
@@ -28,6 +29,7 @@ func TestParseExampleYaml(t *testing.T) {
 		ForwardAgent:  true,
 		IdentityFiles: []string{"~/.ssh/id_rsa", "~/.ssh/id_ed25519"},
 		RequestTTY:    true,
+		Timeout:       10 * time.Second,
 		SetEnv:        []string{"FOO=bar", "BAR=baz"},
 		SendEnv:       []string{"LC_*", "LANG", "SOME_ENV"},
 	}, *cfg.Endpoints[0])
@@ -55,6 +57,7 @@ func TestParseExampleSSHConfig(t *testing.T) {
 		IdentityFiles: []string{"~/.ssh/foo_ed25519"},
 		ForwardAgent:  true,
 		RequestTTY:    true,
+		Timeout:       20 * time.Second,
 		RemoteCommand: "tmux a",
 		SendEnv:       []string{"FOO_*", "BAR_*"},
 		SetEnv:        []string{"HELLO=world", "BYE=world"},
