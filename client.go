@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/termenv"
@@ -16,13 +17,31 @@ type SSHClient interface {
 	For(e *Endpoint) tea.ExecCommand
 }
 
-func createSession(conf *gossh.ClientConfig, e *Endpoint, env ...string) (*gossh.Session, *gossh.Client, closers, error) {
+func createSession(conf *gossh.ClientConfig, e *Endpoint, abort <-chan os.Signal, env ...string) (*gossh.Session, *gossh.Client, closers, error) {
 	var cl closers
-	conn, err := gossh.Dial("tcp", e.Address, conf)
+	var conn *gossh.Client
+	var err error
+	connected := make(chan bool, 1)
+
+	go func() {
+		conn, err = gossh.Dial("tcp", e.Address, conf)
+		connected <- true
+	}()
+
+	select {
+	case <-connected:
+		// fallback
+		break
+	case <-abort:
+		if conn != nil {
+			_ = conn.Close()
+		}
+		return nil, nil, nil, fmt.Errorf("connection aborted")
+	}
+
 	if err != nil {
 		return nil, nil, cl, fmt.Errorf("connection failed: %w", err)
 	}
-
 	cl = append(cl, conn.Close)
 
 	session, err := conn.NewSession()
