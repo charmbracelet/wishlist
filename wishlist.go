@@ -197,6 +197,7 @@ func (m *ListModel) View() string {
 }
 
 func rootCause(err error) error {
+	log.Println("error:", err)
 	for {
 		e := errors.Unwrap(err)
 		if e == nil {

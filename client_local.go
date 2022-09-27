@@ -80,6 +80,7 @@ func (s *localSession) Run() error {
 		User:            firstNonEmpty(s.endpoint.User, user.Username),
 		Auth:            methods,
 		HostKeyCallback: hostKeyCallback(s.endpoint, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
+		Timeout:         s.endpoint.Timeout,
 	}
 
 	session, client, cls, err := createSession(conf, s.endpoint, abort, os.Environ()...)

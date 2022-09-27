@@ -9,6 +9,7 @@ Host supernova
 	ForwardAgent does-not-matter
 	SendEnv FOO
 	SetEnv BAR=bar
+	ConnectTimeout 20
 
 Host app1
 	HostName app.foo.local
@@ -24,6 +25,7 @@ Host app2
 Host multiple1 multiple2 multiple3
 	User multi
 	SendEnv FOO
+	ConnectTimeout 12
 
 Host multiple1
 	HostName multi1.foo.local

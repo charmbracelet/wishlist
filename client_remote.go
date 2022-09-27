@@ -63,6 +63,7 @@ func (s *remoteSession) Run() error {
 		User:            firstNonEmpty(s.endpoint.User, s.parentSession.User()),
 		HostKeyCallback: hostKeyCallback(s.endpoint, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
+		Timeout:         s.endpoint.Timeout,
 	}
 	session, client, cl, err := createSession(conf, s.endpoint, nil, s.parentSession.Environ()...)
 	defer cl.close()

@@ -16,6 +16,9 @@ Host *.bar
 	# Command to run on the connection. By default, it'll require a shell.
 	RemoteCommand tmux a
 
+	# Connection timeout, in seconds
+	ConnectTimeout 20
+
 	# Send environment variables matching, if set.
 	SendEnv FOO_*
 	SendEnv BAR_*

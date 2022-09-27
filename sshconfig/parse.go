@@ -7,8 +7,10 @@ import (
 	"io"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/home"
@@ -67,6 +69,7 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 			ForwardAgent:  stringToBool(info.ForwardAgent),
 			RequestTTY:    stringToBool(info.RequestTTY),
 			RemoteCommand: info.RemoteCommand,
+			Timeout:       info.Timeout,
 			SetEnv:        info.SetEnv,
 			SendEnv:       info.SendEnv,
 		})
@@ -102,6 +105,7 @@ type hostinfo struct {
 	RemoteCommand string
 	SendEnv       []string
 	SetEnv        []string
+	Timeout       time.Duration
 }
 
 type hostinfoMap struct {
@@ -210,6 +214,10 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					info.RequestTTY = value
 				case "RemoteCommand":
 					info.RemoteCommand = value
+				case "ConnectTimeout":
+					timeout, _ := strconv.Atoi(value)
+					// TODO: handle errors?
+					info.Timeout = time.Second * time.Duration(timeout)
 				case "SendEnv":
 					info.SendEnv = append(info.SendEnv, value)
 				case "SetEnv":
@@ -292,6 +300,9 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	}
 	if h1.RemoteCommand != "" {
 		h2.RemoteCommand = h1.RemoteCommand
+	}
+	if h1.Timeout > 0 {
+		h2.Timeout = h1.Timeout
 	}
 	h2.SendEnv = append(h2.SendEnv, h1.SendEnv...)
 	h2.SetEnv = append(h2.SetEnv, h1.SetEnv...)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
@@ -31,18 +32,19 @@ func (l Link) String() string {
 // Endpoint represents an endpoint to list.
 // If it has a Handler, wishlist will start an SSH server on the given address.
 type Endpoint struct {
-	Name          string            `yaml:"name"`           // Endpoint name.
-	Address       string            `yaml:"address"`        // Endpoint address in the `host:port` format, if empty, will be the same address as the list, increasing the port number.
-	User          string            `yaml:"user"`           // User to authenticate as.
-	ForwardAgent  bool              `yaml:"forward_agent"`  // ForwardAgent defines whether to forward the current agent. Anologous to SSH's config ForwardAgent.
-	RequestTTY    bool              `yaml:"request_tty"`    // RequestTTY defines whether to request a TTY. Anologous to SSH's config RequestTTY.
-	RemoteCommand string            `yaml:"remote_command"` // RemoteCommand defines whether to request a TTY. Anologous to SSH's config RemoteCommand.
-	Desc          string            `yaml:"description"`    // Description describes an optional description of the item.
-	Link          Link              `yaml:"link"`           // Links can be used to add a link to the item description using OSC8.
-	SendEnv       []string          `yaml:"send_env"`       // Anologous to SSH's SendEnv
-	SetEnv        []string          `yaml:"set_env"`        // Anologous to SSH's SetEnv
-	IdentityFiles []string          `yaml:"identity_files"` // IdentityFiles is only used when in local mode.
-	Middlewares   []wish.Middleware `yaml:"-"`              // wish middlewares you can use in the factory method.
+	Name          string            `yaml:"name"`            // Endpoint name.
+	Address       string            `yaml:"address"`         // Endpoint address in the `host:port` format, if empty, will be the same address as the list, increasing the port number.
+	User          string            `yaml:"user"`            // User to authenticate as.
+	ForwardAgent  bool              `yaml:"forward_agent"`   // ForwardAgent defines whether to forward the current agent. Anologous to SSH's config ForwardAgent.
+	RequestTTY    bool              `yaml:"request_tty"`     // RequestTTY defines whether to request a TTY. Anologous to SSH's config RequestTTY.
+	RemoteCommand string            `yaml:"remote_command"`  // RemoteCommand defines whether to request a TTY. Anologous to SSH's config RemoteCommand.
+	Desc          string            `yaml:"description"`     // Description describes an optional description of the item.
+	Link          Link              `yaml:"link"`            // Links can be used to add a link to the item description using OSC8.
+	SendEnv       []string          `yaml:"send_env"`        // Anologous to SSH's SendEnv
+	SetEnv        []string          `yaml:"set_env"`         // Anologous to SSH's SetEnv
+	IdentityFiles []string          `yaml:"identity_files"`  // IdentityFiles is only used when in local mode.
+	Timeout       time.Duration     `yaml:"connect_timeout"` // Connection timeout.
+	Middlewares   []wish.Middleware `yaml:"-"`               // wish middlewares you can use in the factory method.
 }
 
 // Environment evaluates SendEnv and SetEnv into the env map that should be
