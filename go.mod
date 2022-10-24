@@ -17,7 +17,7 @@ require (
 	github.com/muesli/roff v0.1.0
 	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	github.com/spf13/cobra v1.6.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/teivah/broadcast v0.1.0
 	golang.org/x/crypto v0.0.0-20220826181053-bd7e27e6170d
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
