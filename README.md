@@ -190,11 +190,11 @@ The gif above shows a lot of [Maas Lalani’s](https://github.com/maaslalani) [c
 
 ## Feedback
 
-We'd love to hear your thoughts on this project. Feel free to drop us a note!
+We’d love to hear your thoughts on this project. Feel free to drop us a note!
 
 * [Twitter](https://twitter.com/charmcli)
-* [The Fediverse](https://mastodon.technology/@charm)
-* [Slack](https://charm.sh/slack)
+* [The Fediverse](https://mastodon.social/@charmcli)
+* [Discord](https://charm.sh/chat)
 
 ## License
 
