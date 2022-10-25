@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/termenv"
+	"golang.org/x/crypto/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -63,7 +64,7 @@ func shellAndWait(session *gossh.Session) error {
 	if err := session.Shell(); err != nil {
 		return fmt.Errorf("failed to start shell: %w", err)
 	}
-	if err := session.Wait(); err != nil {
+	if err := session.Wait(); err != nil && !errors.Is(err, &ssh.ExitMissingError{}) {
 		return fmt.Errorf("session failed: %w", err)
 	}
 	return nil
