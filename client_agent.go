@@ -1,0 +1,23 @@
+package wishlist
+
+import (
+	"fmt"
+	"log"
+
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
+)
+
+func forwardAgent(agt agent.Agent, session *ssh.Session, client *ssh.Client) error {
+	if agt == nil {
+		log.Println("requested ForwardAgent, but no agent is available")
+		return nil
+	}
+	if err := agent.RequestAgentForwarding(session); err != nil {
+		return fmt.Errorf("failed to forward agent: %w", err)
+	}
+	if err := agent.ForwardToAgent(client, agt); err != nil {
+		return fmt.Errorf("failed to forward agent: %w", err)
+	}
+	return nil
+}
