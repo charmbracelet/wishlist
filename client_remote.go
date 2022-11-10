@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/wishlist/blocking"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 )
 
 type remoteClient struct {
@@ -78,15 +77,8 @@ func (s *remoteSession) Run() error {
 	session.Stdin = blocking.New(s.stdin)
 
 	if s.endpoint.ForwardAgent {
-		log.Println("forwarding SSH agent")
-		if agt == nil {
-			return fmt.Errorf("requested ForwardAgent, but no agent is available")
-		}
-		if err := agent.RequestAgentForwarding(session); err != nil {
-			return fmt.Errorf("failed to forward agent: %w", err)
-		}
-		if err := agent.ForwardToAgent(client, agt); err != nil {
-			return fmt.Errorf("failed to forward agent: %w", err)
+		if err := forwardAgent(agt, session, client); err != nil {
+			return err
 		}
 	}
 

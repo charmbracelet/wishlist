@@ -13,7 +13,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/cancelreader"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
 )
 
@@ -105,15 +104,8 @@ func (s *localSession) Run() error {
 	session.Stdin = stdin
 
 	if s.endpoint.ForwardAgent {
-		log.Println("forwarding SSH agent")
-		if agt == nil {
-			return fmt.Errorf("requested ForwardAgent, but no agent is available")
-		}
-		if err := agent.RequestAgentForwarding(session); err != nil {
-			return fmt.Errorf("failed to forward agent: %w", err)
-		}
-		if err := agent.ForwardToAgent(client, agt); err != nil {
-			return fmt.Errorf("failed to forward agent: %w", err)
+		if err := forwardAgent(agt, session, client); err != nil {
+			return err
 		}
 	}
 
