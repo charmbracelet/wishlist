@@ -228,7 +228,8 @@ func workLocally(config wishlist.Config, args []string) error {
 	// either no args or arg is a list
 	if len(args) == 0 || args[0] == "list" {
 		m := wishlist.NewListing(config.Endpoints, wishlist.NewLocalSSHClient())
-		return tea.NewProgram(m).Start()
+		_, err := tea.NewProgram(m).Run()
+		return err
 	}
 
 	// ssh directly into something by its name

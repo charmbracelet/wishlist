@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,11 +17,11 @@ import (
 )
 
 func main() {
-	k, err := keygen.New(".wishlist", "server", nil, keygen.Ed25519)
+	k, err := keygen.New(filepath.Join(".wishlist", "server"), nil, keygen.Ed25519)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if !k.IsKeyPairExists() {
+	if !k.KeyPairExists() {
 		if err := k.WriteKeys(); err != nil {
 			log.Fatalln(err)
 		}
@@ -31,7 +32,7 @@ func main() {
 		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
-				wish.WithHostKeyPEM(k.PrivateKeyPEM),
+				wish.WithHostKeyPEM(k.PrivateKeyPEM()),
 				wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 					return true
 				}),
@@ -58,7 +59,7 @@ func main() {
 				Middlewares: []wish.Middleware{
 					func(h ssh.Handler) ssh.Handler {
 						return func(s ssh.Session) {
-							s.Write([]byte("hello, world\n\r"))
+							_, _ = s.Write([]byte("hello, world\n\r"))
 							h(s)
 						}
 					},

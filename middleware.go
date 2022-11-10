@@ -75,7 +75,8 @@ func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoin
 				tea.WithAltScreen(),
 			)
 			go listenAppEvents(s, p, appch, endpointL.Ch(), errch)
-			errch <- p.Start()
+			_, err := p.Run()
+			errch <- err
 			appch <- true
 		}
 	}
