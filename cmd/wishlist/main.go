@@ -16,7 +16,6 @@ import (
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/sshconfig"
-	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
@@ -95,7 +94,7 @@ var serverCmd = &cobra.Command{
 			}
 		}
 
-		config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
+		config.Factory = func(e wishlist.Endpoint) (*wish.Server, error) {
 			// nolint:wrapcheck
 			return wish.NewServer(
 				wish.WithAddress(e.Address),

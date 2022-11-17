@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/home"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
@@ -23,7 +23,7 @@ var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
 // remoteBestAuthMethod returns an auth method.
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
-func remoteBestAuthMethod(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
+func remoteBestAuthMethod(s wish.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
 	method, agt, cls, err := tryRemoteAuthAgent(s)
 	if err != nil || method != nil {
 		return method, agt, cls, err
@@ -95,7 +95,7 @@ func getLocalAgent() (agent.Agent, closers, error) {
 	return agent.NewClient(conn), closers{conn.Close}, nil
 }
 
-func getRemoteAgent(s ssh.Session) (agent.Agent, closers, error) {
+func getRemoteAgent(s wish.Session) (agent.Agent, closers, error) {
 	_, _ = s.SendRequest("auth-agent-req@openssh.com", true, nil)
 	if !ssh.AgentRequested(s) {
 		return nil, nil, errNoRemoteAgent
@@ -116,7 +116,7 @@ func getRemoteAgent(s ssh.Session) (agent.Agent, closers, error) {
 }
 
 // tryRemoteAuthAgent will try to use an ssh-agent to authenticate.
-func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
+func tryRemoteAuthAgent(s wish.Session) (gossh.AuthMethod, agent.Agent, closers, error) {
 	agent, closers, err := getRemoteAgent(s)
 	if err != nil {
 		if errors.Is(err, errNoRemoteAgent) {

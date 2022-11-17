@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +16,7 @@ func TestEndpointValid(t *testing.T) {
 		require.True(t, Endpoint{
 			Name: "test",
 			Middlewares: []wish.Middleware{
-				func(h ssh.Handler) ssh.Handler { return h },
+				func(h wish.Handler) wish.Handler { return h },
 			},
 		}.Valid())
 	})
@@ -41,7 +40,7 @@ func TestShoudListen(t *testing.T) {
 		require.True(t, Endpoint{
 			Name: "test",
 			Middlewares: []wish.Middleware{
-				func(h ssh.Handler) ssh.Handler { return h },
+				func(h wish.Handler) wish.Handler { return h },
 			},
 		}.ShouldListen())
 	})

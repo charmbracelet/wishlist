@@ -10,7 +10,6 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/blocking"
 	"github.com/charmbracelet/wishlist/multiplex"
-	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 	"github.com/teivah/broadcast"
 )
@@ -21,8 +20,8 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 	for _, e := range endpoints {
 		valid = append(valid, fmt.Sprintf("%q", e.Name))
 	}
-	return func(h ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
+	return func(h wish.Handler) wish.Handler {
+		return func(s wish.Session) {
 			cmd := s.Command()
 
 			if len(cmd) == 0 {
@@ -47,8 +46,8 @@ func cmdsMiddleware(endpoints []*Endpoint) wish.Middleware {
 
 // handles the listing and handoff of apps.
 func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoint]) wish.Middleware {
-	return func(h ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
+	return func(h wish.Handler) wish.Handler {
+		return func(s wish.Session) {
 			lipgloss.SetColorProfile(termenv.ANSI256)
 
 			multiplexDoneCh := make(chan bool, 1)
@@ -88,7 +87,7 @@ func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoin
 // - session's context done: when the session is terminated by either party
 // - winch: when the terminal is resized
 // and handles them accordingly.
-func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-chan []*Endpoint, errch <-chan error) {
+func listenAppEvents(s wish.Session, p *tea.Program, donech <-chan bool, msgch <-chan []*Endpoint, errch <-chan error) {
 	_, winch, _ := s.Pty()
 	for {
 		select {
@@ -115,7 +114,7 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-
 	}
 }
 
-func mustConnect(session ssh.Session, e *Endpoint) {
+func mustConnect(session wish.Session, e *Endpoint) {
 	client := &remoteClient{
 		session: session,
 		stdin:   session,

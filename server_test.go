@@ -8,8 +8,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gliderlabs/ssh"
+	"github.com/charmbracelet/ssh"
 	"github.com/stretchr/testify/require"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 func TestToAddress(t *testing.T) {
@@ -77,7 +78,7 @@ func TestPublicKeyHandler(t *testing.T) {
 	t.Run("with users", func(t *testing.T) {
 		pubkey := "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMYKQ6pT3+iZBROfFKKT/4GVc1Xws776bE67cF3zUQPS foo@bar"
 		pubkey2 := "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDfBMpbghW82c1zk9LauP7G/LqXtTeQrU6Do9FUY1FJ5 foo@bar"
-		k, _, _, _, err := ssh.ParseAuthorizedKey([]byte(pubkey))
+		k, _, _, _, err := gossh.ParseAuthorizedKey([]byte(pubkey))
 		require.NoError(t, err)
 
 		t.Run("authorized", func(t *testing.T) {

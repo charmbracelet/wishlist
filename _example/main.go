@@ -29,11 +29,11 @@ func main() {
 
 	// wishlist config
 	cfg := &wishlist.Config{
-		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
+		Factory: func(e wishlist.Endpoint) (*wish.Server, error) {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
 				wish.WithHostKeyPEM(k.PrivateKeyPEM()),
-				wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+				wish.WithPublicKeyAuth(func(ctx ssh.Context, key wish.PublicKey) bool {
 					return true
 				}),
 				wish.WithMiddleware(
@@ -49,7 +49,7 @@ func main() {
 			{
 				Name: "bubbletea",
 				Middlewares: []wish.Middleware{
-					bm.Middleware(func(ssh.Session) (tea.Model, []tea.ProgramOption) {
+					bm.Middleware(func(wish.Session) (tea.Model, []tea.ProgramOption) {
 						return initialModel(), nil
 					}),
 				},
@@ -58,7 +58,7 @@ func main() {
 				Name: "simple",
 				Middlewares: []wish.Middleware{
 					func(h ssh.Handler) ssh.Handler {
-						return func(s ssh.Session) {
+						return func(s wish.Session) {
 							_, _ = s.Write([]byte("hello, world\n\r"))
 							h(s)
 						}

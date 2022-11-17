@@ -6,14 +6,15 @@ import (
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/ssh"
+	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/blocking"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 
 type remoteClient struct {
 	// parent session
-	session ssh.Session
+	session wish.Session
 
 	// stdin, which is usually multiplexed from the session stdin
 	stdin io.Reader
@@ -35,7 +36,7 @@ type remoteSession struct {
 	endpoint *Endpoint
 
 	// the parent session (ie the session running the listing)
-	parentSession ssh.Session
+	parentSession wish.Session
 
 	stdin   io.Reader
 	cleanup func()

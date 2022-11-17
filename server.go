@@ -11,10 +11,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 	"github.com/teivah/broadcast"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 // Serve serves wishlist with the given config.
@@ -92,7 +93,7 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.PublicKeyHandler = publicKeyAccessOption(config.Users)
+	s.SetOption(wish.WithPublicKeyAuth(publicKeyAccessOption(config.Users)))
 
 	log.Printf("Starting SSH server for %s on ssh://%s", endpoint.Name, endpoint.Address)
 	ln, err := net.Listen("tcp", endpoint.Address)
@@ -146,17 +147,17 @@ func getFirstOpenPort(addr string, ports ...int64) (int64, error) {
 	return 0, fmt.Errorf("all ports unavailable")
 }
 
-func publicKeyAccessOption(users []User) ssh.PublicKeyHandler {
+func publicKeyAccessOption(users []User) wish.PublicKeyHandler {
 	if len(users) == 0 {
 		// if no users, assume everyone can login
 		return nil
 	}
 
-	return func(ctx ssh.Context, key ssh.PublicKey) bool {
+	return func(ctx wish.Context, key wish.PublicKey) bool {
 		for _, user := range users {
 			if user.Name == ctx.User() {
 				for _, pubkey := range user.PublicKeys {
-					upk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(pubkey))
+					upk, _, _, _, err := gossh.ParseAuthorizedKey([]byte(pubkey))
 					if err != nil {
 						log.Printf("invalid key for user %q: %v", user.Name, err)
 						return false
