@@ -8,12 +8,12 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
-	"github.com/gliderlabs/ssh"
 )
 
 func main() {
@@ -33,7 +33,7 @@ func main() {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
 				wish.WithHostKeyPEM(k.PrivateKeyPEM()),
-				wish.WithPublicKeyAuth(func(ctx ssh.Context, key wish.PublicKey) bool {
+				wish.WithPublicKeyAuth(func(ctx wish.Context, key wish.PublicKey) bool {
 					return true
 				}),
 				wish.WithMiddleware(
