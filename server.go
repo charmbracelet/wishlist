@@ -93,7 +93,9 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.SetOption(wish.WithPublicKeyAuth(publicKeyAccessOption(config.Users)))
+	if err := s.SetOption(wish.WithPublicKeyAuth(publicKeyAccessOption(config.Users))); err != nil {
+		return nil, err
+	}
 
 	log.Printf("Starting SSH server for %s on ssh://%s", endpoint.Name, endpoint.Address)
 	ln, err := net.Listen("tcp", endpoint.Address)
