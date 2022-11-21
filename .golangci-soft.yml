@@ -29,7 +29,6 @@ linters:
     - nakedret
     - nestif
     - noctx
-    - nolintlint
     - prealloc
     - wrapcheck
 
@@ -45,4 +44,3 @@ linters:
     - typecheck
     - unused
     - varcheck
-    - nolintlint
