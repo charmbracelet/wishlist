@@ -27,3 +27,5 @@ linters:
     - unconvert
     - unparam
     - whitespace
+  disable:
+    - nolintlint
