@@ -11,6 +11,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/promwish"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	lm "github.com/charmbracelet/wish/logging"
@@ -103,6 +104,10 @@ var serverCmd = &cobra.Command{
 				wish.WithMiddleware(
 					append(
 						e.Middlewares,
+						promwish.Middleware(
+							wishlist.FirstNonEmpty(config.Metrics.Address, "localhost:9222"),
+							wishlist.FirstNonEmpty(config.Metrics.Name, "wishlist"),
+						),
 						lm.Middleware(),
 						activeterm.Middleware(),
 					)...,

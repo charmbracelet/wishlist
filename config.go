@@ -114,6 +114,7 @@ type Config struct {
 	Endpoints    []*Endpoint                         `yaml:"endpoints"` // Endpoints to list.
 	Factory      func(Endpoint) (*ssh.Server, error) `yaml:"-"`         // Factory used to create the SSH server for the given endpoint.
 	Users        []User                              `yaml:"users"`     // Users allowed to access the list.
+	Metrics      Metrics                             `yaml:"metrics"`   // Metrics configuration.
 	EndpointChan chan []*Endpoint                    `yaml:"-"`         // Channel to update the endpoints. Used only in server mode.
 
 	lastPort int64
@@ -123,4 +124,10 @@ type Config struct {
 type User struct {
 	Name       string   `yaml:"name"`
 	PublicKeys []string `yaml:"public-keys"`
+}
+
+// Metrics configuration.
+type Metrics struct {
+	Name    string `yaml:"name"`
+	Address string `yaml:"address"`
 }

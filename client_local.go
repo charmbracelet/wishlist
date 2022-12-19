@@ -76,7 +76,7 @@ func (s *localSession) Run() error {
 	}
 
 	conf := &ssh.ClientConfig{
-		User:            firstNonEmpty(s.endpoint.User, user.Username),
+		User:            FirstNonEmpty(s.endpoint.User, user.Username),
 		Auth:            methods,
 		HostKeyCallback: hostKeyCallback(s.endpoint, filepath.Join(user.HomeDir, ".ssh/known_hosts")),
 		Timeout:         s.endpoint.Timeout,

@@ -81,3 +81,10 @@ users:
     - ssh-rsa AAAAB3Nz...
     - ssh-ed25519 AAAA...
 
+# Setup the /metrics prometheus endpoint.
+metrics:
+  # App name that will be used in the metrics.
+  name: my-wishlist
+
+  # Address to bind to.
+  address: localhost:9223

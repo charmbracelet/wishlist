@@ -59,7 +59,7 @@ func (s *remoteSession) Run() error {
 	defer closers.close()
 
 	conf := &gossh.ClientConfig{
-		User:            firstNonEmpty(s.endpoint.User, s.parentSession.User()),
+		User:            FirstNonEmpty(s.endpoint.User, s.parentSession.User()),
 		HostKeyCallback: hostKeyCallback(s.endpoint, ".wishlist/known_hosts"),
 		Auth:            []gossh.AuthMethod{method},
 		Timeout:         s.endpoint.Timeout,

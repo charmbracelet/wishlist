@@ -96,15 +96,6 @@ func (c closers) close() {
 	}
 }
 
-func firstNonEmpty(ss ...string) string {
-	for _, s := range ss {
-		if s != "" {
-			return s
-		}
-	}
-	return ""
-}
-
 func resetPty(w io.Writer) {
 	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
