@@ -6,8 +6,8 @@ import (
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wishlist/blocking"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

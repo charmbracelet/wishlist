@@ -3,8 +3,8 @@ package wishlist
 import (
 	"testing"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/stretchr/testify/require"
 )
 

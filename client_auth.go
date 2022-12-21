@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/home"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"

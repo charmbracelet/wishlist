@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/gobwas/glob"
 )
 

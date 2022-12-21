@@ -7,9 +7,9 @@ require (
 	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/keygen v0.3.0
 	github.com/charmbracelet/lipgloss v0.6.0
-	github.com/charmbracelet/promwish v0.3.1-0.20221220123307-62d6eeeb72ed
-	github.com/charmbracelet/wish v0.7.1-0.20221201144058-7fe3248bf50f
-	github.com/gliderlabs/ssh v0.3.5
+	github.com/charmbracelet/promwish v0.4.1-0.20221220125725-b388384405e1
+	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
+	github.com/charmbracelet/wish v0.7.1-0.20221221145023-0185fd6c61ef
 	github.com/gobwas/glob v0.2.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kevinburke/ssh_config v1.2.0
@@ -32,12 +32,12 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/caarlos0/sshmarshal v0.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect

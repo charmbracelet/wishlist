@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/charmbracelet/promwish"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 	"github.com/teivah/broadcast"
 )

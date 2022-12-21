@@ -11,12 +11,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/sshconfig"
-	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"

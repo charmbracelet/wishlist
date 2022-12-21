@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gliderlabs/ssh"
+	"github.com/charmbracelet/ssh"
 	"github.com/stretchr/testify/require"
 )
 
