@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/promwish"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/hashicorp/go-multierror"
@@ -57,6 +58,10 @@ func Serve(config *Config) error {
 			Middlewares: []wish.Middleware{
 				listingMiddleware(config, relay),
 				cmdsMiddleware(config.Endpoints),
+				promwish.Middleware(
+					FirstNonEmpty(config.Metrics.Address, "localhost:9222"),
+					FirstNonEmpty(config.Metrics.Name, "wishlist"),
+				),
 			},
 		},
 	}, config.Endpoints...) {

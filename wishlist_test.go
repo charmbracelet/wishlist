@@ -122,3 +122,8 @@ func TestRootCause(t *testing.T) {
 		"the root cause",
 	)
 }
+
+func TestFirstNonEmpty(t *testing.T) {
+	require.Equal(t, "a", FirstNonEmpty("", "a"))
+	require.Equal(t, "", FirstNonEmpty("", ""))
+}

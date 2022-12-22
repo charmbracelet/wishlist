@@ -3,8 +3,6 @@ package wishlist
 import (
 	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestClosers(t *testing.T) {
@@ -19,9 +17,4 @@ func TestClosers(t *testing.T) {
 		},
 	}
 	cl.close()
-}
-
-func TestFirstNonEmpty(t *testing.T) {
-	require.Equal(t, "a", firstNonEmpty("", "a"))
-	require.Equal(t, "", firstNonEmpty("", ""))
 }

@@ -61,8 +61,8 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 		endpoints = append(endpoints, &wishlist.Endpoint{
 			Name: name,
 			Address: net.JoinHostPort(
-				firstNonEmpty(info.Hostname, name),
-				firstNonEmpty(info.Port, "22"),
+				wishlist.FirstNonEmpty(info.Hostname, name),
+				wishlist.FirstNonEmpty(info.Port, "22"),
 			),
 			User:          info.User,
 			IdentityFiles: info.IdentityFiles,
@@ -84,15 +84,6 @@ func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
 func stringToBool(s string) bool {
 	ss := strings.ToLower(strings.TrimSpace(s))
 	return ss == "true" || ss == "yes"
-}
-
-func firstNonEmpty(ss ...string) string {
-	for _, s := range ss {
-		if s != "" {
-			return s
-		}
-	}
-	return ""
 }
 
 type hostinfo struct {

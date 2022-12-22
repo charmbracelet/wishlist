@@ -206,3 +206,13 @@ func rootCause(err error) error {
 		err = e
 	}
 }
+
+// FirstNonEmpty returns the first non-empty string of the list.
+func FirstNonEmpty(ss ...string) string {
+	for _, s := range ss {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
