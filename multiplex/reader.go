@@ -64,21 +64,21 @@ type syncWriter struct {
 	mu sync.RWMutex
 }
 
-// Reset implements ResetableReader
+// Reset implements ResetableReader.
 func (w *syncWriter) Reset() {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.b.Reset()
 }
 
-// Read implements io.Reader
+// Read implements io.Reader.
 func (w *syncWriter) Read(p []byte) (n int, err error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return w.b.Read(p)
 }
 
-// Write implements io.Writer
+// Write implements io.Writer.
 func (w *syncWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
