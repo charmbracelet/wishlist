@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2) // nolint:gomnd
+var docStyle = lipgloss.NewStyle().Margin(1, 2) //nolint:gomnd
 
 var (
 	enter = key.NewBinding(
@@ -89,7 +89,7 @@ func features(endpoints []*Endpoint) []descriptor {
 }
 
 func endpointsToListItems(endpoints []*Endpoint, descriptors []descriptor) []list.Item {
-	var items []list.Item // nolint: prealloc
+	var items []list.Item //nolint: prealloc
 	for _, endpoint := range endpoints {
 		if !endpoint.Valid() {
 			continue

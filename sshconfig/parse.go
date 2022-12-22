@@ -24,7 +24,7 @@ func ParseFile(path string) ([]*wishlist.Endpoint, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config: %w", err)
 	}
-	defer f.Close() // nolint:errcheck
+	defer f.Close() //nolint:errcheck
 	return ParseReader(f)
 }
 
@@ -182,8 +182,8 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					continue
 				}
 
-				parts := strings.SplitN(node, " ", 2) // nolint:gomnd
-				if len(parts) != 2 {                  // nolint:gomnd
+				parts := strings.SplitN(node, " ", 2) //nolint:gomnd
+				if len(parts) != 2 {                  //nolint:gomnd
 					return nil, fmt.Errorf("invalid node on app %q: %q", name, node)
 				}
 
@@ -206,8 +206,10 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 				case "RemoteCommand":
 					info.RemoteCommand = value
 				case "ConnectTimeout":
-					timeout, _ := strconv.Atoi(value)
-					// TODO: handle errors?
+					timeout, err := strconv.Atoi(value)
+					if err != nil {
+						return nil, fmt.Errorf("invalid ConnectTimeout: %s: %w", value, err)
+					}
 					info.Timeout = time.Second * time.Duration(timeout)
 				case "SendEnv":
 					info.SendEnv = append(info.SendEnv, value)
@@ -216,7 +218,7 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 				case "Include":
 					path, err := home.ExpandPath(value)
 					if err != nil {
-						return nil, err // nolint: wrapcheck
+						return nil, err //nolint: wrapcheck
 					}
 					included, err := parseFileInternal(path)
 					if err != nil {
@@ -305,6 +307,6 @@ func parseFileInternal(path string) (*hostinfoMap, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config: %w", err)
 	}
-	defer f.Close() // nolint:errcheck
+	defer f.Close() //nolint:errcheck
 	return parseInternal(f)
 }
