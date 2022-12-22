@@ -75,12 +75,12 @@ func (w *syncWriter) Reset() {
 func (w *syncWriter) Read(p []byte) (n int, err error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.b.Read(p) // nolint: wrapcheck
+	return w.b.Read(p) //nolint: wrapcheck
 }
 
 // Write implements io.Writer.
 func (w *syncWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	return w.b.Write(p) // nolint: wrapcheck
+	return w.b.Write(p) //nolint: wrapcheck
 }
