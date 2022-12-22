@@ -7,10 +7,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/blocking"
 	"github.com/charmbracelet/wishlist/multiplex"
-	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 	"github.com/teivah/broadcast"
 )

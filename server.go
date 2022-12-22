@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-multierror"
 	"github.com/teivah/broadcast"
 )
