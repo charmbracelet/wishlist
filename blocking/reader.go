@@ -10,8 +10,14 @@ import (
 //
 // On EOF, it'll keep trying to read again every 10ms.
 //
-// The purpose of this is to be used to "emulate a STDIN" (which never EOFs)
+// The purpose of this is to be used to "emulate a STDIN"
 // from another io.Reader, for example, a bytes.Buffer.
+//
+// We need that because when we connect into an app through wishlist, we need
+// to keep a copy of STDIN (named handoffstdin in most places). That copy is a
+// bytes.Buffer, which would EOF on last byte, but we are still writing to
+// it... so it shouldn't really EOF. Hence, this Reader. It'll never EOF, and
+// will keep trying to read until another error happens.
 type Reader struct {
 	r io.Reader
 }
