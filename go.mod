@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/charmbracelet/promwish v0.4.1-0.20221220125725-b388384405e1
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
-	github.com/charmbracelet/wish v0.7.1-0.20221221145023-0185fd6c61ef
+	github.com/charmbracelet/wish v1.0.0
 	github.com/gobwas/glob v0.2.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/kevinburke/ssh_config v1.2.0
