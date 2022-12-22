@@ -25,7 +25,7 @@ func Serve(config *Config) error {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	if config.Port == 0 {
-		port, err := getFirstOpenPort(config.Listen, 22, 2222) // nolint:gomnd
+		port, err := getFirstOpenPort(config.Listen, 22, 2222) //nolint:gomnd
 		if err != nil {
 			return fmt.Errorf("could not get an open port and none was provided: %w", err)
 		}
@@ -36,7 +36,7 @@ func Serve(config *Config) error {
 		config.Listen = "0.0.0.0"
 	}
 
-	if err := os.MkdirAll(".wishlist", 0o700); err != nil { // nolint:gomnd
+	if err := os.MkdirAll(".wishlist", 0o700); err != nil { //nolint:gomnd
 		return fmt.Errorf("could not create .wishlist dir: %w", err)
 	}
 
@@ -74,8 +74,7 @@ func Serve(config *Config) error {
 		}
 
 		// i don't see where close was declared before, linter bug maybe?
-		// nolint:predeclared
-		close, err := listenAndServe(config, *endpoint)
+		close, err := listenAndServe(config, *endpoint) //nolint:predeclared
 		if close != nil {
 			closes = append(closes, close)
 		}
@@ -102,7 +101,7 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	log.Printf("Starting SSH server for %s on ssh://%s", endpoint.Name, endpoint.Address)
 	ln, err := net.Listen("tcp", endpoint.Address)
 	if err != nil {
-		return nil, err // nolint:wrapcheck
+		return nil, err //nolint:wrapcheck
 	}
 	go func() {
 		if err := s.Serve(ln); err != nil {
@@ -111,9 +110,9 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	}()
 
 	return func() error {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) // nolint:gomnd
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second) //nolint:gomnd
 		defer func() { cancel() }()
-		return s.Shutdown(ctx) // nolint:wrapcheck
+		return s.Shutdown(ctx) //nolint:wrapcheck
 	}, nil
 }
 
@@ -125,7 +124,7 @@ func closeAll(closes []func() error) error {
 			result = multierror.Append(result, err)
 		}
 	}
-	return result // nolint:wrapcheck
+	return result //nolint:wrapcheck
 }
 
 // returns `listen:port`.
@@ -142,7 +141,7 @@ func getFirstOpenPort(addr string, ports ...int64) (int64, error) {
 
 		// port seems available
 		if err := ln.Close(); err != nil {
-			return 0, err // nolint:wrapcheck
+			return 0, err //nolint:wrapcheck
 		}
 
 		return port, nil

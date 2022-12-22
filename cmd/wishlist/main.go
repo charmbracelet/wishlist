@@ -96,7 +96,7 @@ var serverCmd = &cobra.Command{
 		}
 
 		config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
-			// nolint:wrapcheck
+			//nolint:wrapcheck
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
 				wish.WithHostKeyPath(".wishlist/server_ed25519"),
@@ -207,17 +207,16 @@ func getSSHConfig(path string) (wishlist.Config, error) {
 	config := wishlist.Config{}
 	endpoints, err := sshconfig.ParseFile(path)
 	if err != nil {
-		return config, err // nolint:wrapcheck
+		return config, err //nolint: wrapcheck
 	}
 	config.Endpoints = endpoints
 	return config, nil
 }
 
-// nolint: wrapcheck
 func workLocally(config wishlist.Config, args []string) error {
 	f, err := tea.LogToFile("wishlist.log", "")
 	if err != nil {
-		return err
+		return err //nolint: wrapcheck
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -229,7 +228,7 @@ func workLocally(config wishlist.Config, args []string) error {
 	if len(args) == 0 || args[0] == "list" {
 		m := wishlist.NewListing(config.Endpoints, wishlist.NewLocalSSHClient())
 		_, err := tea.NewProgram(m).Run()
-		return err
+		return err //nolint: wrapcheck
 	}
 
 	// ssh directly into something by its name

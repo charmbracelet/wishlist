@@ -103,13 +103,13 @@ func getRemoteAgent(s ssh.Session) (agent.Agent, closers, error) {
 
 	l, err := ssh.NewAgentListener()
 	if err != nil {
-		return nil, nil, err // nolint:wrapcheck
+		return nil, nil, err //nolint:wrapcheck
 	}
 	go ssh.ForwardAgentConnections(l, s)
 
 	conn, err := net.Dial(l.Addr().Network(), l.Addr().String())
 	if err != nil {
-		return nil, closers{l.Close}, err // nolint:wrapcheck
+		return nil, closers{l.Close}, err //nolint:wrapcheck
 	}
 
 	return agent.NewClient(conn), closers{l.Close, conn.Close}, nil
@@ -143,12 +143,12 @@ func tryNewKey() (gossh.AuthMethod, error) {
 
 	key, err := keygen.New(path, nil, keygen.Ed25519)
 	if err != nil {
-		return nil, err // nolint:wrapcheck
+		return nil, err //nolint:wrapcheck
 	}
 
 	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM())
 	if err != nil {
-		return nil, err // nolint:wrapcheck
+		return nil, err //nolint:wrapcheck
 	}
 
 	log.Printf("offering public key: %s %s %s", path, signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
@@ -176,7 +176,7 @@ func tryIdendityFiles(e *Endpoint) ([]gossh.AuthMethod, error) {
 func tryIdentityFile(id string) (gossh.AuthMethod, error) {
 	h, err := home.ExpandPath(id)
 	if err != nil {
-		return nil, err // nolint: wrapcheck
+		return nil, err //nolint: wrapcheck
 	}
 	return parsePrivateKey(h, nil)
 }
@@ -189,7 +189,7 @@ func tryUserKeys() ([]gossh.AuthMethod, error) {
 // https://github.com/openssh/openssh-portable/blob/8a0848cdd3b25c049332cd56034186b7853ae754/readconf.c#L2534-L2546
 // https://github.com/openssh/openssh-portable/blob/2dc328023f60212cd29504fc05d849133ae47355/pathnames.h#L71-L81
 func tryUserKeysInternal(pathResolver func(string) (string, error)) ([]gossh.AuthMethod, error) {
-	var methods []gossh.AuthMethod // nolint: prealloc
+	var methods []gossh.AuthMethod //nolint: prealloc
 	for _, name := range []string{
 		"id_rsa",
 		// "id_dsa", // unhandled by go, deprecated by openssh
@@ -256,7 +256,7 @@ func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 // if the host does not exist there, it adds it so its available next time, as plain old `ssh` does.
 func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 	return func(hostname string, remote net.Addr, key gossh.PublicKey) error {
-		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) // nolint:gomnd
+		kh, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) //nolint:gomnd
 		if err != nil {
 			return fmt.Errorf("failed to open known_hosts: %w", err)
 		}
