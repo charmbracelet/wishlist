@@ -128,6 +128,7 @@ type User struct {
 
 // Metrics configuration.
 type Metrics struct {
+	Enabled bool   `yaml:"enabled"`
 	Name    string `yaml:"name"`
 	Address string `yaml:"address"`
 }
