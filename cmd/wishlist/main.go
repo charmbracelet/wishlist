@@ -171,7 +171,7 @@ func getConfig(configFile string) (wishlist.Config, error) {
 	if useZeroconf {
 		endpoints, err := zeroconf.Endpoints()
 		if err != nil {
-			return wishlist.Config{}, err
+			return wishlist.Config{}, err //nolint: wrapcheck
 		}
 		seed = endpoints
 	}
