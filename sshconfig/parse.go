@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -19,23 +20,23 @@ import (
 )
 
 // PraseFile reads and parses the file in the given path.
-func ParseFile(path string) ([]*wishlist.Endpoint, error) {
+func ParseFile(path string, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config: %w", err)
 	}
 	defer f.Close() //nolint:errcheck
-	return ParseReader(f)
+	return ParseReader(f, seed)
 }
 
 // ParseReader reads and parses the given reader.
-func ParseReader(r io.Reader) ([]*wishlist.Endpoint, error) {
+func ParseReader(r io.Reader, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, error) {
 	infos, err := parseInternal(r)
 	if err != nil {
 		return nil, err
 	}
 
-	wildcards, hosts := split(infos)
+	wildcards, hosts := split(infos, seed)
 
 	endpoints := make([]*wishlist.Endpoint, 0, infos.length())
 	if err := hosts.forEach(func(name string, info hostinfo, err error) error {
@@ -237,16 +238,25 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 	return infos, nil
 }
 
-func split(m *hostinfoMap) (*hostinfoMap, *hostinfoMap) {
+func split(m *hostinfoMap, seed []*wishlist.Endpoint) (*hostinfoMap, *hostinfoMap) {
 	wildcards := newHostinfoMap()
 	hosts := newHostinfoMap()
+	for _, e := range seed {
+		hostname, port, _ := net.SplitHostPort(e.Address)
+		hosts.set(e.Name, hostinfo{
+			Hostname: hostname,
+			Port:     port,
+		})
+		log.Println("seeding", e.Name)
+	}
 	_ = m.forEach(func(k string, v hostinfo, _ error) error {
 		// FWIW the lib always returns at least one * section... no idea why.
 		if strings.Contains(k, "*") {
 			wildcards.set(k, v)
 			return nil
 		}
-		hosts.set(k, v)
+		vv, _ := hosts.get(k)
+		hosts.set(k, mergeHostinfo(v, vv))
 		return nil
 	})
 	return wildcards, hosts

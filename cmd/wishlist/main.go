@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -9,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
@@ -19,7 +17,7 @@ import (
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/sshconfig"
-	"github.com/grandcat/zeroconf"
+	"github.com/charmbracelet/wishlist/zeroconf"
 	"github.com/hashicorp/go-multierror"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
@@ -57,14 +55,6 @@ It's also possible to serve the TUI over SSH using the server command.
 			return err
 		}
 
-		if useZeroconf {
-			additionalEndpoints, err := getZeroconfEndpoints()
-			if err != nil {
-				return err
-			}
-			config.Endpoints = append(config.Endpoints, additionalEndpoints...)
-		}
-
 		return workLocally(config, args)
 	},
 }
@@ -96,14 +86,6 @@ var serverCmd = &cobra.Command{
 		config, err := getConfig(configFile)
 		if err != nil {
 			return err
-		}
-
-		if useZeroconf {
-			additionalEndpoints, err := getZeroconfEndpoints()
-			if err != nil {
-				return err
-			}
-			config.Endpoints = append(config.Endpoints, additionalEndpoints...)
 		}
 
 		k, err := keygen.New(".wishlist/server", nil, keygen.Ed25519)
@@ -184,6 +166,15 @@ func userConfigPaths() []string {
 
 func getConfig(configFile string) (wishlist.Config, error) {
 	var allErrs error
+
+	var seed []*wishlist.Endpoint
+	if useZeroconf {
+		endpoints, err := zeroconf.Endpoints()
+		if err != nil {
+			return wishlist.Config{}, err
+		}
+		seed = endpoints
+	}
 	for _, path := range append([]string{configFile}, userConfigPaths()...) {
 		if path == "" {
 			continue
@@ -195,7 +186,7 @@ func getConfig(configFile string) (wishlist.Config, error) {
 		case ".yaml", ".yml":
 			cfg, err = getYAMLConfig(path)
 		default:
-			cfg, err = getSSHConfig(path)
+			cfg, err = getSSHConfig(path, seed)
 		}
 		if err != nil {
 			log.Println("Not using", path, ":", err)
@@ -228,9 +219,9 @@ func getYAMLConfig(path string) (wishlist.Config, error) {
 	return config, nil
 }
 
-func getSSHConfig(path string) (wishlist.Config, error) {
+func getSSHConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, error) {
 	config := wishlist.Config{}
-	endpoints, err := sshconfig.ParseFile(path)
+	endpoints, err := sshconfig.ParseFile(path, seed)
 	if err != nil {
 		return config, err //nolint: wrapcheck
 	}
@@ -275,31 +266,4 @@ func connect(e *wishlist.Endpoint) error {
 		return fmt.Errorf("connection failed: %w", err)
 	}
 	return nil
-}
-
-func getZeroconfEndpoints() ([]*wishlist.Endpoint, error) {
-	const service = "_ssh._tcp"
-	r, _ := zeroconf.NewResolver()
-	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
-	defer cancel()
-	var err error
-	entries := make(chan *zeroconf.ServiceEntry)
-	go func() {
-		err = r.Browse(ctx, service, "", entries)
-	}()
-	var endpoints []*wishlist.Endpoint
-	for entry := range entries {
-		endpoints = append(endpoints, &wishlist.Endpoint{
-			Name:    entry.Instance,
-			Address: fmt.Sprintf("%s:%d", entry.HostName, entry.Port),
-			// TODO: some work needed to match HostName against
-			// options in .ssh/config. For example:
-			// Host *.local
-			// User jon
-		})
-	}
-	if err != nil {
-		return nil, err
-	}
-	return endpoints, nil
 }
