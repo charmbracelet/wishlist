@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strconv"
@@ -247,7 +246,6 @@ func split(m *hostinfoMap, seed []*wishlist.Endpoint) (*hostinfoMap, *hostinfoMa
 			Hostname: hostname,
 			Port:     port,
 		})
-		log.Println("seeding", e.Name)
 	}
 	_ = m.forEach(func(k string, v hostinfo, _ error) error {
 		// FWIW the lib always returns at least one * section... no idea why.
