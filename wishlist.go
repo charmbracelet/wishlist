@@ -23,7 +23,7 @@ var (
 )
 
 // NewListing creates a new listing model for the given endpoints and SSH session.
-// If sessuion is nil, it is assume to be a local listing.
+// If session is nil, it is assume to be a local listing.
 func NewListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 	l := list.NewModel(nil, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
