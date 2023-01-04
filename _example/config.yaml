@@ -83,6 +83,9 @@ users:
 
 # Setup the /metrics prometheus endpoint.
 metrics:
+  # Enable the metrics.
+  enabled: true
+
   # App name that will be used in the metrics.
   name: my-wishlist
 

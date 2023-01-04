@@ -58,13 +58,16 @@ func Serve(config *Config) error {
 			Middlewares: []wish.Middleware{
 				listingMiddleware(config, relay),
 				cmdsMiddleware(config.Endpoints),
-				promwish.Middleware(
-					FirstNonEmpty(config.Metrics.Address, "localhost:9222"),
-					FirstNonEmpty(config.Metrics.Name, "wishlist"),
-				),
 			},
 		},
 	}, config.Endpoints...) {
+		if endpoint.Name == "list" && config.Metrics.Enabled {
+			endpoint.Middlewares = append(endpoint.Middlewares, promwish.Middleware(
+				FirstNonEmpty(config.Metrics.Address, "localhost:9222"),
+				FirstNonEmpty(config.Metrics.Name, "wishlist"),
+			))
+		}
+
 		if !endpoint.Valid() || !endpoint.ShouldListen() {
 			continue
 		}
