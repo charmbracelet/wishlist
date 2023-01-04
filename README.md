@@ -12,12 +12,14 @@ The SSH directory ✨
 
 ![screencast](https://user-images.githubusercontent.com/42545625/176265745-1749c5ae-bf8d-460f-865c-fae0e45cb448.gif)
 
-With Wishlist you can have a single entrypoint for multiple SSH endpoints, whether they are [Wish](https://github.com/charmbracelet/wish) apps or not.
+With Wishlist you can have a single entrypoint for multiple SSH endpoints,
+whether they are [Wish](https://github.com/charmbracelet/wish) apps or not.
 
-As a server, it can be used to start multiple SSH apps within a single package and list them over SSH.
-You can list apps provided elsewhere, too.
+As a server, it can be used to start multiple SSH apps within a single package
+and list them over SSH. You can list apps provided elsewhere, too.
 
-You can also use the `wishlist` CLI to list and connect to servers in your `~/.ssh/config` or a YAML config file.
+You can also use the `wishlist` CLI to list and connect to servers in your
+`~/.ssh/config` or, a YAML config file.
 
 ## Installation
 
@@ -71,43 +73,52 @@ go build ./cmd/wishlist/
 
 #### Remote
 
-If you just want a directory of existing servers, you can use the `wishlist` CLI and a YAML config file. You can also just run it without any arguments to list the servers in your `~/.ssh/config`.
-To start wishlist in server mode, you'll need to use the `serve` subcommand:
+If you just want a directory of existing servers, you can use the `wishlist` CLI
+and a YAML config file. You can also just run it without any arguments to list
+the servers in your `~/.ssh/config`. To start wishlist in server mode, you'll
+need to use the `serve` subcommand:
 
 ```sh
 wishlist serve
 ```
 
-Check the [example config file](/_example/config.yaml) file as well as `wishlist server --help` for details.
+Check the [example config file](/_example/config.yaml) file as well as
+`wishlist server --help` for details.
 
 #### Local
 
-If you want to explore your `~/.ssh/config`, you can run wishlist in local mode with:
+If you want to explore your `~/.ssh/config`, you can run wishlist in local mode
+with:
 
 ```sh
 wishlist
 ```
 
-Note that not all options are supported at this moment. Check the [commented example config](/_example/config) for reference.
+Note that not all options are supported at this moment. Check the
+[commented example config](/_example/config) for reference.
 
 ### Library
 
-Wishlist is also available as a library, which allows you to start several apps within the same process.
+Wishlist is also available as a library, which allows you to start several apps
+within the same process.
 Check out the `_example` folder for a working example.
 
 ## Auth
 
 ### Local mode
 
-When running in local mode, wishlist will first see if the current endpoint has an `IdentityFile` specified.
+When running in local mode, wishlist will first see if the current endpoint has
+an `IdentityFile` specified.
 If so, it'll try to use that.
 If not, it'll see if there's a SSH Agent available, and use it.
 Otherwise, it'll try the common key names in `~/.ssh`.
 
 ### Server mode
 
-When running as a server, wishlist will first try to forward the current SSH Agent.
-If there's no agent, it'll create or use an existing ed25519 key present in `.wishlist/client_ed25519`.
+When running as a server, wishlist will first try to forward the current SSH
+Agent.
+If there's no agent, it'll create or use an existing ed25519 key present in
+`.wishlist/client_ed25519`.
 Password authentication is not supported at this moment.
 
 ### Agent forwarding example
@@ -137,7 +148,8 @@ Host wishlist
 
 ## Running it
 
-Wishlist will read and store all its information in a `.wishlist` folder in the current working directory:
+Wishlist will read and store all its information in a `.wishlist` folder in the
+current working directory:
 
 - the server keys
 - the client keys
@@ -161,11 +173,30 @@ The config files are tried in the following order:
 - `$HOME/.ssh/config`
 - `/etc/ssh/ssh_config`
 
-[^1]: i.e. `[[user config dir]]`: On Unix systems, it will be `$XDG_CONFIG_HOME` as specified by https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html if non-empty, else `$HOME/.config`. On Darwin, it will be `$HOME/Library/Application Support`. On Windows, it will be `%AppData%`. On Plan 9, it will be `$home/lib`.
+[^1]: i.e. `[[user config dir]]`: On Unix systems, it will be `$XDG_CONFIG_HOME`
+  as specified by
+  https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+  if non-empty, else `$HOME/.config`. On Darwin, it will be
+	  `$HOME/Library/Application Support`. On Windows, it will be `%AppData%`.
+	  On Plan 9, it will be `$home/lib`.
 
-The first one that is loaded and parsed without errors will be used.
-This means that if you have your common used hosts in your `~/.ssh/config`, you can simply run `wishlist` and get it running right away.
-It also means that if you don't want that, you can pass a path to `-config`, and it can be either a YAML, or a SSH config file.
+The first one that is loaded and parsed without errors will be used. This means
+that if you have your common used hosts in your `~/.ssh/config`, you can simply
+run `wishlist` and get it running right away. It also means that if you don't
+want that, you can pass a path to `-config`, and it can be either a YAML, or a
+SSH config file.
+
+### Zeroconf/Avahi
+
+Wishlist can also discover services using Avahi, to do so, run it with
+`--zeroconf.enabled`.
+Optionally, you can also specify a timeout with `--zeroconf.timeout` and, which
+domain to look for with `--zeroconf.domain`.
+
+Wishlist will look for `_ssh._tcp` services in the given domain.
+If you're using a SSH configuration file as the Wishlist configuration file,
+it'll try to match the hosts with the rules in the given configuration.
+Otherwise, the services will simply be added to the list.
 
 ### Using the binary
 

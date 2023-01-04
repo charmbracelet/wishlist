@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
@@ -121,14 +122,18 @@ var serverCmd = &cobra.Command{
 }
 
 var (
-	configFile  string
-	useZeroconf bool
+	configFile      string
+	zeroconfEnabled bool
+	zeroconfDomain  string
+	zeroconfTimeout time.Duration
 )
 
 func init() {
 	paths := userConfigPaths()
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: "+strings.Join(paths, ", "))
-	rootCmd.PersistentFlags().BoolVarP(&useZeroconf, "zeroconf", "z", false, "Use zeroconf service discovery (Bonjour/mDNS)")
+	rootCmd.PersistentFlags().BoolVar(&zeroconfEnabled, "zeroconf.enabled", false, "Whether to enable zeroconf service discovery (Avahi/Bonjour/mDNS)")
+	rootCmd.PersistentFlags().StringVar(&zeroconfDomain, "zeroconf.domain", "", "Domain to use with zeroconf service discovery")
+	rootCmd.PersistentFlags().DurationVar(&zeroconfTimeout, "zeroconf.timeout", time.Second, "How long should zeroconf keep searching for hosts")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -168,8 +173,8 @@ func getConfig(configFile string) (wishlist.Config, error) {
 	var allErrs error
 
 	var seed []*wishlist.Endpoint
-	if useZeroconf {
-		endpoints, err := zeroconf.Endpoints()
+	if zeroconfEnabled {
+		endpoints, err := zeroconf.Endpoints(zeroconfDomain, zeroconfTimeout)
 		if err != nil {
 			return wishlist.Config{}, err //nolint: wrapcheck
 		}
@@ -184,7 +189,7 @@ func getConfig(configFile string) (wishlist.Config, error) {
 		var err error
 		switch filepath.Ext(path) {
 		case ".yaml", ".yml":
-			cfg, err = getYAMLConfig(path)
+			cfg, err = getYAMLConfig(path, seed)
 		default:
 			cfg, err = getSSHConfig(path, seed)
 		}
@@ -204,7 +209,7 @@ func getConfig(configFile string) (wishlist.Config, error) {
 	return wishlist.Config{}, fmt.Errorf("no valid config files found: %w", allErrs)
 }
 
-func getYAMLConfig(path string) (wishlist.Config, error) {
+func getYAMLConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, error) {
 	var config wishlist.Config
 
 	bts, err := os.ReadFile(path)
@@ -216,6 +221,7 @@ func getYAMLConfig(path string) (wishlist.Config, error) {
 		return config, fmt.Errorf("failed to parse config: %w", err)
 	}
 
+	config.Endpoints = append(config.Endpoints, seed...)
 	return config, nil
 }
 
