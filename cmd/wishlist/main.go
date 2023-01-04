@@ -186,7 +186,7 @@ func getConfig(configFile string) (wishlist.Config, error) {
 	for _, domain := range srvDomains {
 		endpoints, err := srv.Endpoints(domain)
 		if err != nil {
-			return wishlist.Config{}, err
+			return wishlist.Config{}, err //nolint: wrapcheck
 		}
 		seed = append(seed, endpoints...)
 	}
