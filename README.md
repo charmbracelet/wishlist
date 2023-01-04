@@ -200,6 +200,13 @@ Otherwise, the services will simply be added to the list.
 
 Run `wishlist --help` to see all the options.
 
+### SRV records
+
+Wishlist can also find nodes from DNS SRV records, on one or more domains.
+
+Run `wishlist --srv.domain {your domain}` to get started. You can repeat the
+flag for multiple domains.
+
 ### Using the binary
 
 ```sh

@@ -17,6 +17,7 @@ import (
 	"github.com/charmbracelet/wish/activeterm"
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
+	"github.com/charmbracelet/wishlist/srv"
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/charmbracelet/wishlist/zeroconf"
 	"github.com/hashicorp/go-multierror"
@@ -123,6 +124,7 @@ var serverCmd = &cobra.Command{
 
 var (
 	configFile      string
+	srvDomains      []string
 	zeroconfEnabled bool
 	zeroconfDomain  string
 	zeroconfTimeout time.Duration
@@ -134,6 +136,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&zeroconfEnabled, "zeroconf.enabled", false, "Whether to enable zeroconf service discovery (Avahi/Bonjour/mDNS)")
 	rootCmd.PersistentFlags().StringVar(&zeroconfDomain, "zeroconf.domain", "", "Domain to use with zeroconf service discovery")
 	rootCmd.PersistentFlags().DurationVar(&zeroconfTimeout, "zeroconf.timeout", time.Second, "How long should zeroconf keep searching for hosts")
+	rootCmd.PersistentFlags().StringSliceVar(&srvDomains, "srv.domain", nil, "SRV domains to discover endpoints")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -179,6 +182,13 @@ func getConfig(configFile string) (wishlist.Config, error) {
 			return wishlist.Config{}, err //nolint: wrapcheck
 		}
 		seed = endpoints
+	}
+	for _, domain := range srvDomains {
+		endpoints, err := srv.Endpoints(domain)
+		if err != nil {
+			return wishlist.Config{}, err
+		}
+		seed = append(seed, endpoints...)
 	}
 	for _, path := range append([]string{configFile}, userConfigPaths()...) {
 		if path == "" {
