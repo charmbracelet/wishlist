@@ -207,6 +207,16 @@ Wishlist can also find nodes from DNS SRV records, on one or more domains.
 Run `wishlist --srv.domain {your domain}` to get started. You can repeat the
 flag for multiple domains.
 
+By default, Wishlist will set the name of the endpoint to the SRV target.
+You can, however, customize that with a TXT record in the following format:
+
+```
+wishlist.name full.address:22=thename
+```
+
+So, in this case, a SRV record pointing to `full.address` on port `22` will get
+the name `thename`.
+
 ### Using the binary
 
 ```sh
