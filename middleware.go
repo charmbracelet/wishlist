@@ -87,8 +87,15 @@ func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoin
 // - errch: when the program errors
 // - session's context done: when the session is terminated by either party
 // - winch: when the terminal is resized
+// - endpointsch: new endpoint list provided
 // and handles them accordingly.
-func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-chan []*Endpoint, errch <-chan error) {
+func listenAppEvents(
+	s ssh.Session,
+	p *tea.Program,
+	donech <-chan bool,
+	endpointsch <-chan []*Endpoint,
+	errch <-chan error,
+) {
 	_, winch, _ := s.Pty()
 	for {
 		select {
@@ -103,7 +110,7 @@ func listenAppEvents(s ssh.Session, p *tea.Program, donech <-chan bool, msgch <-
 			if p != nil {
 				p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
 			}
-		case m := <-msgch:
+		case m := <-endpointsch:
 			if p != nil {
 				p.Send(SetEndpointsMsg{Endpoints: m})
 			}
