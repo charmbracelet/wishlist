@@ -46,6 +46,7 @@ type ListModel struct {
 	endpoints []*Endpoint
 	client    SSHClient
 	quitting  bool
+	width     int
 	err       error
 }
 
@@ -148,6 +149,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := docStyle.GetMargin()
+		m.width = msg.Width
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
 
 	case SetEndpointsMsg:
@@ -188,10 +190,19 @@ func (m *ListModel) View() string {
 	}
 
 	if m.err != nil {
+		header := lipgloss.NewStyle().
+			Width(m.width).
+			Render("Something went wrong:")
+		errstr := errStyle.Copy().
+			Width(m.width).
+			Render(rootCause(m.err).Error())
+		footer := footerStyle.Copy().
+			Width(m.width).
+			Render("Press any key to go back to the list.")
 		return logoStyle.String() + "\n\n" +
-			"Something went wrong:" + "\n\n" +
-			errStyle.Render(rootCause(m.err).Error()) + "\n\n" +
-			footerStyle.Render("Press any key to go back to the list.") + "\n"
+			header + "\n\n" +
+			errstr + "\n\n" +
+			footer + "\n"
 	}
 	return docStyle.Render(m.list.View())
 }
