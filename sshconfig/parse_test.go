@@ -3,6 +3,7 @@ package sshconfig
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"testing/iotest"
 	"time"
@@ -13,7 +14,7 @@ import (
 
 func TestParseFile(t *testing.T) {
 	t.Run("good", func(t *testing.T) {
-		endpoints, err := ParseFile("testdata/good")
+		endpoints, err := ParseFile("testdata/good", nil)
 		require.NoError(t, err)
 
 		require.Len(t, endpoints, 11)
@@ -111,28 +112,69 @@ func TestParseFile(t *testing.T) {
 	})
 
 	t.Run("invalid node", func(t *testing.T) {
-		endpoints, err := ParseFile("testdata/invalid_node")
+		endpoints, err := ParseFile("testdata/invalid_node", nil)
 		require.Empty(t, endpoints)
 		require.EqualError(t, err, `invalid node on app "invalid": "HostNameinvalid-because-no-spaces"`)
 	})
 
 	t.Run("invalid path", func(t *testing.T) {
-		endpoints, err := ParseFile("testdata/nope")
+		endpoints, err := ParseFile("testdata/nope", nil)
 		require.Empty(t, endpoints)
 		require.ErrorIs(t, err, os.ErrNotExist)
+	})
+
+	t.Run("with seed", func(t *testing.T) {
+		endpoints, err := ParseReader(strings.NewReader(`
+Host *.local
+  User carlos
+
+Host zap.local
+  ForwardAgent yes
+		`), []*wishlist.Endpoint{
+			{
+				Name:    "foo.local",
+				Address: "foo.local:22",
+			},
+			{
+				Name:    "zap.local",
+				Address: "zap.local:22",
+			},
+			{
+				Name:    "zap.non_local",
+				Address: "zap.non_local:22",
+			},
+		})
+		require.NoError(t, err)
+		require.ElementsMatch(t, []*wishlist.Endpoint{
+			{
+				Name:    "foo.local",
+				Address: "foo.local:22",
+				User:    "carlos",
+			},
+			{
+				Name:         "zap.local",
+				Address:      "zap.local:22",
+				User:         "carlos",
+				ForwardAgent: true,
+			},
+			{
+				Name:    "zap.non_local",
+				Address: "zap.non_local:22",
+			},
+		}, endpoints)
 	})
 }
 
 func TestParseReader(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
-		endpoints, err := ParseReader(iotest.ErrReader(fmt.Errorf("any")))
+		endpoints, err := ParseReader(iotest.ErrReader(fmt.Errorf("any")), nil)
 		require.EqualError(t, err, "failed to read config: any")
 		require.Empty(t, endpoints)
 	})
 }
 
 func TestParseIncludes(t *testing.T) {
-	endpoints, err := ParseFile("testdata/include")
+	endpoints, err := ParseFile("testdata/include", nil)
 	require.NoError(t, err)
 	require.ElementsMatch(t, []*wishlist.Endpoint{
 		{
@@ -208,7 +250,7 @@ func TestSplit(t *testing.T) {
 		"*":         {Hostname: "foobar"},
 		"foo.bar":   {User: "john"},
 	},
-	))
+	), nil)
 
 	require.Equal(t, 2, wildcards.length())
 	require.Equal(t, map[string]hostinfo{

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
@@ -17,6 +18,7 @@ import (
 	lm "github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/sshconfig"
+	"github.com/charmbracelet/wishlist/zeroconf"
 	"github.com/hashicorp/go-multierror"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
@@ -53,6 +55,7 @@ It's also possible to serve the TUI over SSH using the server command.
 		if err != nil {
 			return err
 		}
+
 		return workLocally(config, args)
 	},
 }
@@ -85,6 +88,7 @@ var serverCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
 		k, err := keygen.New(".wishlist/server", nil, keygen.Ed25519)
 		if err != nil {
 			return fmt.Errorf("could not create keypair: %w", err)
@@ -117,11 +121,19 @@ var serverCmd = &cobra.Command{
 	},
 }
 
-var configFile string
+var (
+	configFile      string
+	zeroconfEnabled bool
+	zeroconfDomain  string
+	zeroconfTimeout time.Duration
+)
 
 func init() {
 	paths := userConfigPaths()
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to the config file to use. Defaults to, in order of preference: "+strings.Join(paths, ", "))
+	rootCmd.PersistentFlags().BoolVar(&zeroconfEnabled, "zeroconf.enabled", false, "Whether to enable zeroconf service discovery (Avahi/Bonjour/mDNS)")
+	rootCmd.PersistentFlags().StringVar(&zeroconfDomain, "zeroconf.domain", "", "Domain to use with zeroconf service discovery")
+	rootCmd.PersistentFlags().DurationVar(&zeroconfTimeout, "zeroconf.timeout", time.Second, "How long should zeroconf keep searching for hosts")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -159,6 +171,15 @@ func userConfigPaths() []string {
 
 func getConfig(configFile string) (wishlist.Config, error) {
 	var allErrs error
+
+	var seed []*wishlist.Endpoint
+	if zeroconfEnabled {
+		endpoints, err := zeroconf.Endpoints(zeroconfDomain, zeroconfTimeout)
+		if err != nil {
+			return wishlist.Config{}, err //nolint: wrapcheck
+		}
+		seed = endpoints
+	}
 	for _, path := range append([]string{configFile}, userConfigPaths()...) {
 		if path == "" {
 			continue
@@ -168,9 +189,9 @@ func getConfig(configFile string) (wishlist.Config, error) {
 		var err error
 		switch filepath.Ext(path) {
 		case ".yaml", ".yml":
-			cfg, err = getYAMLConfig(path)
+			cfg, err = getYAMLConfig(path, seed)
 		default:
-			cfg, err = getSSHConfig(path)
+			cfg, err = getSSHConfig(path, seed)
 		}
 		if err != nil {
 			log.Println("Not using", path, ":", err)
@@ -188,7 +209,7 @@ func getConfig(configFile string) (wishlist.Config, error) {
 	return wishlist.Config{}, fmt.Errorf("no valid config files found: %w", allErrs)
 }
 
-func getYAMLConfig(path string) (wishlist.Config, error) {
+func getYAMLConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, error) {
 	var config wishlist.Config
 
 	bts, err := os.ReadFile(path)
@@ -200,12 +221,13 @@ func getYAMLConfig(path string) (wishlist.Config, error) {
 		return config, fmt.Errorf("failed to parse config: %w", err)
 	}
 
+	config.Endpoints = append(config.Endpoints, seed...)
 	return config, nil
 }
 
-func getSSHConfig(path string) (wishlist.Config, error) {
+func getSSHConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, error) {
 	config := wishlist.Config{}
-	endpoints, err := sshconfig.ParseFile(path)
+	endpoints, err := sshconfig.ParseFile(path, seed)
 	if err != nil {
 		return config, err //nolint: wrapcheck
 	}
