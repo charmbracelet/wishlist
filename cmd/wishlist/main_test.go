@@ -11,8 +11,10 @@ import (
 )
 
 func TestParseExampleYaml(t *testing.T) {
-	cfg, err := getConfig("../../_example/config.yaml")
+	input := "../../_example/config.yaml"
+	cfg, path, err := getConfig(input, nil)
 	require.NoError(t, err)
+	require.Equal(t, input, path)
 	require.Equal(t, "127.0.0.1", cfg.Listen)
 	require.Equal(t, int64(2223), cfg.Port)
 	require.Len(t, cfg.Endpoints, 1)
@@ -44,9 +46,10 @@ func TestParseExampleYaml(t *testing.T) {
 }
 
 func TestParseExampleSSHConfig(t *testing.T) {
-	cfg, err := getConfig("../../_example/config")
+	input := "../../_example/config"
+	cfg, path, err := getConfig(input, nil)
 	require.NoError(t, err)
-	require.NoError(t, err)
+	require.Equal(t, input, path)
 	require.Empty(t, cfg.Listen)
 	require.Empty(t, cfg.Port)
 	require.Len(t, cfg.Endpoints, 2)
@@ -82,35 +85,35 @@ func TestGetConfig(t *testing.T) {
 
 	t.Run("yaml", func(t *testing.T) {
 		t.Run("valid", func(t *testing.T) {
-			cfg, err := getConfig(filepath.Join(dir, "testdata/valid.yaml"))
+			cfg, _, err := getConfig(filepath.Join(dir, "testdata/valid.yaml"), nil)
 			require.NoError(t, err)
 			require.Equal(t, wishlist.Config{Listen: "127.0.0.1"}, cfg)
 		})
 
 		t.Run("invalid", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/invalid.yaml"))
+			_, _, err := getConfig(filepath.Join(dir, "testdata/invalid.yaml"), nil)
 			require.Error(t, err)
 		})
 
 		t.Run("not found", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/nope.yaml"))
+			_, _, err := getConfig(filepath.Join(dir, "testdata/nope.yaml"), nil)
 			require.NoError(t, err)
 		})
 	})
 
 	t.Run("ssh", func(t *testing.T) {
 		t.Run("valid", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/valid"))
+			_, _, err := getConfig(filepath.Join(dir, "testdata/valid"), nil)
 			require.NoError(t, err)
 		})
 
 		t.Run("invalid", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/invalid"))
+			_, _, err := getConfig(filepath.Join(dir, "testdata/invalid"), nil)
 			require.Error(t, err)
 		})
 
 		t.Run("not found", func(t *testing.T) {
-			_, err := getConfig(filepath.Join(dir, "testdata/nope"))
+			_, _, err := getConfig(filepath.Join(dir, "testdata/nope"), nil)
 			require.NoError(t, err)
 		})
 	})
