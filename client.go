@@ -52,7 +52,7 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint, abort <-chan os.Signal
 	cl = append(cl, session.Close)
 	for k, v := range e.Environment(env...) {
 		if err := session.Setenv(k, v); err != nil {
-			return session, conn, cl, fmt.Errorf("could not set env: %q: %w", env, err)
+			return session, conn, cl, fmt.Errorf("could not set env: %s=%s: %w", k, v, err)
 		}
 		log.Printf("setting env %s = %q", k, v)
 	}
