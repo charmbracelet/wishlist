@@ -271,7 +271,7 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 			var kerr *knownhosts.KeyError
 			if errors.As(err, &kerr) {
 				if len(kerr.Want) > 0 {
-					return fmt.Errorf("possible man-in-the-middle attack: %w", err)
+					return fmt.Errorf("possible man-in-the-middle attack: %w - if your host's key changed, you might need to edit %q", err, kh.Name())
 				}
 				// if want is empty, it means the host was not in the known_hosts file, so lets add it there.
 				fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
