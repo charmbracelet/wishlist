@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 	"github.com/muesli/termenv"
 	"golang.org/x/crypto/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -54,19 +54,19 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint, abort <-chan os.Signal
 		if err := session.Setenv(k, v); err != nil {
 			return session, conn, cl, fmt.Errorf("could not set env: %s=%s: %w", k, v, err)
 		}
-		log.Printf("setting env %s = %q", k, v)
+		log.Info("setting env", "key", k, "value", v)
 	}
 	return session, conn, cl, nil
 }
 
 func shellAndWait(session *gossh.Session) error {
-	log.Println("requesting shell")
+	log.Info("requesting shell")
 	if err := session.Shell(); err != nil {
 		return fmt.Errorf("failed to start shell: %w", err)
 	}
 	if err := session.Wait(); err != nil {
 		if errors.Is(err, &ssh.ExitMissingError{}) {
-			log.Println("exit was missing, assuming exit 0")
+			log.Info("exit was missing, assuming exit 0")
 			return nil
 		}
 		return fmt.Errorf("session failed: %w", err)
@@ -75,7 +75,7 @@ func shellAndWait(session *gossh.Session) error {
 }
 
 func runAndWait(session *gossh.Session, cmd string) error {
-	log.Printf("running %q", cmd)
+	log.Info("running", "command", cmd)
 	if err := session.Run(cmd); err != nil {
 		return fmt.Errorf("failed to run %q: %w", cmd, err)
 	}
@@ -91,7 +91,7 @@ func (c closers) close() {
 				// do not print EOF errors... not a big deal anyway
 				continue
 			}
-			log.Println("failed to close:", err)
+			log.Warn("failed to close", "err", err)
 		}
 	}
 }

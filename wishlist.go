@@ -2,12 +2,12 @@ package wishlist
 
 import (
 	"errors"
-	"log"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2) //nolint:gomnd
@@ -57,7 +57,7 @@ func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
 	d := list.NewDefaultDelegate()
 	d.SetHeight(h)
 	m.list.SetDelegate(d)
-	log.Println("setting delegate height:", h)
+	log.Debug("setting delegate height", "height", h)
 	return m.list.SetItems(endpointsToListItems(endpoints, descriptors))
 }
 
@@ -159,7 +159,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case errMsg:
 		if msg.err != nil {
-			log.Println("got an error:", msg.err)
+			log.Warn("got an error", "err", msg.err)
 			m.err = msg.err
 			return m, nil
 		}
@@ -208,7 +208,7 @@ func (m *ListModel) View() string {
 }
 
 func rootCause(err error) error {
-	log.Println("error:", err)
+	log.Warn("root cause", "err", err)
 	for {
 		e := errors.Unwrap(err)
 		if e == nil {

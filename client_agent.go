@@ -2,15 +2,15 @@ package wishlist
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/charmbracelet/log"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
 func forwardAgent(agt agent.Agent, session *ssh.Session, client *ssh.Client) error {
 	if agt == nil {
-		log.Println("requested ForwardAgent, but no agent is available")
+		log.Info("requested ForwardAgent, but no agent is available")
 		return nil
 	}
 	if err := agent.RequestAgentForwarding(session); err != nil {

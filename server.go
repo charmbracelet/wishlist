@@ -3,7 +3,6 @@ package wishlist
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/promwish"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -101,14 +101,14 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 	}
 	s.PublicKeyHandler = publicKeyAccessOption(config.Users)
 
-	log.Printf("Starting SSH server for %s on ssh://%s", endpoint.Name, endpoint.Address)
+	log.Info("Starting SSH server", "endpoint", endpoint.Name, "address", "ssh://"+endpoint.Address)
 	ln, err := net.Listen("tcp", endpoint.Address)
 	if err != nil {
 		return nil, err //nolint:wrapcheck
 	}
 	go func() {
 		if err := s.Serve(ln); err != nil {
-			log.Println("SSH server error:", err)
+			log.Error("SSH server failed", "err", err)
 		}
 	}()
 
@@ -165,17 +165,17 @@ func publicKeyAccessOption(users []User) ssh.PublicKeyHandler {
 				for _, pubkey := range user.PublicKeys {
 					upk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(pubkey))
 					if err != nil {
-						log.Printf("invalid key for user %q: %v", user.Name, err)
+						log.Warn("invalid key", "user", user.Name, "err", err)
 						return false
 					}
 					if ssh.KeysEqual(upk, key) {
-						log.Printf("authorized %s@%s...", ctx.User(), pubkey[:30])
+						log.Info("authorized", "user", ctx.User(), "key", pubkey[:30])
 						return true
 					}
 				}
 			}
 		}
-		log.Printf("denied %s@%s", ctx.User(), key.Type())
+		log.Warn("denied", "user", ctx.User(), "key.type", key.Type())
 		return false
 	}
 }
