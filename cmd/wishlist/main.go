@@ -53,6 +53,19 @@ It's also possible to serve the TUI over SSH using the server command.
 		HiddenDefaultCmd: true,
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		f, err := os.OpenFile("wishlist.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gomnd
+		if err != nil {
+			return err //nolint: wrapcheck
+		}
+		log.SetOutput(f)
+		log.SetLevel(log.DebugLevel)
+		log.SetFormatter(log.JSONFormatter)
+
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Info("failes to close wishlist.log", "err", err)
+			}
+		}()
 		seed, err := getSeedEndpoints()
 		if err != nil {
 			return err
@@ -281,18 +294,6 @@ func getSSHConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, erro
 }
 
 func workLocally(config wishlist.Config, args []string) error {
-	f, err := os.OpenFile("wishlist.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gomnd
-	if err != nil {
-		return err //nolint: wrapcheck
-	}
-	log.SetOutput(f)
-	log.SetLevel(log.DebugLevel)
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Info("failes to close wishlist.log", "err", err)
-		}
-	}()
-
 	// either no args or arg is a list
 	if len(args) == 0 || args[0] == "list" {
 		m := wishlist.NewListing(config.Endpoints, wishlist.NewLocalSSHClient())
