@@ -281,7 +281,7 @@ func getSSHConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, erro
 }
 
 func workLocally(config wishlist.Config, args []string) error {
-	f, err := os.OpenFile("wishlist.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644)
+	f, err := os.OpenFile("wishlist.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gomnd
 	if err != nil {
 		return err //nolint: wrapcheck
 	}
