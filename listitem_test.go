@@ -46,7 +46,7 @@ func TestWithDescription(t *testing.T) {
 	t.Run("no description", func(t *testing.T) {
 		require.Equal(
 			t,
-			"\x1b[3;2mno description\x1b[0m",
+			"no description",
 			withDescription(&Endpoint{}),
 		)
 	})
@@ -74,7 +74,7 @@ func TestWithLink(t *testing.T) {
 	t.Run("no link", func(t *testing.T) {
 		require.Equal(
 			t,
-			"\x1b[3;2mno link\x1b[0m",
+			"no link",
 			withLink(&Endpoint{}),
 		)
 	})
