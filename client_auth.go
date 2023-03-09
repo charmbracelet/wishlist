@@ -3,12 +3,12 @@ package wishlist
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/home"
@@ -73,7 +73,11 @@ func agentAuthMethod(agt agent.Agent) gossh.AuthMethod {
 
 	signers, _ := agt.Signers()
 	for _, signer := range signers {
-		log.Printf("offering public key via ssh agent: %s %s", signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
+		log.Info(
+			"offering public key via ssh agent",
+			"key.type", signer.PublicKey().Type(),
+			"key.fingerprint", gossh.FingerprintSHA256(signer.PublicKey()),
+		)
 	}
 	return gossh.PublicKeysCallback(agt.Signers)
 }
@@ -128,7 +132,11 @@ func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, 
 
 	signers, _ := agent.Signers()
 	for _, signer := range signers {
-		log.Printf("offering public key via ssh agent: %s %s", signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
+		log.Info(
+			"offering public key via ssh agent",
+			"key.type", signer.PublicKey().Type(),
+			"key.fingerprint", gossh.FingerprintSHA256(signer.PublicKey()),
+		)
 	}
 	return gossh.PublicKeysCallback(agent.Signers), agent, closers, nil
 }
@@ -151,7 +159,12 @@ func tryNewKey() (gossh.AuthMethod, error) {
 		return nil, err //nolint:wrapcheck
 	}
 
-	log.Printf("offering public key: %s %s %s", path, signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
+	log.Info(
+		"offering public key",
+		"key.path", path,
+		"key.type", signer.PublicKey().Type(),
+		"key.fingerprint", gossh.FingerprintSHA256(signer.PublicKey()),
+	)
 
 	if key.KeyPairExists() {
 		return gossh.PublicKeys(signer), nil
@@ -246,7 +259,12 @@ func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 		return nil, fmt.Errorf("failed to parse private key: %q: %w", path, err)
 	}
 
-	log.Printf("offering public key: %s %s %s", path, signer.PublicKey().Type(), gossh.FingerprintSHA256(signer.PublicKey()))
+	log.Info(
+		"offering public key",
+		"key.path", path,
+		"key.type", signer.PublicKey().Type(),
+		"key.fingerprint", gossh.FingerprintSHA256(signer.PublicKey()),
+	)
 	return gossh.PublicKeys(signer), nil
 }
 

@@ -3,12 +3,12 @@ package zeroconf
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/wishlist"
 	"github.com/grandcat/zeroconf"
 )
@@ -17,7 +17,7 @@ const service = "_ssh._tcp"
 
 // Endpoints returns the found endpoints from zeroconf.
 func Endpoints(domain string, timeout time.Duration) ([]*wishlist.Endpoint, error) {
-	log.Printf("discovering %s from zeroconf on domain %q...", service, domain)
+	log.Info("discovering from zeroconf", "service", service, "domain", domain)
 	r, err := zeroconf.NewResolver()
 	if err != nil {
 		return nil, fmt.Errorf("zeroconf: could not create resolver: %w", err)

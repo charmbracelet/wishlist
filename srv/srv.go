@@ -2,17 +2,17 @@ package srv
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/wishlist"
 )
 
 // Endpoints returns the _ssh._tcp SRV records on the given domain as
 // Wishlist endpoints.
 func Endpoints(domain string) ([]*wishlist.Endpoint, error) {
-	log.Printf("discovering _ssh._tcp SRV records on domain %q...", domain)
+	log.Info("discovering _ssh._tcp SRV records", "domain", domain)
 	_, srvs, err := net.LookupSRV("ssh", "tcp", domain)
 	if err != nil {
 		return nil, fmt.Errorf("srv: could not resolve %s: %w", domain, err)

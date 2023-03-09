@@ -2,10 +2,10 @@ package wishlist
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/gobwas/glob"
@@ -64,7 +64,7 @@ func (e Endpoint) Environment(hostenv ...string) map[string]string {
 		if e.shouldSend(k) {
 			env[k] = v
 		} else {
-			log.Printf("ignored env %s", k)
+			log.Debug("ignored", "env", k)
 		}
 	}
 

@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
 	"os/user"
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 	"github.com/muesli/cancelreader"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/term"
@@ -116,7 +116,7 @@ func (s *localSession) Run() error {
 			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")
 		}
 
-		log.Println("requesting tty")
+		log.Info("requesting tty")
 		originalState, err := term.MakeRaw(fd)
 		if err != nil {
 			return fmt.Errorf("failed get terminal state: %w", err)
@@ -124,7 +124,7 @@ func (s *localSession) Run() error {
 
 		defer func() {
 			if err := term.Restore(fd, originalState); err != nil {
-				log.Println("couldn't restore terminal state:", err)
+				log.Warn("couldn't restore terminal state", "err", err)
 			}
 		}()
 
@@ -141,7 +141,7 @@ func (s *localSession) Run() error {
 		defer cancel()
 		go s.notifyWindowChanges(ctx, session)
 	} else {
-		log.Println("did not request a tty")
+		log.Info("did not request a tty")
 	}
 
 	if s.endpoint.RemoteCommand == "" {

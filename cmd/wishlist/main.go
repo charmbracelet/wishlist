@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -13,6 +12,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
@@ -100,13 +100,13 @@ var serverCmd = &cobra.Command{
 		}
 
 		if refreshInterval > 0 {
-			log.Println("Will refresh endpoints every", refreshInterval)
+			log.Info("endpoints", "refresh.interval", refreshInterval)
 			config.EndpointChan = make(chan []*wishlist.Endpoint)
 			ticker := time.NewTicker(refreshInterval)
 			defer ticker.Stop()
 			go func() {
 				for range ticker.C {
-					log.Println("Refreshing endpoints...")
+					log.Info("refreshing endpoints...")
 					reloaded, err := getConfigFile(path, seed)
 					if err != nil {
 						continue
@@ -173,7 +173,7 @@ func main() {
 		Version = fmt.Sprintf("%s (%s)", info.Main.Version, CommitSHA)
 	}
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
+		log.Fatal("command failed", "err", err)
 	}
 }
 
@@ -209,7 +209,7 @@ func getConfig(configFile string, seed []*wishlist.Endpoint) (wishlist.Config, s
 
 		cfg, err := getConfigFile(path, seed)
 		if err != nil {
-			log.Println("Not using", path, ":", err)
+			log.Info("Not using", "path", path, "err", err)
 			if errors.Is(err, os.ErrNotExist) {
 				allErrs = multierror.Append(allErrs, fmt.Errorf("%q: %w", path, err))
 				continue
@@ -217,7 +217,7 @@ func getConfig(configFile string, seed []*wishlist.Endpoint) (wishlist.Config, s
 			return wishlist.Config{}, "", err
 		}
 
-		log.Println("Using config from", path)
+		log.Info("Using configuration file", "path", path)
 		return cfg, path, nil
 	}
 	return wishlist.Config{}, "", fmt.Errorf("no valid config files found: %w", allErrs)
@@ -281,13 +281,15 @@ func getSSHConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, erro
 }
 
 func workLocally(config wishlist.Config, args []string) error {
-	f, err := tea.LogToFile("wishlist.log", "")
+	f, err := os.OpenFile("wishlist.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644)
 	if err != nil {
 		return err //nolint: wrapcheck
 	}
+	log.SetOutput(f)
+	log.SetLevel(log.DebugLevel)
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Println(err)
+			log.Info("failes to close wishlist.log", "err", err)
 		}
 	}()
 

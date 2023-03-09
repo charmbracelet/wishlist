@@ -3,8 +3,9 @@ package multiplex
 import (
 	"bytes"
 	"io"
-	"log"
 	"sync"
+
+	"github.com/charmbracelet/log"
 )
 
 // ResetableReader is an io.Reader that can be "reset", i.e.: cleared of
@@ -38,12 +39,12 @@ func Reader(r io.Reader, done <-chan bool) (ResetableReader, ResetableReader) {
 				n, err := r.Read(buf[:])
 				if err != nil {
 					if err != io.EOF {
-						log.Println("ignored multiplex read error:", err)
+						log.Info("ignored multiplex read error", "err", err)
 					}
 					continue
 				}
 				if _, err := w.Write(buf[:n]); err != nil {
-					log.Println("multiplex write error:", err)
+					log.Info("multiplex write error", "err", err)
 				}
 			}
 		}
