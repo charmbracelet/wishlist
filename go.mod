@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/keygen v0.3.0
-	github.com/charmbracelet/lipgloss v0.6.0
+	github.com/charmbracelet/lipgloss v0.7.0
 	github.com/charmbracelet/log v0.1.2
 	github.com/charmbracelet/promwish v0.5.0
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
@@ -18,7 +18,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2
 	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
-	github.com/muesli/termenv v0.15.0
+	github.com/muesli/termenv v0.15.1
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
 	github.com/teivah/broadcast v0.1.0
