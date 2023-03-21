@@ -53,7 +53,11 @@ It's also possible to serve the TUI over SSH using the server command.
 		HiddenDefaultCmd: true,
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := os.OpenFile("wishlist.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gomnd
+		cache, err := os.UserCacheDir()
+		if err != nil {
+			return fmt.Errorf("could not create log file: %w", err)
+		}
+		f, err := os.OpenFile(filepath.Join(cache, "wishlist.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gomnd
 		if err != nil {
 			return err //nolint: wrapcheck
 		}
