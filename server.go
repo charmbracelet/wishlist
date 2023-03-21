@@ -2,6 +2,7 @@ package wishlist
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -82,14 +83,14 @@ func Serve(config *Config) error {
 			closes = append(closes, closer)
 		}
 		if err != nil {
-			if err2 := closeAll(closes); err2 != nil {
+			if err2 := closeAll(closes); err2 != nil && !errors.Is(err2, ssh.ErrServerClosed) {
 				return multierror.Append(err, err2)
 			}
 			return err
 		}
 	}
 	<-done
-	log.Print("Stopping SSH servers")
+	log.Info("Stopping SSH servers")
 	return closeAll(closes)
 }
 
