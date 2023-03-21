@@ -25,8 +25,8 @@ github.com/charmbracelet/keygen v0.3.0/go.mod h1:1ukgO8806O25lUZ5s0IrNur+RlwTBER
 github.com/charmbracelet/lipgloss v0.6.0/go.mod h1:tHh2wr34xcHjC2HCXIlGSG1jaDF0S0atAUvBMP6Ppuk=
 github.com/charmbracelet/lipgloss v0.7.1 h1:17WMwi7N1b1rVWOjMT+rCh7sQkvDU75B2hbZpc5Kc1E=
 github.com/charmbracelet/lipgloss v0.7.1/go.mod h1:yG0k3giv8Qj8edTCbbg6AlQ5e8KNWpFujkNawKNhE2c=
-github.com/charmbracelet/log v0.1.2 h1:xmKMxo0T/lcftgggQOhUkS32exku2/ID55FGYbr4nKQ=
-github.com/charmbracelet/log v0.1.2/go.mod h1:86XdIdmrubqtL/6u0z+jGFol1bQejBGG/qPSTwGZuQQ=
+github.com/charmbracelet/log v0.2.0 h1:xx1ssrisRsAwVKyj7A7H3kIFdiuFWR9p2hse7B08jxY=
+github.com/charmbracelet/log v0.2.0/go.mod h1:3/Kcg0B7Y6ou8JFPy6gIAl1YuV0QmRfmeVxmiDt3eas=
 github.com/charmbracelet/promwish v0.5.0 h1:Oh08pKC/LNQlnXdNu+jDUgrjQvmCd+WzorgB+PYK00g=
 github.com/charmbracelet/promwish v0.5.0/go.mod h1:R3mSvCiHlyzu5uK73rNvwz7pP0S3vqRe01EEk2VKPZ8=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103 h1:wpHMERIN0pQZE635jWwT1dISgfjbpUcEma+fbPKSMCU=
