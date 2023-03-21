@@ -41,9 +41,9 @@ type remoteSession struct {
 	cleanup func()
 }
 
-func (s *remoteSession) SetStdin(r io.Reader)  {}
-func (s *remoteSession) SetStdout(w io.Writer) {}
-func (s *remoteSession) SetStderr(w io.Writer) {}
+func (s *remoteSession) SetStdin(_ io.Reader)  {}
+func (s *remoteSession) SetStdout(_ io.Writer) {}
+func (s *remoteSession) SetStderr(_ io.Writer) {}
 
 func (s *remoteSession) Run() error {
 	if s.cleanup != nil {
