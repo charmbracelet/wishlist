@@ -108,7 +108,7 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 		return nil, err //nolint:wrapcheck
 	}
 	go func() {
-		if err := s.Serve(ln); err != nil {
+		if err := s.Serve(ln); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
 			log.Error("SSH server failed", "err", err)
 		}
 	}()
@@ -124,7 +124,7 @@ func listenAndServe(config *Config, endpoint Endpoint) (func() error, error) {
 func closeAll(closes []func() error) error {
 	var result error
 	for _, close := range closes {
-		if err := close(); err != nil {
+		if err := close(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
 			result = multierror.Append(result, err)
 		}
 	}
