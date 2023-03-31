@@ -3,6 +3,7 @@ package sshconfig
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -222,6 +223,9 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					}
 					included, err := parseFileInternal(path)
 					if err != nil {
+						if errors.Is(err, os.ErrNotExist) {
+							continue
+						}
 						return nil, err
 					}
 					infos.set(name, info)
