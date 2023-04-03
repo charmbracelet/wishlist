@@ -234,6 +234,23 @@ docker run \
   docker.io/charmcli/wishlist:latest
 ```
 
+### Supported SSH Options
+
+Not all SSH options are currently supported.
+Here's a list of the ones that are:
+
+- `User`
+- `Hostname`
+- `Port`
+- `IdentityFiles`
+- `ForwardAgent`
+- `RequestTTY`
+- `RemoteCommand`
+- `SendEnv`
+- `SetEnv`
+- `ConnectTimeout`
+- `Include`
+
 ## Acknowledgments
 
 The gif above shows a lot of [Maas Lalani’s](https://github.com/maaslalani) [confeTTY](https://github.com/maaslalani/confetty).
