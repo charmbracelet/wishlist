@@ -149,7 +149,7 @@ func tryNewKey() (gossh.AuthMethod, error) {
 		return nil, fmt.Errorf("could not create client key: %w", err)
 	}
 
-	key, err := keygen.New(path, keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
+	key, err := keygen.New(path, keygen.WithKeyType(keygen.Ed25519))
 	if err != nil {
 		return nil, fmt.Errorf("could not create new client key at %q: %w", path, err)
 	}
