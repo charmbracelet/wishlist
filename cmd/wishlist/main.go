@@ -133,7 +133,7 @@ var serverCmd = &cobra.Command{
 			}()
 		}
 
-		k, err := keygen.New(".wishlist/server", keygen.WithKeyType(keygen.Ed25519))
+		k, err := keygen.New(".wishlist/server_ed25519", keygen.WithKeyType(keygen.Ed25519))
 		if err != nil {
 			return fmt.Errorf("could not create keypair: %w", err)
 		}
