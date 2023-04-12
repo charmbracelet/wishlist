@@ -144,12 +144,12 @@ func tryRemoteAuthAgent(s ssh.Session) (gossh.AuthMethod, agent.Agent, closers, 
 // tryNewKey will create a .wishlist/client_ed25519 keypair if one does not exist.
 // It will return an auth method that uses the keypair if it exist or is successfully created.
 func tryNewKey() (gossh.AuthMethod, error) {
-	path, err := filepath.Abs(".wishlist/client")
+	path, err := filepath.Abs(".wishlist/client_ed25519")
 	if err != nil {
 		return nil, fmt.Errorf("could not create client key: %w", err)
 	}
 
-	key, err := keygen.New(path+"_ed25519", keygen.WithKeyType(keygen.Ed25519))
+	key, err := keygen.New(path, keygen.WithKeyType(keygen.Ed25519))
 	if err != nil {
 		return nil, fmt.Errorf("could not create new client key at %q: %w", path, err)
 	}
