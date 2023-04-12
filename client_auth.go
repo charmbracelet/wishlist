@@ -149,16 +149,12 @@ func tryNewKey() (gossh.AuthMethod, error) {
 		return nil, fmt.Errorf("could not create client key: %w", err)
 	}
 
-	key, err := keygen.New(path, nil, keygen.Ed25519)
+	key, err := keygen.New(path, keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
 	if err != nil {
-		return nil, err //nolint:wrapcheck
+		return nil, fmt.Errorf("could not create new client key at %q: %w", path, err)
 	}
 
-	signer, err := gossh.ParsePrivateKey(key.PrivateKeyPEM())
-	if err != nil {
-		return nil, err //nolint:wrapcheck
-	}
-
+	signer := key.Signer()
 	log.Info(
 		"offering public key",
 		"key.path", path,
@@ -166,11 +162,13 @@ func tryNewKey() (gossh.AuthMethod, error) {
 		"key.fingerprint", gossh.FingerprintSHA256(signer.PublicKey()),
 	)
 
-	if key.KeyPairExists() {
-		return gossh.PublicKeys(signer), nil
+	if !key.KeyPairExists() {
+		if err := key.WriteKeys(); err != nil {
+			return nil, fmt.Errorf("could not write key: %w", err)
+		}
 	}
 
-	return gossh.PublicKeys(signer), key.WriteKeys()
+	return gossh.PublicKeys(signer), nil
 }
 
 func tryIdendityFiles(e *Endpoint) ([]gossh.AuthMethod, error) {
