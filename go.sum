@@ -31,8 +31,8 @@ github.com/charmbracelet/promwish v0.5.0 h1:Oh08pKC/LNQlnXdNu+jDUgrjQvmCd+WzorgB
 github.com/charmbracelet/promwish v0.5.0/go.mod h1:R3mSvCiHlyzu5uK73rNvwz7pP0S3vqRe01EEk2VKPZ8=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103 h1:wpHMERIN0pQZE635jWwT1dISgfjbpUcEma+fbPKSMCU=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103/go.mod h1:0Vm2/8yBljiLDnGJHU8ehswfawrEybGk33j5ssqKQVM=
-github.com/charmbracelet/wish v1.1.1-0.20230412142535-b02fea5b2633 h1:39rtZkUFcDgFfmgejfKYmBvsFYbEXEaFF2JmB28o2vY=
-github.com/charmbracelet/wish v1.1.1-0.20230412142535-b02fea5b2633/go.mod h1:Q8b4DURo6cmQ4G3LnyoxDlWmN3LHYdiXfOjEw8oZcEM=
+github.com/charmbracelet/wish v1.1.1 h1:KdICASKd2oh2JPvk1Z4CJtAi97cFErXF7NKienPICO4=
+github.com/charmbracelet/wish v1.1.1/go.mod h1:xh4KZpSULw+Xqb9bcbhw92QAinVB75CVLWrFuyY6IVs=
 github.com/containerd/console v1.0.3 h1:lIr7SlA5PxZyMV30bDW0MGbiOPXwc63yRuCP0ARubLw=
 github.com/containerd/console v1.0.3/go.mod h1:7LqA/THxQ86k76b8c/EMSiaJ3h1eZkMkXar0TQ1gf3U=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
