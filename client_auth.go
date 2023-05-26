@@ -298,3 +298,7 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 		return nil
 	}
 }
+
+func noChallengeKeyboardInteractiveMethod(_, _ string, _ []string, _ []bool) ([]string, error) {
+	return nil, nil
+}
