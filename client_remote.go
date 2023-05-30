@@ -52,8 +52,10 @@ func (s *remoteSession) Run() error {
 	}
 	resetPty(s.parentSession)
 
-	kbMethod := gossh.KeyboardInteractive(noChallengeKeyboardInteractiveMethod)
-	method, agt, closers, err := remoteBestAuthMethod(s.parentSession)
+	stderr := s.parentSession.Stderr()
+	stdin := blocking.New(s.stdin)
+
+	method, agt, closers, err := remoteBestAuthMethod(s.parentSession, stderr, stdin)
 	if err != nil {
 		return fmt.Errorf("failed to find an auth method: %w", err)
 	}
@@ -62,7 +64,7 @@ func (s *remoteSession) Run() error {
 	conf := &gossh.ClientConfig{
 		User:            FirstNonEmpty(s.endpoint.User, s.parentSession.User()),
 		HostKeyCallback: hostKeyCallback(s.endpoint, ".wishlist/known_hosts"),
-		Auth:            []gossh.AuthMethod{method, kbMethod},
+		Auth:            method,
 		Timeout:         s.endpoint.Timeout,
 	}
 	session, client, cl, err := createSession(conf, s.endpoint, nil, s.parentSession.Environ()...)
@@ -80,7 +82,7 @@ func (s *remoteSession) Run() error {
 
 	session.Stdout = s.parentSession
 	session.Stderr = s.parentSession.Stderr()
-	session.Stdin = blocking.New(s.stdin)
+	session.Stdin = stdin
 
 	if s.endpoint.ForwardAgent {
 		if err := forwardAgent(agt, session, client); err != nil {
