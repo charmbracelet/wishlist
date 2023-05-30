@@ -24,8 +24,8 @@ var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
 // remoteBestAuthMethod returns an auth method.
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
-func remoteBestAuthMethod(s ssh.Session, out io.Writer, in io.Reader) ([]gossh.AuthMethod, agent.Agent, closers, error) {
-	kb := keyboardInteractiveAuth(in, out)
+func remoteBestAuthMethod(s ssh.Session, in io.Reader) ([]gossh.AuthMethod, agent.Agent, closers, error) {
+	kb := keyboardInteractiveAuth(in, s)
 	method, agt, cls, err := tryRemoteAuthAgent(s)
 	if err != nil || method != nil {
 		return []gossh.AuthMethod{method, kb}, agt, cls, err

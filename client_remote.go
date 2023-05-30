@@ -52,10 +52,9 @@ func (s *remoteSession) Run() error {
 	}
 	resetPty(s.parentSession)
 
-	stderr := s.parentSession.Stderr()
 	stdin := blocking.New(s.stdin)
 
-	method, agt, closers, err := remoteBestAuthMethod(s.parentSession, stderr, stdin)
+	method, agt, closers, err := remoteBestAuthMethod(s.parentSession, stdin)
 	if err != nil {
 		return fmt.Errorf("failed to find an auth method: %w", err)
 	}
