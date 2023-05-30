@@ -13,7 +13,6 @@ import (
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/home"
-	"github.com/muesli/termenv"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
@@ -304,11 +303,18 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 func keyboardInteractiveAuth(in io.Reader, out io.Writer) gossh.AuthMethod {
 	scan := func(q string, echo bool) (string, error) {
 		fmt.Fprint(out, q+" ")
-		var answer string
 		if !echo {
-			fmt.Fprint(out, termenv.CSI+"8m")
-			defer fmt.Fprint(out, termenv.CSI+"28m")
+			if f, ok := in.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
+				bts, err := term.ReadPassword(int(f.Fd()))
+				if err != nil {
+					return "", fmt.Errorf("could not scan: %w", err)
+				}
+				return string(bts), nil
+			}
+			log.Warn("stdin is not a terminal, can't disable echo")
 		}
+
+		var answer string
 		if _, err := fmt.Fscan(in, &answer); err != nil {
 			return "", fmt.Errorf("could not scan: %w", err)
 		}
