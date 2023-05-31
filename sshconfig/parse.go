@@ -65,14 +65,15 @@ func ParseReader(r io.Reader, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, 
 				wishlist.FirstNonEmpty(info.Hostname, name),
 				wishlist.FirstNonEmpty(info.Port, "22"),
 			),
-			User:          info.User,
-			IdentityFiles: info.IdentityFiles,
-			ForwardAgent:  stringToBool(info.ForwardAgent),
-			RequestTTY:    stringToBool(info.RequestTTY),
-			RemoteCommand: info.RemoteCommand,
-			Timeout:       info.Timeout,
-			SetEnv:        info.SetEnv,
-			SendEnv:       info.SendEnv,
+			User:                     info.User,
+			IdentityFiles:            info.IdentityFiles,
+			ForwardAgent:             stringToBool(info.ForwardAgent),
+			RequestTTY:               stringToBool(info.RequestTTY),
+			RemoteCommand:            info.RemoteCommand,
+			Timeout:                  info.Timeout,
+			SetEnv:                   info.SetEnv,
+			SendEnv:                  info.SendEnv,
+			PreferredAuthentications: info.PreferredAuthentications,
 		})
 		return nil
 	}); err != nil {
@@ -88,16 +89,17 @@ func stringToBool(s string) bool {
 }
 
 type hostinfo struct {
-	User          string
-	Hostname      string
-	Port          string
-	IdentityFiles []string
-	ForwardAgent  string
-	RequestTTY    string
-	RemoteCommand string
-	SendEnv       []string
-	SetEnv        []string
-	Timeout       time.Duration
+	User                     string
+	Hostname                 string
+	Port                     string
+	IdentityFiles            []string
+	ForwardAgent             string
+	RequestTTY               string
+	RemoteCommand            string
+	SendEnv                  []string
+	SetEnv                   []string
+	PreferredAuthentications []string
+	Timeout                  time.Duration
 }
 
 type hostinfoMap struct {
@@ -216,6 +218,8 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					info.SendEnv = append(info.SendEnv, value)
 				case "SetEnv":
 					info.SetEnv = append(info.SetEnv, value)
+				case "PreferredAuthentications":
+					info.PreferredAuthentications = append(info.PreferredAuthentications, strings.Split(value, ",")...)
 				case "Include":
 					path, err := home.ExpandPath(value)
 					if err != nil {
@@ -311,6 +315,7 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	}
 	h2.SendEnv = append(h2.SendEnv, h1.SendEnv...)
 	h2.SetEnv = append(h2.SetEnv, h1.SetEnv...)
+	h2.PreferredAuthentications = append(h2.PreferredAuthentications, h1.PreferredAuthentications...)
 	return h2
 }
 

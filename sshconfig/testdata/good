@@ -10,6 +10,7 @@ Host supernova
 	SendEnv FOO
 	SetEnv BAR=bar
 	ConnectTimeout 20
+  PreferredAuthentications password,keyboard-interactive,publickey,hostbased
 
 Host app1
 	HostName app.foo.local

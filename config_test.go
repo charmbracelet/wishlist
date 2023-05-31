@@ -115,3 +115,18 @@ func TestEnvironment(t *testing.T) {
 		})
 	}
 }
+
+func TestAuth(t *testing.T) {
+	require.Equal(
+		t,
+		[]string{authModePublicKey, authModeKeyboardInteractive},
+		Endpoint{}.Authentications(),
+	)
+	require.Equal(
+		t,
+		[]string{authModePassword, authModePublicKey},
+		Endpoint{
+			PreferredAuthentications: []string{authModePassword, authModePublicKey},
+		}.Authentications(),
+	)
+}

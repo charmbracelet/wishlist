@@ -29,6 +29,12 @@ func TestParseFile(t *testing.T) {
 				Address: "supernova.local:22",
 				User:    "notme",
 				Timeout: 20 * time.Second,
+				PreferredAuthentications: []string{
+					"password",
+					"keyboard-interactive",
+					"publickey",
+					"hostbased",
+				},
 				SendEnv: []string{
 					"FOO",
 				},

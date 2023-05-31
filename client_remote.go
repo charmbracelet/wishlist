@@ -54,7 +54,7 @@ func (s *remoteSession) Run() error {
 
 	stdin := blocking.New(s.stdin)
 
-	method, agt, closers, err := remoteBestAuthMethod(s.parentSession, stdin)
+	method, agt, closers, err := remoteBestAuthMethod(s.endpoint, s.parentSession, stdin)
 	if err != nil {
 		return fmt.Errorf("failed to find an auth method: %w", err)
 	}
