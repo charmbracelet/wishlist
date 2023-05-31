@@ -53,7 +53,6 @@ func remoteBestAuthMethod(e *Endpoint, s ssh.Session, in io.Reader) ([]gossh.Aut
 		}
 	}
 
-	log.Info(e.String(), "methods", len(methods))
 	return methods, agt, closers, nil
 }
 
@@ -100,7 +99,6 @@ func localBestAuthMethod(agt agent.Agent, e *Endpoint, in io.Reader, out io.Writ
 		}
 	}
 
-	log.Info(e.String(), "methods", len(methods))
 	return methods, nil
 }
 
