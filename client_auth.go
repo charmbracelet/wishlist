@@ -24,15 +24,37 @@ var errNoRemoteAgent = fmt.Errorf("no agent forwarded")
 // remoteBestAuthMethod returns an auth method.
 //
 // it first tries to use ssh-agent, if that's not available, it creates and uses a new key pair.
-func remoteBestAuthMethod(s ssh.Session, in io.Reader) ([]gossh.AuthMethod, agent.Agent, closers, error) {
-	kb := keyboardInteractiveAuth(in, s)
-	method, agt, cls, err := tryRemoteAuthAgent(s)
-	if err != nil || method != nil {
-		return []gossh.AuthMethod{method, kb}, agt, cls, err
+func remoteBestAuthMethod(e *Endpoint, s ssh.Session, in io.Reader) ([]gossh.AuthMethod, agent.Agent, closers, error) {
+	var methods []gossh.AuthMethod
+	var agt agent.Agent
+	var closers closers
+	for _, m := range e.Authentications() {
+		switch m {
+		case authModePassword:
+			method, err := passwordAuth(e, in, s)
+			if err != nil {
+				return nil, nil, closers, err
+			}
+			methods = append(methods, method)
+		case authModeKeyboardInteractive:
+			methods = append(methods, keyboardInteractiveAuth(in, s))
+		case authModePublicKey:
+			method, a, cl, err := tryRemoteAuthAgent(s)
+			if err != nil || method != nil {
+				agt = a
+				methods = append(methods, method)
+				closers = append(closers, cl...)
+				continue
+			}
+			newKey, err := tryNewKey()
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			methods = append(methods, newKey)
+		}
 	}
 
-	method, err = tryNewKey()
-	return []gossh.AuthMethod{method, kb}, nil, nil, err
+	return methods, agt, closers, nil
 }
 
 // localBestAuthMethod figures out which authentication method is the best for
@@ -45,24 +67,42 @@ func remoteBestAuthMethod(s ssh.Session, in io.Reader) ([]gossh.AuthMethod, agen
 //
 // If any of the methods fails, it returns an error.
 // It'll return a nil list if none of the methods is available.
-func localBestAuthMethod(agt agent.Agent, e *Endpoint) ([]gossh.AuthMethod, error) {
+func localBestAuthMethod(agt agent.Agent, e *Endpoint, in io.Reader, out io.Writer) ([]gossh.AuthMethod, error) {
 	var methods []gossh.AuthMethod
-	if len(e.IdentityFiles) > 0 {
-		ids, err := tryIdendityFiles(e)
-		if err != nil {
-			return methods, err
+	for _, m := range e.Authentications() {
+		switch m {
+		case authModePassword:
+			method, err := passwordAuth(e, in, out)
+			if err != nil {
+				return nil, err
+			}
+			methods = append(methods, method)
+		case authModeKeyboardInteractive:
+			methods = append(methods, keyboardInteractiveAuth(in, out))
+		case authModePublicKey:
+			if len(e.IdentityFiles) > 0 {
+				ids, err := tryIdendityFiles(e)
+				if err != nil {
+					return methods, err
+				}
+				methods = append(methods, ids...)
+				continue
+			}
+
+			if method := agentAuthMethod(agt); method != nil {
+				methods = append(methods, method)
+				continue
+			}
+
+			keys, err := tryUserKeys()
+			if err != nil {
+				return nil, err
+			}
+			methods = append(methods, keys...)
 		}
-		methods = append(methods, ids...)
 	}
 
-	if method := agentAuthMethod(agt); method != nil {
-		methods = append(methods, method)
-	}
-
-	methods = append(methods, keyboardInteractiveAuth(os.Stdin, os.Stdout))
-
-	keys, err := tryUserKeys()
-	return append(methods, keys...), err
+	return methods, nil
 }
 
 // agentAuthMethod setups an auth method for the given agent.
@@ -299,24 +339,32 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 	}
 }
 
+func askUser(in io.Reader, echo bool) (string, error) {
+	if !echo {
+		if f, ok := in.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
+			bts, err := term.ReadPassword(int(f.Fd()))
+			if err != nil {
+				return "", fmt.Errorf("could not scan: %w", err)
+			}
+			return string(bts), nil
+		}
+		log.Warn("stdin is not a terminal, can't disable echo")
+	}
+
+	var answer string
+	if _, err := fmt.Fscan(in, &answer); err != nil {
+		return "", fmt.Errorf("could not scan: %w", err)
+	}
+	return answer, nil
+}
+
 // keyboardInteractiveAuth implements keyboard interactive authentication.
 func keyboardInteractiveAuth(in io.Reader, out io.Writer) gossh.AuthMethod {
 	scan := func(q string, echo bool) (string, error) {
 		fmt.Fprint(out, q+" ")
-		if !echo {
-			if f, ok := in.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
-				bts, err := term.ReadPassword(int(f.Fd()))
-				if err != nil {
-					return "", fmt.Errorf("could not scan: %w", err)
-				}
-				return string(bts), nil
-			}
-			log.Warn("stdin is not a terminal, can't disable echo")
-		}
-
-		var answer string
-		if _, err := fmt.Fscan(in, &answer); err != nil {
-			return "", fmt.Errorf("could not scan: %w", err)
+		answer, err := askUser(in, echo)
+		if err != nil {
+			return "", err
 		}
 		fmt.Fprintln(out)
 		return answer, nil
@@ -333,4 +381,13 @@ func keyboardInteractiveAuth(in io.Reader, out io.Writer) gossh.AuthMethod {
 		}
 		return answers, nil
 	})
+}
+
+func passwordAuth(e *Endpoint, in io.Reader, out io.Writer) (gossh.AuthMethod, error) {
+	fmt.Fprintf(out, "%s password: ", e.Address)
+	secret, err := askUser(in, false)
+	if err != nil {
+		return nil, fmt.Errorf("could not read password: %w", err)
+	}
+	return gossh.Password(secret), nil
 }

@@ -11,6 +11,12 @@ import (
 	"github.com/gobwas/glob"
 )
 
+const (
+	authModePassword            = "password"
+	authModePublicKey           = "publickey"
+	authModeKeyboardInteractive = "keyboard-interactive"
+)
+
 // Link defines an item link.
 type Link struct {
 	Name string `yaml:"name"`
@@ -46,6 +52,15 @@ type Endpoint struct {
 	IdentityFiles            []string          `yaml:"identity_files"`            // IdentityFiles is only used when in local mode.
 	Timeout                  time.Duration     `yaml:"connect_timeout"`           // Connection timeout.
 	Middlewares              []wish.Middleware `yaml:"-"`                         // wish middlewares you can use in the factory method.
+}
+
+// Authentications returns either the client preferred authentications or the
+// default publickey,keyboard-interactive
+func (e Endpoint) Authentications() []string {
+	if len(e.PreferredAuthentications) == 0 {
+		return []string{authModePublicKey, authModeKeyboardInteractive}
+	}
+	return e.PreferredAuthentications
 }
 
 // Environment evaluates SendEnv and SetEnv into the env map that should be

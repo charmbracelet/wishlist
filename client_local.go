@@ -70,7 +70,7 @@ func (s *localSession) Run() error {
 	}
 	defer cls.close()
 
-	methods, err := localBestAuthMethod(agt, s.endpoint)
+	methods, err := localBestAuthMethod(agt, s.endpoint, os.Stdin, os.Stdout)
 	if err != nil {
 		return fmt.Errorf("failed to setup a authentication method: %w", err)
 	}
