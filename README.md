@@ -201,20 +201,30 @@ Run `wishlist --help` to see all the options.
 
 ### SRV records
 
-Wishlist can also find nodes from DNS SRV records, on one or more domains.
+Wishlist can also find nodes from DNS `SRV` records, on one or more domains.
 
 Run `wishlist --srv.domain {your domain}` to get started. You can repeat the
 flag for multiple domains.
 
-By default, Wishlist will set the name of the endpoint to the SRV target.
-You can, however, customize that with a TXT record in the following format:
+By default, Wishlist will set the name of the endpoint to the `SRV` target.
+You can, however, customize that with a `TXT` record in the following format:
 
 ```
 wishlist.name full.address:22=thename
 ```
 
-So, in this case, a SRV record pointing to `full.address` on port `22` will get
+So, in this case, a `SRV` record pointing to `full.address` on port `22` will get
 the name `thename`.
+
+Run `wishlist --help` to see all the options.
+
+### Hints
+
+You can use the `hints` key in the YAML configuration file to hint settings into
+discovered endpoints.
+
+Check the [example configuration file](/_example/config.yaml) to learn
+what options are available.
 
 ### Using the binary
 

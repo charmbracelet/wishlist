@@ -54,6 +54,24 @@ type Endpoint struct {
 	Middlewares              []wish.Middleware `yaml:"-"`                         // wish middlewares you can use in the factory method.
 }
 
+// EndpointHint can be used to match a discovered endpoint (through zeroconf
+// for example) and set additional options into it.
+type EndpointHint struct {
+	Match                    string        `yaml:"match"`
+	Port                     string        `yaml:"port"`
+	User                     string        `yaml:"user"`
+	ForwardAgent             *bool         `yaml:"forward_agent"`
+	RequestTTY               *bool         `yaml:"request_tty"`
+	RemoteCommand            string        `yaml:"remote_command"`
+	Desc                     string        `yaml:"description"`
+	Link                     Link          `yaml:"link"`
+	SendEnv                  []string      `yaml:"send_env"`
+	SetEnv                   []string      `yaml:"set_env"`
+	PreferredAuthentications []string      `yaml:"preferred_authentications"`
+	IdentityFiles            []string      `yaml:"identity_files"`
+	Timeout                  time.Duration `yaml:"connect_timeout"`
+}
+
 // Authentications returns either the client preferred authentications or the
 // default publickey,keyboard-interactive
 func (e Endpoint) Authentications() []string {
@@ -128,6 +146,7 @@ type Config struct {
 	Listen       string                              `yaml:"listen"`    // Address to listen on.
 	Port         int64                               `yaml:"port"`      // Port to start the first server on.
 	Endpoints    []*Endpoint                         `yaml:"endpoints"` // Endpoints to list.
+	Hints        []EndpointHint                      `yaml:"hints"`     // Endpoints hints to apply to discovered hosts.
 	Factory      func(Endpoint) (*ssh.Server, error) `yaml:"-"`         // Factory used to create the SSH server for the given endpoint.
 	Users        []User                              `yaml:"users"`     // Users allowed to access the list.
 	Metrics      Metrics                             `yaml:"metrics"`   // Metrics configuration.
