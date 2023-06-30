@@ -67,6 +67,68 @@ endpoints:
       - LANG
       - SOME_ENV
 
+# Hints can be used to hint settings into discovered endpoints.
+#
+# You can use it to change the user, port, set remote commands, etc.
+#
+# A host can match multiple hints, in which all matched hints will be applied,
+# the last one having the priority.
+hints:
+  - #
+    # Glob to be used to match the discovered names.
+    match: "*.local"
+
+    # SSH port to use.
+    port: 23234
+
+    # URL to be printed in the list.
+    link:
+      name: Optional link name
+      url: https://github.com/charmbracelet/wishlist
+
+    # Descripton of the item.
+    description: "A description of this endpoint.\nCan have multiple lines."
+
+    # User to use to connect.
+    # Defaults to the current remote user.
+    user: notme
+
+    # Command to run against the remote address.
+    # Defaults to asking for a shell.
+    remote_command: uptime -a
+
+    # Whether to forward the SSH agent.
+    # Will cause the connection to fail if no agent is available.
+    forward_agent: true # forwards the ssh agent
+
+    # IdentityFiles to try to use to authorize.
+    # Only used in local mode.
+    identity_files:
+      - ~/.ssh/id_rsa
+      - ~/.ssh/id_ed25519
+
+    # Requests a TTY.
+    # Defaults to true if remote_command is empty.
+    request_tty: true
+
+    # Connection timeout.
+    connect_timeout: 10s
+
+    # Set environment variables into the connection.
+    # Analogous to SSH's SetEnv.
+    set_env:
+      - FOO=bar
+      - BAR=baz
+
+    # Environments from the environment that match these keys will also be set
+    # into the connection.
+    # Analogous to SSH's SendEnv.
+    # Defaults to ["LC_*", "LANG"].
+    send_env:
+      - LC_*
+      - LANG
+      - SOME_ENV
+
 # Users to allow access to the list
 users:
   - # User login

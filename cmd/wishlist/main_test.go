@@ -156,3 +156,64 @@ func TestUserConfigPaths(t *testing.T) {
 		}, paths)
 	})
 }
+
+func TestApplyHints(t *testing.T) {
+	boolPtr := func(b bool) *bool {
+		return &b
+	}
+	result := applyHints([]*wishlist.Endpoint{
+		{
+			Name:    "foo.bar.local",
+			Address: "foo.bar.local:22",
+		},
+	}, []wishlist.EndpointHint{
+		{
+			Match: "match nothing",
+			User:  "nope",
+		},
+		{
+			Match:         "*.local",
+			Port:          "2345",
+			User:          "carlos",
+			ForwardAgent:  boolPtr(true),
+			RequestTTY:    boolPtr(true),
+			RemoteCommand: "tmux a",
+			Desc:          "The descriptions",
+			Link: wishlist.Link{
+				Name: "foo.bar",
+				URL:  "https://github.com/charmbracelet/wishlist",
+			},
+			SendEnv:                  []string{"FOO_*"},
+			SetEnv:                   []string{"FOO_TEST=bar"},
+			PreferredAuthentications: []string{"publickey"},
+			IdentityFiles:            []string{"~/.ssh/charm_id_ed25519"},
+			Timeout:                  time.Minute,
+		},
+		{
+			Match: "invalid.*******$$$\a\a\a",
+		},
+		{
+			Match: "foo.*.local",
+			Port:  "22234",
+		},
+	})
+	require.Len(t, result, 1)
+	require.Equal(t, wishlist.Endpoint{
+		Name:          "foo.bar.local",
+		Address:       "foo.bar.local:22234",
+		User:          "carlos",
+		ForwardAgent:  true,
+		RequestTTY:    true,
+		RemoteCommand: "tmux a",
+		Desc:          "The descriptions",
+		Link: wishlist.Link{
+			Name: "foo.bar",
+			URL:  "https://github.com/charmbracelet/wishlist",
+		},
+		SendEnv:                  []string{"FOO_*"},
+		SetEnv:                   []string{"FOO_TEST=bar"},
+		PreferredAuthentications: []string{"publickey"},
+		IdentityFiles:            []string{"~/.ssh/charm_id_ed25519"},
+		Timeout:                  time.Minute,
+	}, *result[0])
+}

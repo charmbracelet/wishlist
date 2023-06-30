@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime/debug"
 	"sort"
 	"strings"
@@ -21,6 +23,7 @@ import (
 	"github.com/charmbracelet/wishlist/srv"
 	"github.com/charmbracelet/wishlist/sshconfig"
 	"github.com/charmbracelet/wishlist/zeroconf"
+	"github.com/gobwas/glob"
 	"github.com/hashicorp/go-multierror"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
@@ -217,6 +220,52 @@ func userConfigPaths() []string {
 	return append(paths, "/etc/ssh/ssh_config")
 }
 
+func applyHints(seed []*wishlist.Endpoint, hints []wishlist.EndpointHint) []*wishlist.Endpoint {
+	for _, hint := range hints {
+		glob, err := glob.Compile(hint.Match)
+		if err != nil {
+			log.Error("invalid hint match", "match", hint.Match, "error", err)
+			continue
+		}
+		for i, end := range seed {
+			if !glob.Match(end.Name) {
+				continue
+			}
+			if hint.Port != "" {
+				host, _, _ := net.SplitHostPort(end.Address)
+				end.Address = net.JoinHostPort(host, hint.Port)
+			}
+			if s := hint.User; s != "" {
+				end.User = s
+			}
+			if s := hint.ForwardAgent; s != nil {
+				end.ForwardAgent = *s
+			}
+			if s := hint.RequestTTY; s != nil {
+				end.RequestTTY = *s
+			}
+			if s := hint.RemoteCommand; s != "" {
+				end.RemoteCommand = s
+			}
+			if s := hint.Desc; s != "" {
+				end.Desc = s
+			}
+			if s := hint.Link; !reflect.DeepEqual(s, wishlist.Link{}) {
+				end.Link = s
+			}
+			end.SendEnv = append(end.SendEnv, hint.SendEnv...)
+			end.SetEnv = append(end.SetEnv, hint.SetEnv...)
+			end.PreferredAuthentications = append(end.PreferredAuthentications, hint.PreferredAuthentications...)
+			end.IdentityFiles = append(end.IdentityFiles, hint.IdentityFiles...)
+			if s := hint.Timeout; s != 0 {
+				end.Timeout = s
+			}
+			seed[i] = end
+		}
+	}
+	return seed
+}
+
 func getConfig(configFile string, seed []*wishlist.Endpoint) (wishlist.Config, string, error) {
 	var allErrs error
 	for _, path := range append([]string{configFile}, userConfigPaths()...) {
@@ -283,7 +332,7 @@ func getYAMLConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, err
 		return config, fmt.Errorf("failed to parse config: %w", err)
 	}
 
-	config.Endpoints = append(config.Endpoints, seed...)
+	config.Endpoints = append(config.Endpoints, applyHints(seed, config.Hints)...)
 	return config, nil
 }
 
