@@ -2,7 +2,6 @@
 # setup wishlist with a YAML file
 #
 
-
 # Address in which wishlist should listen for.
 # Defaults to 0.0.0.0.
 listen: 127.0.0.1
@@ -13,73 +12,71 @@ port: 2223
 
 # Endpoints to list in the UI.
 endpoints:
--
-  # Endpoint's name.
-  # Recommended to avoid spaces so users can `ssh -t appname`.
-  name: appname
+  - # Endpoint's name.
+    # Recommended to avoid spaces so users can `ssh -t appname`.
+    name: appname
 
-  # Endpoint's address in the host:port format.
-  address: foo.local:2234
+    # Endpoint's address in the host:port format.
+    address: foo.local:2234
 
-  # An URL to be printed in the list.
-  link:
-    name: Optional link name
-    url: https://github.com/charmbracelet/wishlist
+    # An URL to be printed in the list.
+    link:
+      name: Optional link name
+      url: https://github.com/charmbracelet/wishlist
 
-  # A descripton of the item.
-  description: "A description of this endpoint.\nCan have multiple lines."
+    # A descripton of the item.
+    description: "A description of this endpoint.\nCan have multiple lines."
 
-  # User to use to connect.
-  # Defaults to the current remote user.
-  user: notme
+    # User to use to connect.
+    # Defaults to the current remote user.
+    user: notme
 
-  # Command to run against the remote address.
-  # Defaults to asking for a shell.
-  remote_command: uptime -a
+    # Command to run against the remote address.
+    # Defaults to asking for a shell.
+    remote_command: uptime -a
 
-  # Whether to forward the SSH agent.
-  # Will cause the connection to fail if no agent is available.
-  forward_agent: true # forwards the ssh agent
+    # Whether to forward the SSH agent.
+    # Will cause the connection to fail if no agent is available.
+    forward_agent: true # forwards the ssh agent
 
-  # IdentityFiles to try to use to authorize.
-  # Only used in local mode.
-  identity_files:
-    - ~/.ssh/id_rsa
-    - ~/.ssh/id_ed25519
+    # IdentityFiles to try to use to authorize.
+    # Only used in local mode.
+    identity_files:
+      - ~/.ssh/id_rsa
+      - ~/.ssh/id_ed25519
 
-  # Requests a TTY.
-  # Defaults to true if remote_command is empty.
-  request_tty: true
+    # Requests a TTY.
+    # Defaults to true if remote_command is empty.
+    request_tty: true
 
-  # Connection timeout.
-  connect_timeout: 10s
+    # Connection timeout.
+    connect_timeout: 10s
 
-  # Set environment variables into the connection.
-  # Analogous to SSH's SetEnv.
-  set_env:
-    - FOO=bar
-    - BAR=baz
+    # Set environment variables into the connection.
+    # Analogous to SSH's SetEnv.
+    set_env:
+      - FOO=bar
+      - BAR=baz
 
-  # Environments from the environment that match these keys will also be set
-  # into the connection.
-  # Analogous to SSH's SendEnv.
-  # Defaults to ["LC_*", "LANG"].
-  send_env:
-    - LC_*
-    - LANG
-    - SOME_ENV
+    # Environments from the environment that match these keys will also be set
+    # into the connection.
+    # Analogous to SSH's SendEnv.
+    # Defaults to ["LC_*", "LANG"].
+    send_env:
+      - LC_*
+      - LANG
+      - SOME_ENV
 
 # Users to allow access to the list
 users:
-  -
-    # User login
+  - # User login
     name: carlos
 
     # User's public keys.
     # Must be in the same format as seen in the ~/.allowed_keys file.
     public-keys:
-    - ssh-rsa AAAAB3Nz...
-    - ssh-ed25519 AAAA...
+      - ssh-rsa AAAAB3Nz...
+      - ssh-ed25519 AAAA...
 
 # Setup the /metrics prometheus endpoint.
 metrics:
