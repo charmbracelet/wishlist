@@ -22,6 +22,7 @@ import (
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/srv"
 	"github.com/charmbracelet/wishlist/sshconfig"
+	"github.com/charmbracelet/wishlist/tailscale"
 	"github.com/charmbracelet/wishlist/zeroconf"
 	"github.com/gobwas/glob"
 	"github.com/hashicorp/go-multierror"
@@ -175,6 +176,8 @@ var (
 	zeroconfEnabled bool
 	zeroconfDomain  string
 	zeroconfTimeout time.Duration
+	tailscaleNet    string
+	tailscaleKey    string
 )
 
 func init() {
@@ -185,6 +188,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&zeroconfDomain, "zeroconf.domain", "", "Domain to use with zeroconf service discovery")
 	rootCmd.PersistentFlags().DurationVar(&zeroconfTimeout, "zeroconf.timeout", time.Second, "How long should zeroconf keep searching for hosts")
 	rootCmd.PersistentFlags().StringSliceVar(&srvDomains, "srv.domain", nil, "SRV domains to discover endpoints")
+	rootCmd.PersistentFlags().StringVar(&tailscaleNet, "tailscale.net", "", "Tailscale tailnet name")
+	rootCmd.PersistentFlags().StringVar(&tailscaleKey, "tailscale.key", os.Getenv("TAILSCALE_KEY"), "Tailscale tailnet name [$TAILSCALE_KEY]")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -300,6 +305,16 @@ func getConfigFile(path string, seed []*wishlist.Endpoint) (wishlist.Config, err
 
 func getSeedEndpoints() ([]*wishlist.Endpoint, error) {
 	var seed []*wishlist.Endpoint
+	if tailscaleNet != "" {
+		if tailscaleKey == "" {
+			return nil, fmt.Errorf("missing tailscale.key")
+		}
+		endpoints, err := tailscale.Endpoints(tailscaleNet, tailscaleKey)
+		if err != nil {
+			return nil, err //nolint: wrapcheck
+		}
+		seed = append(seed, endpoints...)
+	}
 	if zeroconfEnabled {
 		endpoints, err := zeroconf.Endpoints(zeroconfDomain, zeroconfTimeout)
 		if err != nil {
