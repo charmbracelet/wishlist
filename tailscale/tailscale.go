@@ -1,6 +1,7 @@
 package tailscale
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,33 +13,34 @@ import (
 )
 
 // Endpoints returns the found endpoints from tailscale.
-func Endpoints(tailnet, key string) ([]*wishlist.Endpoint, error) {
+func Endpoints(ctx context.Context, tailnet, key string) ([]*wishlist.Endpoint, error) {
 	log.Info("discovering from tailscale", "tailnet", tailnet)
-	req, err := http.NewRequest(
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodGet,
 		fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/devices", tailnet),
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tailscale: %w", err)
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", key))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tailscale: %w", err)
 	}
 
 	defer func() { _ = resp.Body.Close() }()
 	bts, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tailscale: %w", err)
 	}
 
 	var devices struct {
 		Devices []device `json:"devices"`
 	}
 	if err := json.Unmarshal(bts, &devices); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("tailscale: %w", err)
 	}
 
 	endpoints := make([]*wishlist.Endpoint, 0, len(devices.Devices))

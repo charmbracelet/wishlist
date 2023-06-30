@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -56,7 +57,7 @@ It's also possible to serve the TUI over SSH using the server command.
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
-	RunE: func(_ *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		cache, err := os.UserCacheDir()
 		if err != nil {
 			return fmt.Errorf("could not create log file: %w", err)
@@ -74,7 +75,8 @@ It's also possible to serve the TUI over SSH using the server command.
 				log.Info("failes to close wishlist.log", "err", err)
 			}
 		}()
-		seed, err := getSeedEndpoints()
+
+		seed, err := getSeedEndpoints(cmd.Context())
 		if err != nil {
 			return err
 		}
@@ -110,8 +112,8 @@ var serverCmd = &cobra.Command{
 	Aliases: []string{"server", "s"},
 	Args:    cobra.NoArgs,
 	Short:   "Serve the TUI over SSH.",
-	RunE: func(_ *cobra.Command, _ []string) error {
-		seed, err := getSeedEndpoints()
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		seed, err := getSeedEndpoints(cmd.Context())
 		if err != nil {
 			return err
 		}
@@ -303,13 +305,13 @@ func getConfigFile(path string, seed []*wishlist.Endpoint) (wishlist.Config, err
 	}
 }
 
-func getSeedEndpoints() ([]*wishlist.Endpoint, error) {
+func getSeedEndpoints(ctx context.Context) ([]*wishlist.Endpoint, error) {
 	var seed []*wishlist.Endpoint
 	if tailscaleNet != "" {
 		if tailscaleKey == "" {
 			return nil, fmt.Errorf("missing tailscale.key")
 		}
-		endpoints, err := tailscale.Endpoints(tailscaleNet, tailscaleKey)
+		endpoints, err := tailscale.Endpoints(ctx, tailscaleNet, tailscaleKey)
 		if err != nil {
 			return nil, err //nolint: wrapcheck
 		}
