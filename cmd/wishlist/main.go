@@ -55,7 +55,7 @@ It's also possible to serve the TUI over SSH using the server command.
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		cache, err := os.UserCacheDir()
 		if err != nil {
 			return fmt.Errorf("could not create log file: %w", err)
@@ -92,7 +92,7 @@ var manCmd = &cobra.Command{
 	Short:        "generate man pages",
 	Hidden:       true,
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		manPage, err := mcobra.NewManPage(1, rootCmd)
 		if err != nil {
 			return fmt.Errorf("could not generate man pages: %w", err)
@@ -109,7 +109,7 @@ var serverCmd = &cobra.Command{
 	Aliases: []string{"server", "s"},
 	Args:    cobra.NoArgs,
 	Short:   "Serve the TUI over SSH.",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		seed, err := getSeedEndpoints()
 		if err != nil {
 			return err
