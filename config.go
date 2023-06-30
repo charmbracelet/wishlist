@@ -73,7 +73,7 @@ type EndpointHint struct {
 }
 
 // Authentications returns either the client preferred authentications or the
-// default publickey,keyboard-interactive
+// default publickey,keyboard-interactive.
 func (e Endpoint) Authentications() []string {
 	if len(e.PreferredAuthentications) == 0 {
 		return []string{authModePublicKey, authModeKeyboardInteractive}
