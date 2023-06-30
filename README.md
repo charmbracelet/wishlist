@@ -1,5 +1,33 @@
 # Wishlist
 
+<!--toc:start-->
+
+- [Wishlist](#wishlist)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [CLI](#cli)
+      - [Remote](#remote)
+      - [Local](#local)
+    - [Library](#library)
+  - [Auth](#auth)
+    - [Local mode](#local-mode)
+    - [Server mode](#server-mode)
+    - [Agent forwarding example](#agent-forwarding-example)
+  - [Discovery](#discovery)
+    - [Tailscale](#tailscale)
+    - [Zeroconf/Avahi/mDNS/Bonjour](#zeroconfavahimdnsbonjour)
+    - [SRV records](#srv-records)
+    - [Hints](#hints)
+  - [Running it](#running-it)
+    - [Using the binary](#using-the-binary)
+    - [Using Docker](#using-docker)
+    - [Supported SSH Options](#supported-ssh-options)
+  - [Acknowledgments](#acknowledgments)
+  - [Feedback](#feedback)
+  - [License](#license)
+
+<!--toc:end-->
+
 <p>
     <a href="https://github.com/charmbracelet/wishlist/releases"><img src="https://img.shields.io/github/release/charmbracelet/wishlist.svg" alt="Latest Release"></a>
     <a href="https://pkg.go.dev/github.com/charmbracelet/wishlist?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc"></a>
@@ -144,6 +172,75 @@ Host wishlist
 	UserKnownHostsFile /dev/null
 ```
 
+## Discovery
+
+Wishlist can discover endpoints using Zeroconf, SRV Records, and [Tailscale][].
+
+You can find a brief explanation and examples of all of them bellow.
+
+Run `wishlist --help` to see all the options.
+
+[Tailscale]: http://tailscale.com
+
+### Tailscale
+
+You can configure Wishlist to find all nodes in your **tailnet** and add them
+as endpoints:
+
+```bash
+wishlist --tailscale.net=your_tailnet_name --tailscale.key=tskey-api-abc123...
+```
+
+You can use the [Hints](#Hints) to change the connection settings.
+
+### Zeroconf/Avahi/mDNS/Bonjour
+
+You can enable this using the `--zeroconf.enabled` flag:
+
+```bash
+wishlist --zeroconf.enabled
+```
+
+Optionally, you can also specify a timeout with `--zeroconf.timeout` and, which
+domain to look for with `--zeroconf.domain`.
+
+Wishlist will look for `_ssh._tcp` services in the given domain.
+
+You can use the [Hints](#Hints) to change the connection settings.
+
+### SRV records
+
+You can set Wishlist up to find nodes from DNS `SRV` records:
+
+```bash
+wishlist --srv.domain example.com
+```
+
+By default, Wishlist will set the name of the endpoint to the `SRV` target.
+You can, however, customize that with a `TXT` record in the following format:
+
+```txt
+wishlist.name full.address:22=thename
+```
+
+So, in this case, a `SRV` record pointing to `full.address` on port `22` will
+get the name `thename`.
+
+### Hints
+
+You can use the `hints` key in the YAML configuration file to hint settings into
+discovered endpoints.
+
+Check the [example configuration file](/_example/config.yaml) to learn
+what options are available.
+
+If you're using a SSH configuration file as the Wishlist configuration file,
+it'll try to match the hosts with the rules in the given configuration.
+Otherwise, the services will simply be added to the list.
+
+The difference is that if a hints themselves won't show in the TUI, as of hosts
+in the SSH configuration will.
+
 ## Running it
 
 Wishlist will read and store all its information in a `.wishlist` folder in the
@@ -184,47 +281,6 @@ that if you have your common used hosts in your `~/.ssh/config`, you can simply
 run `wishlist` and get it running right away. It also means that if you don't
 want that, you can pass a path to `-config`, and it can be either a YAML, or a
 SSH config file.
-
-### Zeroconf/Avahi/mDNS/Bonjour
-
-Wishlist can also discover services using mDNS, to do so, run it with
-`--zeroconf.enabled`.
-Optionally, you can also specify a timeout with `--zeroconf.timeout` and, which
-domain to look for with `--zeroconf.domain`.
-
-Wishlist will look for `_ssh._tcp` services in the given domain.
-If you're using a SSH configuration file as the Wishlist configuration file,
-it'll try to match the hosts with the rules in the given configuration.
-Otherwise, the services will simply be added to the list.
-
-Run `wishlist --help` to see all the options.
-
-### SRV records
-
-Wishlist can also find nodes from DNS `SRV` records, on one or more domains.
-
-Run `wishlist --srv.domain {your domain}` to get started. You can repeat the
-flag for multiple domains.
-
-By default, Wishlist will set the name of the endpoint to the `SRV` target.
-You can, however, customize that with a `TXT` record in the following format:
-
-```
-wishlist.name full.address:22=thename
-```
-
-So, in this case, a `SRV` record pointing to `full.address` on port `22` will get
-the name `thename`.
-
-Run `wishlist --help` to see all the options.
-
-### Hints
-
-You can use the `hints` key in the YAML configuration file to hint settings into
-discovered endpoints.
-
-Check the [example configuration file](/_example/config.yaml) to learn
-what options are available.
 
 ### Using the binary
 
@@ -283,4 +339,5 @@ Part of [Charm](https://charm.sh).
 
 <a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400"></a>
 
-Charm 热爱开源 • Charm loves open source
+<!--prettier-ignore-->
+Charm热爱开源 • Charm loves open source
