@@ -318,14 +318,14 @@ func getSeedEndpoints(ctx context.Context) ([]*wishlist.Endpoint, error) {
 		seed = append(seed, endpoints...)
 	}
 	if zeroconfEnabled {
-		endpoints, err := zeroconf.Endpoints(zeroconfDomain, zeroconfTimeout)
+		endpoints, err := zeroconf.Endpoints(ctx, zeroconfDomain, zeroconfTimeout)
 		if err != nil {
 			return nil, err //nolint: wrapcheck
 		}
 		seed = endpoints
 	}
 	for _, domain := range srvDomains {
-		endpoints, err := srv.Endpoints(domain)
+		endpoints, err := srv.Endpoints(ctx, domain)
 		if err != nil {
 			return nil, err //nolint: wrapcheck
 		}
