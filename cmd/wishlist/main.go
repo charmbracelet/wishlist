@@ -322,7 +322,7 @@ func getSeedEndpoints(ctx context.Context) ([]*wishlist.Endpoint, error) {
 		if err != nil {
 			return nil, err //nolint: wrapcheck
 		}
-		seed = endpoints
+		seed = append(seed, endpoints...)
 	}
 	for _, domain := range srvDomains {
 		endpoints, err := srv.Endpoints(ctx, domain)
