@@ -16,13 +16,14 @@ import (
 const service = "_ssh._tcp"
 
 // Endpoints returns the found endpoints from zeroconf.
-func Endpoints(domain string, timeout time.Duration) ([]*wishlist.Endpoint, error) {
+func Endpoints(ctx context.Context, domain string, timeout time.Duration) ([]*wishlist.Endpoint, error) {
 	log.Info("discovering from zeroconf", "service", service, "domain", domain)
 	r, err := zeroconf.NewResolver()
 	if err != nil {
 		return nil, fmt.Errorf("zeroconf: could not create resolver: %w", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	entries := make(chan *zeroconf.ServiceEntry)
