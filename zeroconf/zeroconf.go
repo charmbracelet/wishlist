@@ -17,7 +17,7 @@ const service = "_ssh._tcp"
 
 // Endpoints returns the found endpoints from zeroconf.
 func Endpoints(ctx context.Context, domain string, timeout time.Duration) ([]*wishlist.Endpoint, error) {
-	log.Info("discovering from zeroconf", "service", service, "domain", domain)
+	log.Debug("discovering from zeroconf", "service", service, "domain", domain)
 	r, err := zeroconf.NewResolver()
 	if err != nil {
 		return nil, fmt.Errorf("zeroconf: could not create resolver: %w", err)
@@ -40,5 +40,6 @@ func Endpoints(ctx context.Context, domain string, timeout time.Duration) ([]*wi
 			Address: net.JoinHostPort(hostname, port),
 		})
 	}
+	log.Info("discovered from zeroconf", "service", service, "domain", domain, "devices", len(endpoints))
 	return endpoints, nil
 }

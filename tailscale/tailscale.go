@@ -14,7 +14,7 @@ import (
 
 // Endpoints returns the found endpoints from tailscale.
 func Endpoints(ctx context.Context, tailnet, key string) ([]*wishlist.Endpoint, error) {
-	log.Info("discovering from tailscale", "tailnet", tailnet)
+	log.Debug("discovering from tailscale", "tailnet", tailnet)
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
@@ -50,6 +50,8 @@ func Endpoints(ctx context.Context, tailnet, key string) ([]*wishlist.Endpoint, 
 			Address: net.JoinHostPort(device.Addresses[0], "22"),
 		})
 	}
+
+	log.Info("discovered from tailscale", "tailnet", tailnet, "devices", len(endpoints))
 	return endpoints, nil
 }
 

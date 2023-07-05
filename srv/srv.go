@@ -10,10 +10,15 @@ import (
 	"github.com/charmbracelet/wishlist"
 )
 
+const (
+	service   = "_ssh._tcp"
+	txtPrefix = "wishlist.name "
+)
+
 // Endpoints returns the _ssh._tcp SRV records on the given domain as
 // Wishlist endpoints.
 func Endpoints(ctx context.Context, domain string) ([]*wishlist.Endpoint, error) {
-	log.Info("discovering _ssh._tcp SRV records", "domain", domain)
+	log.Debug("discovering SRV records", "service", service, "domain", domain)
 	_, srvs, err := net.DefaultResolver.LookupSRV(ctx, "ssh", "tcp", domain)
 	if err != nil {
 		return nil, fmt.Errorf("srv: could not resolve %s: %w", domain, err)
@@ -22,10 +27,10 @@ func Endpoints(ctx context.Context, domain string) ([]*wishlist.Endpoint, error)
 	if err != nil {
 		return nil, fmt.Errorf("srv: could not resolve %s: %w", domain, err)
 	}
-	return fromRecords(srvs, txts), nil
+	endpoints := fromRecords(srvs, txts)
+	log.Info("discovered from SRV records", "service", service, "domain", domain, "devices", len(endpoints))
+	return endpoints, nil
 }
-
-const txtPrefix = "wishlist.name "
 
 func fromRecords(srvs []*net.SRV, txts []string) []*wishlist.Endpoint {
 	result := make([]*wishlist.Endpoint, 0, len(srvs))
