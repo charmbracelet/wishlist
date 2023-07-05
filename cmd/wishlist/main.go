@@ -130,8 +130,15 @@ var serverCmd = &cobra.Command{
 			go func() {
 				for range ticker.C {
 					log.Info("refreshing endpoints...")
+					ctx := context.Background()
+					seed, err := getSeedEndpoints(ctx)
+					if err != nil {
+						log.Error("could not get seed endpoints", "error", err)
+						continue
+					}
 					reloaded, err := getConfigFile(path, seed)
 					if err != nil {
+						log.Error("could not load configuration file", "error", err)
 						continue
 					}
 					config.EndpointChan <- reloaded.Endpoints
