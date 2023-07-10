@@ -46,6 +46,7 @@ type Endpoint struct {
 	RemoteCommand            string            `yaml:"remote_command"`            // RemoteCommand defines whether to request a TTY. Anologous to SSH's config RemoteCommand.
 	Desc                     string            `yaml:"description"`               // Description describes an optional description of the item.
 	Link                     Link              `yaml:"link"`                      // Links can be used to add a link to the item description using OSC8.
+	ProxyJump                string            `yaml:"proxy_jump"`                // Anologous to SSH's ProxyJump
 	SendEnv                  []string          `yaml:"send_env"`                  // Anologous to SSH's SendEnv
 	SetEnv                   []string          `yaml:"set_env"`                   // Anologous to SSH's SetEnv
 	PreferredAuthentications []string          `yaml:"preferred_authentications"` // Anologous to SSH's PreferredAuthentications
@@ -65,6 +66,7 @@ type EndpointHint struct {
 	RemoteCommand            string        `yaml:"remote_command"`
 	Desc                     string        `yaml:"description"`
 	Link                     Link          `yaml:"link"`
+	ProxyJump                string        `yaml:"proxy_jump"`
 	SendEnv                  []string      `yaml:"send_env"`
 	SetEnv                   []string      `yaml:"set_env"`
 	PreferredAuthentications []string      `yaml:"preferred_authentications"`

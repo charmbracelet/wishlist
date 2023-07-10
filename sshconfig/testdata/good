@@ -10,7 +10,8 @@ Host supernova
 	SendEnv FOO
 	SetEnv BAR=bar
 	ConnectTimeout 20
-  PreferredAuthentications password,keyboard-interactive,publickey,hostbased
+	PreferredAuthentications password,keyboard-interactive,publickey,hostbased
+	ProxyJump user@host:port
 
 Host app1
 	HostName app.foo.local
