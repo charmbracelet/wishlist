@@ -19,7 +19,7 @@ func TestParseExampleYaml(t *testing.T) {
 	require.Equal(t, int64(2223), cfg.Port)
 	require.Len(t, cfg.Endpoints, 1)
 	require.Equal(t, wishlist.Endpoint{
-		Name:    "appname",
+		Name:    "thename",
 		Address: "foo.local:2234",
 		Link: wishlist.Link{
 			Name: "Optional link name",
@@ -34,6 +34,7 @@ func TestParseExampleYaml(t *testing.T) {
 		Timeout:       10 * time.Second,
 		SetEnv:        []string{"FOO=bar", "BAR=baz"},
 		SendEnv:       []string{"LC_*", "LANG", "SOME_ENV"},
+		ProxyJump:     "user@host:22",
 	}, *cfg.Endpoints[0])
 	require.Len(t, cfg.Users, 1)
 	require.Equal(t, wishlist.User{
@@ -64,6 +65,7 @@ func TestParseExampleSSHConfig(t *testing.T) {
 		RemoteCommand: "tmux a",
 		SendEnv:       []string{"FOO_*", "BAR_*"},
 		SetEnv:        []string{"HELLO=world", "BYE=world"},
+		ProxyJump:     "user@host:22",
 	}, *cfg.Endpoints[0])
 	require.Equal(t, wishlist.Endpoint{
 		Name:    "ssh.example.com",
