@@ -12,17 +12,14 @@ port: 2223
 
 # Endpoints to list in the UI.
 endpoints:
-  - # Endpoint's name.
-    # Recommended to avoid spaces so users can `ssh -t appname`.
-    name: appname
+  - #
+
+    # Endpoint's name.
+    # Recommended to avoid spaces so users can `ssh -t thename`.
+    name: thename
 
     # Endpoint's address in the host:port format.
     address: foo.local:2234
-
-    # An URL to be printed in the list.
-    link:
-      name: Optional link name
-      url: https://github.com/charmbracelet/wishlist
 
     # A descripton of the item.
     description: "A description of this endpoint.\nCan have multiple lines."
@@ -39,18 +36,26 @@ endpoints:
     # Will cause the connection to fail if no agent is available.
     forward_agent: true # forwards the ssh agent
 
-    # IdentityFiles to try to use to authorize.
-    # Only used in local mode.
-    identity_files:
-      - ~/.ssh/id_rsa
-      - ~/.ssh/id_ed25519
-
     # Requests a TTY.
     # Defaults to true if remote_command is empty.
     request_tty: true
 
     # Connection timeout.
     connect_timeout: 10s
+
+    # Connect to the host through this proxy.
+    proxy_jump: "user@host:22"
+
+    # An URL to be printed in the list.
+    link:
+      name: Optional link name
+      url: https://github.com/charmbracelet/wishlist
+
+    # IdentityFiles to try to use to authorize.
+    # Only used in local mode.
+    identity_files:
+      - ~/.ssh/id_rsa
+      - ~/.ssh/id_ed25519
 
     # Set environment variables into the connection.
     # Analogous to SSH's SetEnv.
@@ -81,49 +86,22 @@ hints:
     # SSH port to use.
     port: 23234
 
-    # URL to be printed in the list.
+    description: "A description of this endpoint.\nCan have multiple lines."
+    user: notme
+    remote_command: uptime -a
+    forward_agent: true
+    request_tty: true
+    connect_timeout: 10s
+    proxy_jump: "user@host:22"
     link:
       name: Optional link name
       url: https://github.com/charmbracelet/wishlist
-
-    # Descripton of the item.
-    description: "A description of this endpoint.\nCan have multiple lines."
-
-    # User to use to connect.
-    # Defaults to the current remote user.
-    user: notme
-
-    # Command to run against the remote address.
-    # Defaults to asking for a shell.
-    remote_command: uptime -a
-
-    # Whether to forward the SSH agent.
-    # Will cause the connection to fail if no agent is available.
-    forward_agent: true # forwards the ssh agent
-
-    # IdentityFiles to try to use to authorize.
-    # Only used in local mode.
     identity_files:
       - ~/.ssh/id_rsa
       - ~/.ssh/id_ed25519
-
-    # Requests a TTY.
-    # Defaults to true if remote_command is empty.
-    request_tty: true
-
-    # Connection timeout.
-    connect_timeout: 10s
-
-    # Set environment variables into the connection.
-    # Analogous to SSH's SetEnv.
     set_env:
       - FOO=bar
       - BAR=baz
-
-    # Environments from the environment that match these keys will also be set
-    # into the connection.
-    # Analogous to SSH's SendEnv.
-    # Defaults to ["LC_*", "LANG"].
     send_env:
       - LC_*
       - LANG
