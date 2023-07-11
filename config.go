@@ -46,10 +46,10 @@ type Endpoint struct {
 	RemoteCommand            string            `yaml:"remote_command"`            // RemoteCommand defines whether to request a TTY. Anologous to SSH's config RemoteCommand.
 	Desc                     string            `yaml:"description"`               // Description describes an optional description of the item.
 	Link                     Link              `yaml:"link"`                      // Links can be used to add a link to the item description using OSC8.
-	ProxyJump                string            `yaml:"proxy_jump"`                // Anologous to SSH's ProxyJump
-	SendEnv                  []string          `yaml:"send_env"`                  // Anologous to SSH's SendEnv
-	SetEnv                   []string          `yaml:"set_env"`                   // Anologous to SSH's SetEnv
-	PreferredAuthentications []string          `yaml:"preferred_authentications"` // Anologous to SSH's PreferredAuthentications
+	ProxyJump                string            `yaml:"proxy_jump"`                // Analogous to SSH's ProxyJump
+	SendEnv                  []string          `yaml:"send_env"`                  // Analogous to SSH's SendEnv
+	SetEnv                   []string          `yaml:"set_env"`                   // Analogous to SSH's SetEnv
+	PreferredAuthentications []string          `yaml:"preferred_authentications"` // Analogous to SSH's PreferredAuthentications
 	IdentityFiles            []string          `yaml:"identity_files"`            // IdentityFiles is only used when in local mode.
 	Timeout                  time.Duration     `yaml:"connect_timeout"`           // Connection timeout.
 	Middlewares              []wish.Middleware `yaml:"-"`                         // wish middlewares you can use in the factory method.
