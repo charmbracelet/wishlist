@@ -74,6 +74,7 @@ func ParseReader(r io.Reader, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, 
 			SetEnv:                   info.SetEnv,
 			SendEnv:                  info.SendEnv,
 			PreferredAuthentications: info.PreferredAuthentications,
+			ProxyJump:                info.ProxyJump,
 		})
 		return nil
 	}); err != nil {
@@ -96,6 +97,7 @@ type hostinfo struct {
 	ForwardAgent             string
 	RequestTTY               string
 	RemoteCommand            string
+	ProxyJump                string
 	SendEnv                  []string
 	SetEnv                   []string
 	PreferredAuthentications []string
@@ -208,6 +210,8 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					info.RequestTTY = value
 				case "RemoteCommand":
 					info.RemoteCommand = value
+				case "ProxyJump":
+					info.ProxyJump = value
 				case "ConnectTimeout":
 					timeout, err := strconv.Atoi(value)
 					if err != nil {
@@ -312,6 +316,9 @@ func mergeHostinfo(h1, h2 hostinfo) hostinfo {
 	}
 	if h1.Timeout > 0 {
 		h2.Timeout = h1.Timeout
+	}
+	if h1.ProxyJump != "" {
+		h2.ProxyJump = h1.ProxyJump
 	}
 	h2.SendEnv = append(h2.SendEnv, h1.SendEnv...)
 	h2.SetEnv = append(h2.SetEnv, h1.SetEnv...)

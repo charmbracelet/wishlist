@@ -267,6 +267,9 @@ func applyHints(seed []*wishlist.Endpoint, hints []wishlist.EndpointHint) []*wis
 			if s := hint.Link; !reflect.DeepEqual(s, wishlist.Link{}) {
 				end.Link = s
 			}
+			if s := hint.ProxyJump; s != "" {
+				end.ProxyJump = s
+			}
 			end.SendEnv = append(end.SendEnv, hint.SendEnv...)
 			end.SetEnv = append(end.SetEnv, hint.SetEnv...)
 			end.PreferredAuthentications = append(end.PreferredAuthentications, hint.PreferredAuthentications...)

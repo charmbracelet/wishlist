@@ -35,6 +35,7 @@ func TestParseFile(t *testing.T) {
 					"publickey",
 					"hostbased",
 				},
+				ProxyJump: "user@host:port",
 				SendEnv: []string{
 					"FOO",
 				},
@@ -302,7 +303,7 @@ func TestHostinfoMap(t *testing.T) {
 	require.Equal(t, []string{"a", "b"}, order)
 
 	expectedErr := fmt.Errorf("some error")
-	require.Equal(t, expectedErr, m.forEach(func(s string, h hostinfo, e error) error {
+	require.Equal(t, expectedErr, m.forEach(func(s string, _ hostinfo, e error) error {
 		if e != nil {
 			return e
 		}

@@ -23,10 +23,23 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint, abort <-chan os.Signal
 	var err error
 	connected := make(chan bool, 1)
 
-	go func() {
-		conn, err = gossh.Dial("tcp", e.Address, conf)
-		connected <- true
-	}()
+	if jump := e.ProxyJump; jump == "" {
+		go func() {
+			conn, err = gossh.Dial("tcp", e.Address, conf)
+			connected <- true
+		}()
+	} else {
+		username, addr := splitJump(jump)
+		jumpConf := &gossh.ClientConfig{
+			User:            FirstNonEmpty(username, conf.User),
+			Auth:            conf.Auth,
+			HostKeyCallback: conf.HostKeyCallback,
+		}
+		go func() {
+			conn, cl, err = proxyJump(addr, e.Address, jumpConf, conf)
+			connected <- true
+		}()
+	}
 
 	select {
 	case <-connected:
@@ -34,9 +47,9 @@ func createSession(conf *gossh.ClientConfig, e *Endpoint, abort <-chan os.Signal
 		break
 	case <-abort:
 		if conn != nil {
-			_ = conn.Close()
+			cl = append(cl, conn.Close)
 		}
-		return nil, nil, nil, fmt.Errorf("connection aborted")
+		return nil, nil, cl, fmt.Errorf("connection aborted")
 	}
 
 	if err != nil {
