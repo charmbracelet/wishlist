@@ -316,6 +316,7 @@ Here's a list of the ones that are:
 - `ConnectTimeout`
 - `Include`
 - `PreferredAuthentications`
+- `ProxyJump`
 
 ## Acknowledgments
 
