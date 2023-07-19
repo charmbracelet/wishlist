@@ -193,7 +193,7 @@ wishlist --tailscale.net=your_tailnet_name --tailscale.key=tskey-api-abc123...
 
 You can use the [Hints](#Hints) to change the connection settings.
 
-#### Oauth authentication
+#### OAuth authentication
 
 Tailscale API keys expire after 90 days. If you want something that doesn't
 require you to intervene every couple of months, use OAuth Clients:
