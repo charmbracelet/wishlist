@@ -58,16 +58,19 @@ It's also possible to serve the TUI over SSH using the server command.
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
-	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-		if e := os.Getenv("TAILSCALE_KEY"); e != "" {
-			cmd.Flags().Set("tailscale.key", e)
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		for k, v := range map[string]string{
+			"TAILSCALE_KEY":           "tailscale.key",
+			"TAILSCALE_CLIENT_ID":     "tailscale.client.id",
+			"TAILSCALE_CLIENT_SECRET": "tailscale.client.secret",
+		} {
+			if e := os.Getenv(k); e != "" {
+				if err := cmd.Flags().Set(v, e); err != nil {
+					return err
+				}
+			}
 		}
-		if e := os.Getenv("TAILSCALE_CLIENT_ID"); e != "" {
-			cmd.Flags().Set("tailscale.client.id", e)
-		}
-		if e := os.Getenv("TAILSCALE_CLIENT_SECRET"); e != "" {
-			cmd.Flags().Set("tailscale.client.secret", e)
-		}
+		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cache, err := os.UserCacheDir()

@@ -47,7 +47,7 @@ func splitJump(jump string) (string, string) {
 	switch len(parts) {
 	case 1:
 		return "", ensureJumpPort(parts[0]) // jump with no username
-	case 2:
+	case 2: //nolint: gomnd
 		return parts[0], ensureJumpPort(parts[1]) // jump with user and host
 	default:
 		return strings.Join(parts[0:len(parts)-1], "@"), ensureJumpPort(parts[len(parts)-1])

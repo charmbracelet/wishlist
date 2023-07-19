@@ -42,7 +42,7 @@ func Endpoints(ctx context.Context, tailnet, key, clientID, clientSecret string)
 		return nil, fmt.Errorf("tailscale: %w", err)
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		var out nonOK
 		if err := json.Unmarshal(bts, &out); err != nil {
 			return nil, fmt.Errorf("tailscale: %w", err)
@@ -94,7 +94,7 @@ type apiKeyRoundTripper struct {
 
 func (r apiKeyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", r.key))
-	return http.DefaultTransport.RoundTrip(req)
+	return http.DefaultTransport.RoundTrip(req) //nolint: wrapcheck
 }
 
 type nonOK struct {
