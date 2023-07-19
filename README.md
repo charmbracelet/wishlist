@@ -1,33 +1,5 @@
 # Wishlist
 
-<!--toc:start-->
-
-- [Wishlist](#wishlist)
-  - [Installation](#installation)
-  - [Usage](#usage)
-    - [CLI](#cli)
-      - [Remote](#remote)
-      - [Local](#local)
-    - [Library](#library)
-  - [Auth](#auth)
-    - [Local mode](#local-mode)
-    - [Server mode](#server-mode)
-    - [Agent forwarding example](#agent-forwarding-example)
-  - [Discovery](#discovery)
-    - [Tailscale](#tailscale)
-    - [Zeroconf/Avahi/mDNS/Bonjour](#zeroconfavahimdnsbonjour)
-    - [SRV records](#srv-records)
-    - [Hints](#hints)
-  - [Running it](#running-it)
-    - [Using the binary](#using-the-binary)
-    - [Using Docker](#using-docker)
-    - [Supported SSH Options](#supported-ssh-options)
-  - [Acknowledgments](#acknowledgments)
-  - [Feedback](#feedback)
-  - [License](#license)
-
-<!--toc:end-->
-
 <p>
     <a href="https://github.com/charmbracelet/wishlist/releases"><img src="https://img.shields.io/github/release/charmbracelet/wishlist.svg" alt="Latest Release"></a>
     <a href="https://pkg.go.dev/github.com/charmbracelet/wishlist?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc"></a>
@@ -37,16 +9,17 @@
 
 The SSH directory ✨
 
-![screencast](https://user-images.githubusercontent.com/42545625/176265745-1749c5ae-bf8d-460f-865c-fae0e45cb448.gif)
+![Gif](https://vhs.charm.sh/vhs-3YDAKLasKh7IgWNTkHKrHB.gif)
 
-With Wishlist you can have a single entrypoint for multiple SSH endpoints,
+With Wishlist you can have a single entry point for multiple SSH endpoints,
 whether they are [Wish](https://github.com/charmbracelet/wish) apps or not.
 
 As a server, it can be used to start multiple SSH apps within a single package
-and list them over SSH. You can list apps provided elsewhere, too.
+and list them over SSH.
+You can list apps provided elsewhere, too.
 
-You can also use the `wishlist` CLI to list and connect to servers in your
-`~/.ssh/config` or, a YAML config file.
+You can also use the `wishlist` command to list and connect to servers in your
+`~/.ssh/config` or in a YAML configuration file.
 
 ## Installation
 
@@ -83,7 +56,7 @@ sudo yum install wishlist
 
 Or download a pre-compiled binary or package from the [releases][releases] page.
 
-Or just build it yourself (requires Go 1.18+):
+Or just build it yourself (requires Go 1.19+):
 
 ```bash
 git clone https://github.com/charmbracelet/wishlist.git
