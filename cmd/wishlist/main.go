@@ -51,11 +51,26 @@ be in either the SSH configuration format or YAML.
 
 It's also possible to serve the TUI over SSH using the server command.
 `,
-	Version:      Version,
-	SilenceUsage: true,
-	Args:         cobra.MaximumNArgs(1),
+	Version:       Version,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	Args:          cobra.MaximumNArgs(1),
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
+	},
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		for k, v := range map[string]string{
+			"TAILSCALE_KEY":           "tailscale.key",
+			"TAILSCALE_CLIENT_ID":     "tailscale.client.id",
+			"TAILSCALE_CLIENT_SECRET": "tailscale.client.secret",
+		} {
+			if e := os.Getenv(k); e != "" {
+				if err := cmd.Flags().Set(v, e); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cache, err := os.UserCacheDir()
@@ -179,14 +194,16 @@ var serverCmd = &cobra.Command{
 }
 
 var (
-	configFile      string
-	srvDomains      []string
-	refreshInterval time.Duration
-	zeroconfEnabled bool
-	zeroconfDomain  string
-	zeroconfTimeout time.Duration
-	tailscaleNet    string
-	tailscaleKey    string
+	configFile            string
+	srvDomains            []string
+	refreshInterval       time.Duration
+	zeroconfEnabled       bool
+	zeroconfDomain        string
+	zeroconfTimeout       time.Duration
+	tailscaleNet          string
+	tailscaleKey          string
+	tailscaleClientID     string
+	tailscaleClientSecret string
 )
 
 func init() {
@@ -198,7 +215,11 @@ func init() {
 	rootCmd.PersistentFlags().DurationVar(&zeroconfTimeout, "zeroconf.timeout", time.Second, "How long should zeroconf keep searching for hosts")
 	rootCmd.PersistentFlags().StringSliceVar(&srvDomains, "srv.domain", nil, "SRV domains to discover endpoints")
 	rootCmd.PersistentFlags().StringVar(&tailscaleNet, "tailscale.net", "", "Tailscale tailnet name")
-	rootCmd.PersistentFlags().StringVar(&tailscaleKey, "tailscale.key", os.Getenv("TAILSCALE_KEY"), "Tailscale tailnet name [$TAILSCALE_KEY]")
+	rootCmd.PersistentFlags().StringVar(&tailscaleKey, "tailscale.key", "", "Tailscale API key [$TAILSCALE_KEY]")
+	rootCmd.PersistentFlags().StringVar(&tailscaleClientID, "tailscale.client.id", "", "Tailscale client ID [$TAILSCALE_CLIENT_ID]")
+	rootCmd.PersistentFlags().StringVar(&tailscaleClientSecret, "tailscale.client.secret", "", "Tailscale client Secret [$TAILSCALE_CLIENT_SECRET]")
+	rootCmd.MarkFlagsMutuallyExclusive("tailscale.key", "tailscale.client.id")
+	rootCmd.MarkFlagsRequiredTogether("tailscale.client.id", "tailscale.client.secret")
 	rootCmd.AddCommand(serverCmd, manCmd)
 }
 
@@ -318,10 +339,7 @@ func getConfigFile(path string, seed []*wishlist.Endpoint) (wishlist.Config, err
 func getSeedEndpoints(ctx context.Context) ([]*wishlist.Endpoint, error) {
 	var seed []*wishlist.Endpoint
 	if tailscaleNet != "" {
-		if tailscaleKey == "" {
-			return nil, fmt.Errorf("missing tailscale.key")
-		}
-		endpoints, err := tailscale.Endpoints(ctx, tailscaleNet, tailscaleKey)
+		endpoints, err := tailscale.Endpoints(ctx, tailscaleNet, tailscaleKey, tailscaleClientID, tailscaleClientSecret)
 		if err != nil {
 			return nil, err //nolint: wrapcheck
 		}

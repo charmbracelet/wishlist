@@ -193,6 +193,18 @@ wishlist --tailscale.net=your_tailnet_name --tailscale.key=tskey-api-abc123...
 
 You can use the [Hints](#Hints) to change the connection settings.
 
+#### OAuth authentication
+
+Tailscale API keys expire after 90 days. If you want something that doesn't
+require you to intervene every couple of months, use OAuth Clients:
+
+Create a client [here](https://login.tailscale.com/admin/settings/oauth).
+The only scope needed is `devices:read`.
+
+Instead of using `--tailscale.key` (or `$TAILSCALE_KEY`), set
+`--tailscale.client.id` and `--tailscale.client.secret` (or
+`$TAILSCALE_CLIENT_ID` and `$TAILSCALE_CLIENT_SECRET`, respectively).
+
 ### Zeroconf/Avahi/mDNS/Bonjour
 
 You can enable this using the `--zeroconf.enabled` flag:

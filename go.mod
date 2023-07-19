@@ -23,6 +23,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/teivah/broadcast v0.1.0
 	golang.org/x/crypto v0.11.0
+	golang.org/x/oauth2 v0.5.0
 	golang.org/x/term v0.10.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -65,5 +66,6 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )
