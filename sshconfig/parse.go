@@ -195,36 +195,36 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 				key := strings.TrimSpace(parts[0])
 				value := strings.TrimSpace(parts[1])
 
-				switch key {
-				case "HostName":
+				switch strings.ToLower(key) {
+				case "hostname":
 					info.Hostname = value
-				case "User":
+				case "user":
 					info.User = value
-				case "Port":
+				case "port":
 					info.Port = value
-				case "IdentityFile":
+				case "identityfile":
 					info.IdentityFiles = append(info.IdentityFiles, value)
-				case "ForwardAgent":
+				case "forwardagent":
 					info.ForwardAgent = value
-				case "RequestTTY":
+				case "requesttty":
 					info.RequestTTY = value
-				case "RemoteCommand":
+				case "remotecommand":
 					info.RemoteCommand = value
-				case "ProxyJump":
+				case "proxyjump":
 					info.ProxyJump = value
-				case "ConnectTimeout":
+				case "connecttimeout":
 					timeout, err := strconv.Atoi(value)
 					if err != nil {
 						return nil, fmt.Errorf("invalid ConnectTimeout: %s: %w", value, err)
 					}
 					info.Timeout = time.Second * time.Duration(timeout)
-				case "SendEnv":
+				case "sendenv":
 					info.SendEnv = append(info.SendEnv, value)
-				case "SetEnv":
+				case "setenv":
 					info.SetEnv = append(info.SetEnv, value)
-				case "PreferredAuthentications":
+				case "preferredauthentications":
 					info.PreferredAuthentications = append(info.PreferredAuthentications, strings.Split(value, ",")...)
-				case "Include":
+				case "include":
 					path, err := home.ExpandPath(value)
 					if err != nil {
 						return nil, err //nolint: wrapcheck

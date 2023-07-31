@@ -4,8 +4,8 @@ Host darkstar
 	HostName darkstar.local
 
 Host supernova
-	HostName supernova.local
-	User notme
+	Hostname supernova.local
+	uSer notme
 	ForwardAgent does-not-matter
 	SendEnv FOO
 	SetEnv BAR=bar
