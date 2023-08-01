@@ -62,7 +62,7 @@ var (
 
 type syncWriter struct {
 	b  bytes.Buffer
-	mu sync.RWMutex
+	mu sync.Mutex
 }
 
 // Reset implements ResetableReader.
@@ -74,8 +74,8 @@ func (w *syncWriter) Reset() {
 
 // Read implements io.Reader.
 func (w *syncWriter) Read(p []byte) (n int, err error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	w.mu.Lock()
+	defer w.mu.Unlock()
 	return w.b.Read(p) //nolint: wrapcheck
 }
 
