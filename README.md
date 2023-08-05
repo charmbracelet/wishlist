@@ -164,7 +164,7 @@ as endpoints:
 wishlist --tailscale.net=your_tailnet_name --tailscale.key=tskey-api-abc123...
 ```
 
-You can use the [Hints](#Hints) to change the connection settings.
+You can use the [Hints](#hints) to change the connection settings.
 
 #### OAuth authentication
 
@@ -191,7 +191,7 @@ domain to look for with `--zeroconf.domain`.
 
 Wishlist will look for `_ssh._tcp` services in the given domain.
 
-You can use the [Hints](#Hints) to change the connection settings.
+You can use the [Hints](#hints) to change the connection settings.
 
 ### SRV records
 
