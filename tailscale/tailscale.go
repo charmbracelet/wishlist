@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/wishlist"
@@ -58,7 +59,7 @@ func Endpoints(ctx context.Context, tailnet, key, clientID, clientSecret string)
 	endpoints := make([]*wishlist.Endpoint, 0, len(devices.Devices))
 	for _, device := range devices.Devices {
 		endpoints = append(endpoints, &wishlist.Endpoint{
-			Name:    device.Hostname,
+			Name:    strings.Split(device.DeviceName, ".")[0],
 			Address: net.JoinHostPort(device.Addresses[0], "22"),
 		})
 	}
@@ -110,4 +111,5 @@ type device struct {
 	Addresses  []string `json:"addresses"`
 	Authorized bool     `json:"Authorized"`
 	Hostname   string   `json:"hostname"`
+	DeviceName string   `json:"name"`
 }
