@@ -53,7 +53,7 @@ It's also possible to serve the TUI over SSH using the server command.
 `,
 	Version:       Version,
 	SilenceUsage:  true,
-	SilenceErrors: true,
+	SilenceErrors: false,
 	Args:          cobra.MaximumNArgs(1),
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
@@ -123,10 +123,11 @@ var manCmd = &cobra.Command{
 }
 
 var serverCmd = &cobra.Command{
-	Use:     "serve",
-	Aliases: []string{"server", "s"},
-	Args:    cobra.NoArgs,
-	Short:   "Serve the TUI over SSH.",
+	Use:           "serve",
+	Aliases:       []string{"server", "s"},
+	Args:          cobra.NoArgs,
+	Short:         "Serve the TUI over SSH.",
+	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		seed, err := getSeedEndpoints(cmd.Context())
 		if err != nil {
