@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
-	github.com/charmbracelet/keygen v0.4.3
+	github.com/charmbracelet/keygen v0.5.0
 	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/charmbracelet/log v0.2.5
 	github.com/charmbracelet/promwish v0.6.0
@@ -22,7 +22,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/teivah/broadcast v0.1.0
-	golang.org/x/crypto v0.13.0
+	golang.org/x/crypto v0.14.0
 	golang.org/x/oauth2 v0.12.0
 	golang.org/x/term v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -33,7 +33,6 @@ require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/caarlos0/sshmarshal v0.1.0 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
