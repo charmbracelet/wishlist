@@ -6,3 +6,4 @@ cover.txt
 manpages
 completions
 cmd/wishlist/wishlist
+.env
