@@ -33,6 +33,7 @@ brew install charmbracelet/tap/wishlist
 yay -S wishlist-bin (or wishlist)
 
 # Windows (with Scoop)
+scoop bucket add https://github.com/charmbracelet/scoop-bucket.git
 scoop install wishlist
 
 # Nix
