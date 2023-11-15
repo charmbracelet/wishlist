@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"os/user"
 	"path/filepath"
+	"runtime"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
@@ -117,16 +118,18 @@ func (s *localSession) Run() error {
 		}
 
 		log.Info("requesting tty")
-		originalState, err := term.MakeRaw(fd)
-		if err != nil {
-			return fmt.Errorf("failed get terminal state: %w", err)
-		}
-
-		defer func() {
-			if err := term.Restore(fd, originalState); err != nil {
-				log.Warn("couldn't restore terminal state", "err", err)
+		if runtime.GOOS != "windows" {
+			originalState, err := term.MakeRaw(fd)
+			if err != nil {
+				return fmt.Errorf("failed get terminal state: %w", err)
 			}
-		}()
+
+			defer func() {
+				if err := term.Restore(fd, originalState); err != nil {
+					log.Warn("couldn't restore terminal state", "err", err)
+				}
+			}()
+		}
 
 		w, h, err := term.GetSize(fd)
 		if err != nil {
