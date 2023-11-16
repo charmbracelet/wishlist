@@ -117,16 +117,11 @@ func (s *localSession) Run() error {
 		}
 
 		log.Info("requesting tty")
-		originalState, err := term.MakeRaw(fd)
+		restore, err := makeRaw(fd)
 		if err != nil {
-			return fmt.Errorf("failed get terminal state: %w", err)
+			return err
 		}
-
-		defer func() {
-			if err := term.Restore(fd, originalState); err != nil {
-				log.Warn("couldn't restore terminal state", "err", err)
-			}
-		}()
+		defer restore()
 
 		w, h, err := term.GetSize(fd)
 		if err != nil {

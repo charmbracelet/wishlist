@@ -5,6 +5,7 @@ package wishlist
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,4 +36,18 @@ func (s *localSession) notifyWindowChanges(ctx context.Context, session *ssh.Ses
 			}
 		}
 	}
+}
+
+func makeRaw(fd int) (func(), error) {
+	log.Info("putting term in raw mode")
+	originalState, err := term.MakeRaw(fd)
+	if err != nil {
+		return func() {}, fmt.Errorf("failed get terminal state: %w", err)
+	}
+
+	return func() {
+		if err := term.Restore(fd, originalState); err != nil {
+			log.Warn("couldn't restore terminal state", "err", err)
+		}
+	}, nil
 }
