@@ -30,7 +30,12 @@ Use your fave package manager:
 brew install charmbracelet/tap/wishlist
 
 # Arch Linux (btw)
-yay -S wishlist-bin (or wishlist)
+yay -S wishlist-bin
+# or
+yay -S wishlist
+
+# Windows (with winget)
+winget install wishlist
 
 # Windows (with Scoop)
 scoop bucket add https://github.com/charmbracelet/scoop-bucket.git
