@@ -38,7 +38,7 @@ yay -S wishlist
 winget install wishlist
 
 # Windows (with Scoop)
-scoop bucket add https://github.com/charmbracelet/scoop-bucket.git
+scoop bucket add charm https://github.com/charmbracelet/scoop-bucket.git
 scoop install wishlist
 
 # Nix
