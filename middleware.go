@@ -60,7 +60,7 @@ func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoin
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
-			model := NewListing(config.Endpoints, &remoteClient{
+			model := NewRemoteListing(config.Endpoints, &remoteClient{
 				session: s,
 				stdin:   handoffStdin,
 				cleanup: func() {
