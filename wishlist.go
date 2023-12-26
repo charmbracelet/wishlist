@@ -129,7 +129,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 		}
 		if key.Matches(msg, enter) {
-			if key.Matches(msg, keyO) && m.list.SettingFilter() {
+			if m.list.SettingFilter() {
 				break
 			}
 			selectedItem := m.list.SelectedItem()
