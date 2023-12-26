@@ -17,9 +17,6 @@ var (
 		key.WithKeys("enter", "o"),
 		key.WithHelp("enter/o", "connect"),
 	)
-	keyO = key.NewBinding(
-		key.WithKeys("o"),
-	)
 )
 
 // NewListing creates a new listing model for the given endpoints and SSH session.
