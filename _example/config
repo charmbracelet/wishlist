@@ -5,7 +5,7 @@
 # Includes another config file.
 # Include ~/.ssh/config.other
 
-# Hosts will wildcards will not show up in the list
+# Hosts with wildcards will not show up in the list
 Host *.bar
 	# Forwards the agent to the target host.
 	ForwardAgent true
