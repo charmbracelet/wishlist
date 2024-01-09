@@ -22,7 +22,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/teivah/broadcast v0.1.0
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.18.0
 	golang.org/x/oauth2 v0.15.0
 	golang.org/x/term v0.16.0
 	gopkg.in/yaml.v3 v3.0.1
