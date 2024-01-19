@@ -1,0 +1,4 @@
+Host *.else
+	PreferredAuthentications password
+
+# vim: set ft=sshconfig:

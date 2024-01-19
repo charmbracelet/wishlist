@@ -1,4 +1,4 @@
-Include ./testdata/included
+Include ./*.included
 
 Host test.foo.bar
 	Port 2222
