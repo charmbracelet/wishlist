@@ -244,7 +244,7 @@ func parseInternal(r NamedReader) (*hostinfoMap, error) {
 
 					matches, err := filepath.Glob(path)
 					if err != nil {
-						return nil, err
+						return nil, err //nolint: wrapcheck
 					}
 
 					for _, match := range matches {
