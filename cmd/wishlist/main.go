@@ -66,7 +66,7 @@ It's also possible to serve the TUI over SSH using the server command.
 		} {
 			if e := os.Getenv(k); e != "" {
 				if err := cmd.Flags().Set(v, e); err != nil {
-					return err
+					return err //nolint: wrapcheck
 				}
 			}
 		}
