@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/wishlist"
 	"github.com/charmbracelet/wishlist/home"
 	"github.com/gobwas/glob"
@@ -229,6 +230,7 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					if err != nil {
 						return nil, err //nolint: wrapcheck
 					}
+					log.Info("Using configuration file (via includes)", "path", path)
 					included, err := parseFileInternal(path)
 					if err != nil {
 						if errors.Is(err, os.ErrNotExist) {
