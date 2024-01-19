@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +21,12 @@ import (
 	"github.com/kevinburke/ssh_config"
 )
 
+// NamedReader is an io.Reader that also has a name, usually a os.File.
+type NamedReader interface {
+	io.Reader
+	Name() string
+}
+
 // PraseFile reads and parses the file in the given path.
 func ParseFile(path string, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, error) {
 	f, err := os.Open(path)
@@ -31,7 +38,7 @@ func ParseFile(path string, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, er
 }
 
 // ParseReader reads and parses the given reader.
-func ParseReader(r io.Reader, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, error) {
+func ParseReader(r NamedReader, seed []*wishlist.Endpoint) ([]*wishlist.Endpoint, error) {
 	infos, err := parseInternal(r)
 	if err != nil {
 		return nil, err
@@ -149,7 +156,7 @@ func newHostinfoMap() *hostinfoMap {
 	}
 }
 
-func parseInternal(r io.Reader) (*hostinfoMap, error) {
+func parseInternal(r NamedReader) (*hostinfoMap, error) {
 	bts, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
@@ -230,17 +237,29 @@ func parseInternal(r io.Reader) (*hostinfoMap, error) {
 					if err != nil {
 						return nil, err //nolint: wrapcheck
 					}
-					log.Info("Using configuration file (via includes)", "path", path)
-					included, err := parseFileInternal(path)
-					if err != nil {
-						if errors.Is(err, os.ErrNotExist) {
-							continue
-						}
-						return nil, err
+					if !filepath.IsAbs(path) {
+						// ssh use paths relative to the current file path
+						path = filepath.Join(filepath.Dir(r.Name()), path)
 					}
-					infos.set(name, info)
-					infos = merge(infos, included)
-					info, _ = infos.get(name)
+
+					matches, err := filepath.Glob(path)
+					if err != nil {
+						return nil, err //nolint: wrapcheck
+					}
+
+					for _, match := range matches {
+						log.Info("Using configuration file (via includes)", "path", match)
+						included, err := parseFileInternal(match)
+						if err != nil {
+							if errors.Is(err, os.ErrNotExist) {
+								continue
+							}
+							return nil, err
+						}
+						infos.set(name, info)
+						infos = merge(infos, included)
+						info, _ = infos.get(name)
+					}
 				}
 			}
 
