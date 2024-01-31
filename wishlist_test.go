@@ -16,7 +16,7 @@ func TestEndointToListItems(t *testing.T) {
 		{
 			// invalid
 		},
-	}, nil)
+	}, nil, makeStyles(testRenderer))
 
 	require.Len(t, result, 1)
 	item := result[0]
