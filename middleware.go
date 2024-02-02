@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
+	bm "github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wishlist/blocking"
 	"github.com/charmbracelet/wishlist/multiplex"
 	"github.com/muesli/termenv"
@@ -60,14 +61,18 @@ func listingMiddleware(config *Config, endpointRelay *broadcast.Relay[[]*Endpoin
 
 			errch := make(chan error, 1)
 			appch := make(chan bool, 1)
-			model := NewRemoteListing(config.Endpoints, &remoteClient{
-				session: s,
-				stdin:   handoffStdin,
-				cleanup: func() {
-					listStdin.Reset()
-					handoffStdin.Reset()
+			model := NewRemoteListing(
+				config.Endpoints,
+				&remoteClient{
+					session: s,
+					stdin:   handoffStdin,
+					cleanup: func() {
+						listStdin.Reset()
+						handoffStdin.Reset()
+					},
 				},
-			})
+				bm.MakeRenderer(s),
+			)
 			p := tea.NewProgram(
 				model,
 				tea.WithInput(blocking.New(listStdin)),

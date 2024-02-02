@@ -38,7 +38,7 @@ func TestWithSSHURL(t *testing.T) {
 		"ssh://localhost:22",
 		withSSHURL(&Endpoint{
 			Address: "localhost:22",
-		}),
+		}, styles{}),
 	)
 }
 
@@ -47,7 +47,7 @@ func TestWithDescription(t *testing.T) {
 		require.Equal(
 			t,
 			"no description",
-			withDescription(&Endpoint{}),
+			withDescription(&Endpoint{}, makeStyles(testRenderer)),
 		)
 	})
 	t.Run("multiline", func(t *testing.T) {
@@ -56,7 +56,7 @@ func TestWithDescription(t *testing.T) {
 			"foo",
 			withDescription(&Endpoint{
 				Desc: "foo\n\nbar\n\nsfsdfsd\n",
-			}),
+			}, makeStyles(testRenderer)),
 		)
 	})
 	t.Run("simple", func(t *testing.T) {
@@ -65,7 +65,7 @@ func TestWithDescription(t *testing.T) {
 			"foobar desc",
 			withDescription(&Endpoint{
 				Desc: "foobar desc",
-			}),
+			}, makeStyles(testRenderer)),
 		)
 	})
 }
@@ -75,7 +75,7 @@ func TestWithLink(t *testing.T) {
 		require.Equal(
 			t,
 			"no link",
-			withLink(&Endpoint{}),
+			withLink(&Endpoint{}, makeStyles(testRenderer)),
 		)
 	})
 	t.Run("url only", func(t *testing.T) {
@@ -86,7 +86,7 @@ func TestWithLink(t *testing.T) {
 				Link: Link{
 					URL: "https://example.com",
 				},
-			}),
+			}, makeStyles(testRenderer)),
 		)
 	})
 	t.Run("url and name", func(t *testing.T) {
@@ -98,7 +98,7 @@ func TestWithLink(t *testing.T) {
 					Name: "example",
 					URL:  "https://example.com",
 				},
-			}),
+			}, makeStyles(testRenderer)),
 		)
 	})
 }

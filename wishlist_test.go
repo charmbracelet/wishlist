@@ -16,7 +16,7 @@ func TestEndointToListItems(t *testing.T) {
 		{
 			// invalid
 		},
-	}, nil)
+	}, nil, makeStyles(testRenderer))
 
 	require.Len(t, result, 1)
 	item := result[0]
@@ -31,7 +31,7 @@ func TestNewWishlist(t *testing.T) {
 				Name:    "name",
 				Address: "anything",
 			},
-		}, cl)
+		}, cl, testRenderer)
 		require.Len(t, lm.endpoints, 1)
 		require.Equal(t, lm.client, cl)
 	})

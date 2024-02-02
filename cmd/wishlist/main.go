@@ -15,6 +15,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -66,7 +67,7 @@ It's also possible to serve the TUI over SSH using the server command.
 		} {
 			if e := os.Getenv(k); e != "" {
 				if err := cmd.Flags().Set(v, e); err != nil {
-					return err
+					return err //nolint: wrapcheck
 				}
 			}
 		}
@@ -395,8 +396,16 @@ func getSSHConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, erro
 func workLocally(config wishlist.Config, args []string) error {
 	// either no args or arg is a list
 	if len(args) == 0 || args[0] == "list" {
-		m := wishlist.NewLocalListing(config.Endpoints, wishlist.NewLocalSSHClient())
-		_, err := tea.NewProgram(m, tea.WithAltScreen()).Run()
+		m := wishlist.NewLocalListing(
+			config.Endpoints,
+			wishlist.NewLocalSSHClient(),
+			lipgloss.NewRenderer(os.Stderr),
+		)
+		_, err := tea.NewProgram(
+			m,
+			tea.WithOutput(os.Stderr),
+			tea.WithAltScreen(),
+		).Run()
 		return err //nolint: wrapcheck
 	}
 

@@ -16,15 +16,10 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2) //nolint:gomnd
-
 var (
 	enter = key.NewBinding(
 		key.WithKeys("enter", "o"),
 		key.WithHelp("enter/o", "connect"),
-	)
-	keyO = key.NewBinding(
-		key.WithKeys("o"),
 	)
 	keyN = key.NewBinding(
 		key.WithKeys("n"),
@@ -42,8 +37,8 @@ var (
 // A local list allow to edit before connecting, as well as creating new
 // endpoints on the go.
 // If session is nil, it is assume to be a local listing.
-func NewLocalListing(endpoints []*Endpoint, client SSHClient) *ListModel {
-	m := newListing(endpoints, client)
+func NewLocalListing(endpoints []*Endpoint, client SSHClient, r *lipgloss.Renderer) *ListModel {
+	m := newListing(endpoints, client, r)
 	m.local = true
 	m.list.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter, keyE, keyN}
@@ -54,13 +49,13 @@ func NewLocalListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 // NewRemoteListing creates a new remote listing model for the given
 // endpoints and SSH session.
 // If session is nil, it is assume to be a local listing.
-func NewRemoteListing(endpoints []*Endpoint, client SSHClient) *ListModel {
-	return newListing(endpoints, client)
+func NewRemoteListing(endpoints []*Endpoint, client SSHClient, r *lipgloss.Renderer) *ListModel {
+	return newListing(endpoints, client, r)
 }
 
 // NewListing creates a new listing model for the given endpoints and SSH session.
 // If session is nil, it is assume to be a local listing.
-func newListing(endpoints []*Endpoint, client SSHClient) *ListModel {
+func newListing(endpoints []*Endpoint, client SSHClient, r *lipgloss.Renderer) *ListModel {
 	l := list.New(nil, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
 	l.AdditionalShortHelpKeys = func() []key.Binding {
@@ -71,6 +66,7 @@ func newListing(endpoints []*Endpoint, client SSHClient) *ListModel {
 		list:      l,
 		endpoints: endpoints,
 		client:    client,
+		styles:    makeStyles(r),
 	}
 	m.SetItems(endpoints)
 	return m
@@ -84,6 +80,7 @@ type ListModel struct {
 	quitting  bool
 	width     int
 	err       error
+	styles    styles
 
 	local   bool
 	form    *huh.Form
@@ -98,7 +95,7 @@ func (m *ListModel) SetItems(endpoints []*Endpoint) tea.Cmd {
 	d.SetHeight(h)
 	m.list.SetDelegate(d)
 	log.Debug("setting delegate height", "height", h)
-	return m.list.SetItems(endpointsToListItems(endpoints, descriptors))
+	return m.list.SetItems(endpointsToListItems(endpoints, descriptors, m.styles))
 }
 
 func features(endpoints []*Endpoint) []descriptor {
@@ -129,7 +126,7 @@ func features(endpoints []*Endpoint) []descriptor {
 	return append(descriptors, withSSHURL)
 }
 
-func endpointsToListItems(endpoints []*Endpoint, descriptors []descriptor) []list.Item {
+func endpointsToListItems(endpoints []*Endpoint, descriptors []descriptor, styles styles) []list.Item {
 	var items []list.Item //nolint: prealloc
 	for _, endpoint := range endpoints {
 		if !endpoint.Valid() {
@@ -138,6 +135,7 @@ func endpointsToListItems(endpoints []*Endpoint, descriptors []descriptor) []lis
 		items = append(items, ItemWrapper{
 			endpoint:    endpoint,
 			descriptors: descriptors,
+			styles:      styles,
 		})
 	}
 	return items
@@ -203,7 +201,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.customize(w.endpoint)
 		}
 		if key.Matches(msg, enter) {
-			if key.Matches(msg, keyO, keyE, keyN) && m.list.SettingFilter() {
+			if m.list.SettingFilter() {
 				break
 			}
 			selectedItem := m.list.SelectedItem()
@@ -223,7 +221,7 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		})
 
 	case tea.WindowSizeMsg:
-		top, right, bottom, left := docStyle.GetMargin()
+		top, right, bottom, left := m.styles.Doc.GetMargin()
 		m.width = msg.Width
 		m.list.SetSize(msg.Width-left-right, msg.Height-top-bottom)
 
@@ -245,19 +243,6 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-var (
-	logoStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.AdaptiveColor{Light: "#FFFDF5", Dark: "#FFFDF5"}).
-			Background(lipgloss.Color("#5A56E0")).
-			Padding(0, 1).
-			SetString("Wishlist")
-	errStyle = lipgloss.NewStyle().
-			Italic(true).
-			Foreground(lipgloss.AdaptiveColor{Light: "#FF4672", Dark: "#ED567A"})
-	footerStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"})
-)
-
 // View comply with tea.Model interface.
 func (m *ListModel) View() string {
 	if m.quitting {
@@ -272,18 +257,18 @@ func (m *ListModel) View() string {
 		header := lipgloss.NewStyle().
 			Width(m.width).
 			Render("Something went wrong:")
-		errstr := errStyle.Copy().
+		errstr := m.styles.Err.Copy().
 			Width(m.width).
 			Render(rootCause(m.err).Error())
-		footer := footerStyle.Copy().
+		footer := m.styles.Footer.Copy().
 			Width(m.width).
 			Render("Press any key to go back to the list.")
-		return logoStyle.String() + "\n\n" +
+		return m.styles.Logo.String() + "\n\n" +
 			header + "\n\n" +
 			errstr + "\n\n" +
 			footer + "\n"
 	}
-	return docStyle.Render(m.list.View())
+	return m.styles.Doc.Render(m.list.View())
 }
 
 func rootCause(err error) error {
