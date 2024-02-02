@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -17,22 +19,26 @@ import (
 )
 
 func main() {
-	k, err := keygen.New(filepath.Join(".wishlist", "server"), nil, keygen.Ed25519)
+	k, err := keygen.New(
+		filepath.Join(".wishlist", "server"),
+		keygen.WithKeyType(keygen.Ed25519),
+	)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal("Server keypair", "err", err)
 	}
 	if !k.KeyPairExists() {
 		if err := k.WriteKeys(); err != nil {
-			log.Fatalln(err)
+			log.Fatal("Server keypair", "err", err)
 		}
 	}
 
 	// wishlist config
 	cfg := &wishlist.Config{
+		Port: 2233,
 		Factory: func(e wishlist.Endpoint) (*ssh.Server, error) {
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
-				wish.WithHostKeyPEM(k.PrivateKeyPEM()),
+				wish.WithHostKeyPEM(k.RawPrivateKey()),
 				wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 					return true
 				}),
@@ -49,8 +55,9 @@ func main() {
 			{
 				Name: "bubbletea",
 				Middlewares: []wish.Middleware{
-					bm.Middleware(func(ssh.Session) (tea.Model, []tea.ProgramOption) {
-						return initialModel(), nil
+					bm.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+						r := bm.MakeRenderer(s)
+						return initialModel(r), nil
 					}),
 				},
 			},
@@ -60,6 +67,7 @@ func main() {
 					func(h ssh.Handler) ssh.Handler {
 						return func(s ssh.Session) {
 							_, _ = s.Write([]byte("hello, world\n\r"))
+							time.Sleep(time.Second * 5)
 							h(s)
 						}
 					},
@@ -89,34 +97,35 @@ func main() {
 
 	// start all the servers
 	if err := wishlist.Serve(cfg); err != nil {
-		log.Fatalln(err)
+		log.Fatal("Serve", "err", err)
 	}
 }
 
 type model struct {
-	spinner spinner.Model
+	spinner  spinner.Model
+	renderer *lipgloss.Renderer
 }
 
-func initialModel() model {
-	s := spinner.NewModel()
+func initialModel(r *lipgloss.Renderer) model {
+	s := spinner.New()
 	s.Spinner = spinner.Dot
-	return model{spinner: s}
+	return model{spinner: s, renderer: r}
 }
 
 func (m model) Init() tea.Cmd {
-	return spinner.Tick
+	return m.spinner.Tick
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		log.Println("keypress:", msg)
+		log.Info("keypress", "msg", msg)
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
 		}
 	case tea.WindowSizeMsg:
-		log.Println("window size:", msg)
+		log.Info("window size", "msg", msg)
 	}
 	var cmd tea.Cmd
 	m.spinner, cmd = m.spinner.Update(msg)
@@ -124,6 +133,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	str := fmt.Sprintf("\n\n   %s Loading forever...press q to quit\n\n", m.spinner.View())
+	str := fmt.Sprintf(
+		"\n\n   %s Loading forever... press q to quit\n\n",
+		m.renderer.NewStyle().Foreground(lipgloss.Color("5")).Render(m.spinner.View()),
+	)
 	return str
 }
