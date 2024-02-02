@@ -229,7 +229,7 @@ func parseInternal(r NamedReader) (*hostinfoMap, error) {
 				case "sendenv":
 					info.SendEnv = append(info.SendEnv, value)
 				case "setenv":
-					info.SetEnv = append(info.SetEnv, value)
+					info.SetEnv = append(info.SetEnv, parseSetEnv(value))
 				case "preferredauthentications":
 					info.PreferredAuthentications = append(info.PreferredAuthentications, strings.Split(value, ",")...)
 				case "include":
@@ -354,4 +354,17 @@ func parseFileInternal(path string) (*hostinfoMap, error) {
 	}
 	defer f.Close() //nolint:errcheck
 	return parseInternal(f)
+}
+
+func parseSetEnv(e string) string {
+	k, v, ok := strings.Cut(e, "=")
+	if !ok {
+		// just in case, do whatever we were doing before.
+		return e
+	}
+	qv, err := strconv.Unquote(v)
+	if err == nil {
+		return fmt.Sprintf("%s=%s", k, qv)
+	}
+	return fmt.Sprintf("%s=%s", k, v)
 }
