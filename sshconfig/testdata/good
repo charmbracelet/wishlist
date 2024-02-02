@@ -38,6 +38,7 @@ Host multiple2
 	Port 2223
 	ForwardAgent no
 	SetEnv FOOS=foobar
+	SetEnv FOO2="foobar within quotes"
 
 ##############
 # HOME STUFF #

@@ -79,6 +79,7 @@ func TestParseFile(t *testing.T) {
 				},
 				SetEnv: []string{
 					"FOOS=foobar",
+					"FOO2=foobar within quotes",
 				},
 			},
 			"multiple3": {
