@@ -24,8 +24,8 @@ github.com/charmbracelet/promwish v0.7.0 h1:oaMH+ey6W4DDIv1xucS8jL1ik/Q46qxjNXlh
 github.com/charmbracelet/promwish v0.7.0/go.mod h1:WbRJN9irg8LmsBU8G2rFF8md9O3rSg63qrnqquP/+cs=
 github.com/charmbracelet/ssh v0.0.0-20240202115812-f4ab1009799a h1:ryXQeBfu7DN77RFiKLa/VA9VRkMsinpkv4qYparR//k=
 github.com/charmbracelet/ssh v0.0.0-20240202115812-f4ab1009799a/go.mod h1:GPT/bjXsVDf5TKq2P1n4zl79ZnGwt2lWr19DomWm7zw=
-github.com/charmbracelet/wish v1.3.1-0.20240202121148-92123fdfa942 h1:JiZXIlVQbnnJ/bm/Hi/T/OsP9NSR2BF6AJ1hxCBsn8s=
-github.com/charmbracelet/wish v1.3.1-0.20240202121148-92123fdfa942/go.mod h1:4GbN5YK/Qmip0k/nT+dOuYVpdKgj3oZBnsOeEJlG9fE=
+github.com/charmbracelet/wish v1.3.1 h1:HXrHadxu6qbZOfwjEuu2OWpGWuhpKVd26Ecpv+QEc58=
+github.com/charmbracelet/wish v1.3.1/go.mod h1:4GbN5YK/Qmip0k/nT+dOuYVpdKgj3oZBnsOeEJlG9fE=
 github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651 h1:3RXpZWGWTOeVXCTv0Dnzxdv/MhNUkBfEcbaTY0zrTQI=
 github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651/go.mod h1:2P0UgXMEa6TsToMSuFqKFQR+fZTO9CNGUNokkPatT/0=
 github.com/charmbracelet/x/exp/term v0.0.0-20240202113029-6ff29cf0473e h1:45T85zTqW/gN3FK5/JFM5Jk+LJkdP2gAfJcg8xE5lBs=

@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/log v0.3.1
 	github.com/charmbracelet/promwish v0.7.0
 	github.com/charmbracelet/ssh v0.0.0-20240202115812-f4ab1009799a
-	github.com/charmbracelet/wish v1.3.1-0.20240202121148-92123fdfa942
+	github.com/charmbracelet/wish v1.3.1
 	github.com/gobwas/glob v0.2.3
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/hashicorp/go-multierror v1.1.1
