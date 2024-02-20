@@ -396,7 +396,7 @@ func getSSHConfig(path string, seed []*wishlist.Endpoint) (wishlist.Config, erro
 func workLocally(config wishlist.Config, args []string) error {
 	// either no args or arg is a list
 	if len(args) == 0 || args[0] == "list" {
-		m := wishlist.NewListing(
+		m := wishlist.NewLocalListing(
 			config.Endpoints,
 			wishlist.NewLocalSSHClient(),
 			lipgloss.NewRenderer(os.Stderr),
