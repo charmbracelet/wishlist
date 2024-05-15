@@ -287,10 +287,10 @@ func (m *ListModel) View() string {
 		header := lipgloss.NewStyle().
 			Width(m.width).
 			Render("Something went wrong:")
-		errstr := m.styles.Err.Copy().
+		errstr := m.styles.Err.
 			Width(m.width).
 			Render(rootCause(m.err).Error())
-		footer := m.styles.Footer.Copy().
+		footer := m.styles.Footer.
 			Width(m.width).
 			Render("Press any key to go back to the list.")
 		return m.styles.Logo.String() + "\n\n" +
