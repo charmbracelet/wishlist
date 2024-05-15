@@ -14,9 +14,14 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
+	"github.com/muesli/termenv"
 )
 
 var (
+	copyIPAddr = key.NewBinding(
+		key.WithKeys("y"),
+		key.WithHelp("y", "copy address"),
+	)
 	enter = key.NewBinding(
 		key.WithKeys("enter", "o"),
 		key.WithHelp("enter/o", "connect"),
@@ -58,6 +63,9 @@ func NewRemoteListing(endpoints []*Endpoint, client SSHClient, r *lipgloss.Rende
 func newListing(endpoints []*Endpoint, client SSHClient, r *lipgloss.Renderer) *ListModel {
 	l := list.New(nil, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Directory Listing"
+	l.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{copyIPAddr}
+	}
 	l.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{enter}
 	}
@@ -200,6 +208,15 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			w := selectedItem.(ItemWrapper)
 			return m.customize(w.endpoint)
 		}
+		if key.Matches(msg, copyIPAddr) && !m.list.SettingFilter() {
+			if w := m.selected(); w != nil {
+				host, _, _ := net.SplitHostPort(w.endpoint.Address)
+				termenv.Copy(host)
+				return m, m.list.NewStatusMessage(fmt.Sprintf("copied %q to the clipboard", host))
+			}
+
+			return m, nil
+		}
 		if key.Matches(msg, enter) {
 			if m.list.SettingFilter() {
 				break
@@ -241,6 +258,19 @@ func (m *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
+}
+
+func (m *ListModel) selected() *ItemWrapper {
+	selectedItem := m.list.SelectedItem()
+	if selectedItem == nil {
+		return nil
+	}
+	w, ok := selectedItem.(ItemWrapper)
+	if !ok {
+		// this should never happen
+		return nil
+	}
+	return &w
 }
 
 // View comply with tea.Model interface.
