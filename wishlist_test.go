@@ -26,7 +26,7 @@ func TestEndointToListItems(t *testing.T) {
 func TestNewWishlist(t *testing.T) {
 	t.Run("local", func(t *testing.T) {
 		cl := NewLocalSSHClient()
-		lm := NewListing([]*Endpoint{
+		lm := NewLocalListing([]*Endpoint{
 			{
 				Name:    "name",
 				Address: "anything",
