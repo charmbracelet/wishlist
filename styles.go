@@ -2,7 +2,7 @@ package wishlist
 
 import "github.com/charmbracelet/lipgloss"
 
-//nolint:gomnd
+//nolint:mnd
 func makeStyles(r *lipgloss.Renderer) styles {
 	return styles{
 		Logo: r.NewStyle().

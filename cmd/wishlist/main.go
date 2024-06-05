@@ -78,7 +78,7 @@ It's also possible to serve the TUI over SSH using the server command.
 		if err != nil {
 			return fmt.Errorf("could not create log file: %w", err)
 		}
-		f, err := os.OpenFile(filepath.Join(cache, "wishlist.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gomnd
+		f, err := os.OpenFile(filepath.Join(cache, "wishlist.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:mnd
 		if err != nil {
 			return err //nolint: wrapcheck
 		}
@@ -174,7 +174,6 @@ var serverCmd = &cobra.Command{
 		}
 
 		config.Factory = func(e wishlist.Endpoint) (*ssh.Server, error) {
-			//nolint:wrapcheck
 			return wish.NewServer(
 				wish.WithAddress(e.Address),
 				wish.WithHostKeyPath(".wishlist/server_ed25519"),

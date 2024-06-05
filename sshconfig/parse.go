@@ -195,8 +195,8 @@ func parseInternal(r NamedReader) (*hostinfoMap, error) {
 					continue
 				}
 
-				parts := strings.SplitN(node, " ", 2) //nolint:gomnd
-				if len(parts) != 2 {                  //nolint:gomnd
+				parts := strings.SplitN(node, " ", 2) //nolint:mnd
+				if len(parts) != 2 {                  //nolint:mnd
 					return nil, fmt.Errorf("invalid node on app %q: %q", name, node)
 				}
 

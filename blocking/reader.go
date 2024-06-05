@@ -35,7 +35,7 @@ func (r Reader) Read(data []byte) (int, error) {
 			return n, err
 		}
 		// 10ms is not that much a magic number, more like a guess.
-		//nolint:gomnd
+		//nolint:mnd
 		time.Sleep(10 * time.Millisecond)
 	}
 }
