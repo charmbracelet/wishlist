@@ -139,6 +139,6 @@ func mustConnect(session ssh.Session, e *Endpoint) {
 		wish.Fatal(session, fmt.Errorf("wishlist: %w", err))
 		return // unreachable
 	}
-	fmt.Fprintf(session, "wishlist: closed connection to %q (%s)\n\r", e.Name, e.Address)
+	fmt.Fprintf(session, "wishlist: closed connection to %q (%s)\n\r", e.Name, e.Address) //nolint: errcheck
 	_ = session.Exit(0)
 }
