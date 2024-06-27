@@ -327,7 +327,7 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 					return fmt.Errorf("possible man-in-the-middle attack: %w - if your host's key changed, you might need to edit %q", err, kh.Name())
 				}
 				// if want is empty, it means the host was not in the known_hosts file, so lets add it there.
-				fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key))
+				fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key)) //nolint: errcheck
 				return nil
 			}
 			return fmt.Errorf("failed to check known_hosts: %w", err)
@@ -358,17 +358,17 @@ func askUser(in io.Reader, echo bool) (string, error) {
 // keyboardInteractiveAuth implements keyboard interactive authentication.
 func keyboardInteractiveAuth(in io.Reader, out io.Writer) gossh.AuthMethod {
 	scan := func(q string, echo bool) (string, error) {
-		fmt.Fprint(out, q+" ")
+		fmt.Fprint(out, q+" ") //nolint: errcheck
 		answer, err := askUser(in, echo)
 		if err != nil {
 			return "", err
 		}
-		fmt.Fprintln(out)
+		fmt.Fprintln(out) //nolint: errcheck
 		return answer, nil
 	}
 	return gossh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) (answers []string, err error) {
-		fmt.Fprintln(out, name)
-		fmt.Fprintln(out, instruction)
+		fmt.Fprintln(out, name)        //nolint: errcheck
+		fmt.Fprintln(out, instruction) //nolint: errcheck
 		for i, q := range questions {
 			answer, err := scan(q, echos[i])
 			if err != nil {
@@ -381,7 +381,7 @@ func keyboardInteractiveAuth(in io.Reader, out io.Writer) gossh.AuthMethod {
 }
 
 func passwordAuth(e *Endpoint, in io.Reader, out io.Writer) (gossh.AuthMethod, error) {
-	fmt.Fprintf(out, "%s password: ", e.Address)
+	fmt.Fprintf(out, "%s password: ", e.Address) //nolint: errcheck
 	secret, err := askUser(in, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not read password: %w", err)
