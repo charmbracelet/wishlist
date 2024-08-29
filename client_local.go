@@ -111,6 +111,7 @@ func (s *localSession) Run() error {
 
 	//nolint:nestif
 	if s.endpoint.RequestTTY || s.endpoint.RemoteCommand == "" {
+		// #nosec G115
 		fd := int(os.Stdout.Fd())
 		if !term.IsTerminal(fd) {
 			return fmt.Errorf("requested a TTY, but current session is not TTY, aborting")

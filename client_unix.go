@@ -27,6 +27,7 @@ func (s *localSession) notifyWindowChanges(ctx context.Context, session *ssh.Ses
 		case <-ctx.Done():
 			return
 		case <-sig:
+			// #nosec G115
 			w, h, err := term.GetSize(int(os.Stdout.Fd()))
 			if err != nil {
 				log.Info("could not get term size", "err", err)

@@ -109,8 +109,7 @@ func (c closers) close() {
 	}
 }
 
-// nolint: errcheck
-func resetPty(w io.Writer) {
+func resetPty(w io.Writer) { //nolint:errcheck
 	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
 	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
 	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2) //nolint:mnd

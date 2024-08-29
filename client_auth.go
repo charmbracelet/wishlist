@@ -284,6 +284,7 @@ func parsePrivateKey(path string, password []byte) (gossh.AuthMethod, error) {
 		pwderr := &gossh.PassphraseMissingError{}
 		if errors.As(err, &pwderr) {
 			fmt.Printf("Enter the password for %q: ", path)
+			// #nosec G115
 			password, err := term.ReadPassword(int(os.Stdin.Fd()))
 			fmt.Println()
 			if err != nil {
@@ -336,6 +337,7 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 	}
 }
 
+// #nosec G115
 func askUser(in io.Reader, echo bool) (string, error) {
 	if !echo {
 		if f, ok := in.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
