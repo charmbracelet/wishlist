@@ -110,7 +110,7 @@ func (c closers) close() {
 }
 
 func resetPty(w io.Writer) { //nolint:errcheck
-	fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
-	fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
-	fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2) //nolint:mnd
+	_, _ = fmt.Fprint(w, termenv.CSI+termenv.ExitAltScreenSeq)
+	_, _ = fmt.Fprint(w, termenv.CSI+termenv.ResetSeq+"m")
+	_, _ = fmt.Fprintf(w, termenv.CSI+termenv.EraseDisplaySeq, 2) //nolint:mnd
 }
