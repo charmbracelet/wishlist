@@ -1,6 +1,8 @@
 module github.com/charmbracelet/wishlist
 
-go 1.19
+go 1.21
+
+toolchain go1.22.10
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
