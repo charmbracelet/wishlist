@@ -20,7 +20,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2
 	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
-	github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5
+	github.com/muesli/termenv v0.16.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/teivah/broadcast v0.1.0
