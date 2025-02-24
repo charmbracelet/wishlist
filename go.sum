@@ -94,8 +94,8 @@ github.com/muesli/mango-pflag v0.1.0 h1:UADqbYgpUyRoBja3g6LUL+3LErjpsOwaC9ywvBWe
 github.com/muesli/mango-pflag v0.1.0/go.mod h1:YEQomTxaCUp8PrbhFh10UfbhbQrM/xJ4i2PB8VTLLW0=
 github.com/muesli/roff v0.1.0 h1:YD0lalCotmYuF5HhZliKWlIx7IEhiXeSfq7hNjFqGF8=
 github.com/muesli/roff v0.1.0/go.mod h1:pjAHQM9hdUUwm/krAfrLGgJkXJ+YuhtsfZ42kieB2Ig=
-github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5 h1:NiONcKK0EV5gUZcnCiPMORaZA0eBDc+Fgepl9xl4lZ8=
-github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5/go.mod h1:hxSnBBYLK21Vtq/PHd0S2FYCxBXzBua8ov5s1RobyRQ=
+github.com/muesli/termenv v0.16.0 h1:S5AlUN9dENB57rsbnkPyfdGuWIlkmzJjbFf0Tf5FWUc=
+github.com/muesli/termenv v0.16.0/go.mod h1:ZRfOIKPFDYQoDFF4Olj7/QJbW60Ol/kL1pU3VfY/Cnk=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
