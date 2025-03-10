@@ -6,7 +6,7 @@ toolchain go1.23.6
 require (
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.3.4
-	github.com/charmbracelet/keygen v0.5.1
+	github.com/charmbracelet/keygen v0.5.3
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/promwish v0.8.0
