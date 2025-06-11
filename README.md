@@ -321,6 +321,12 @@ Here's a list of the ones that are:
 
 The gif above shows a lot of [Maas Lalani’s](https://github.com/maaslalani) [confeTTY](https://github.com/maaslalani/confetty).
 
+## Contributing
+
+See [contributing][contribute].
+
+[contribute]: https://github.com/charmbracelet/wishlist/contribute
+
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
