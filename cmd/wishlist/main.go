@@ -14,6 +14,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/fang"
 	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
@@ -228,7 +229,7 @@ func main() {
 	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
 		Version = fmt.Sprintf("%s (%s)", info.Main.Version, CommitSHA)
 	}
-	if err := rootCmd.Execute(); err != nil {
+	if err := fang.Execute(context.Background(), rootCmd); err != nil {
 		log.Fatal("command failed", "err", err)
 	}
 }
