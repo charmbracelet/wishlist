@@ -22,7 +22,7 @@ require (
 	github.com/muesli/roff v0.1.0
 	github.com/muesli/termenv v0.16.0
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	github.com/teivah/broadcast v0.1.0
 	golang.org/x/crypto v0.41.0
 	golang.org/x/oauth2 v0.30.0
