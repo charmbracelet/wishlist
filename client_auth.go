@@ -89,13 +89,13 @@ func localBestAuthMethod(agt agent.Agent, e *Endpoint, in io.Reader, out io.Writ
 
 			if method := agentAuthMethod(agt); method != nil {
 				methods = append(methods, method)
+			} else {
+				keys, err := tryUserKeys()
+				if err != nil {
+					return nil, err
+				}
+				methods = append(methods, keys...)
 			}
-
-			keys, err := tryUserKeys()
-			if err != nil {
-				return nil, err
-			}
-			methods = append(methods, keys...)
 		}
 	}
 
