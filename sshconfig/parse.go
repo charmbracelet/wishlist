@@ -195,13 +195,24 @@ func parseInternal(r NamedReader) (*hostinfoMap, error) {
 					continue
 				}
 
-				parts := strings.SplitN(node, " ", 2) //nolint:mnd
-				if len(parts) != 2 {                  //nolint:mnd
+				var key, value string
+				if kv, ok := n.(*ssh_config.KV); ok {
+					// KV.Value is the parsed value; String keeps quotes for
+					// round-tripping, which breaks Windows IdentityFile paths.
+					key = kv.Key
+					value = kv.Value
+				} else {
+					parts := strings.SplitN(node, " ", 2) //nolint:mnd
+					if len(parts) != 2 {                  //nolint:mnd
+						return nil, fmt.Errorf("invalid node on app %q: %q", name, node)
+					}
+
+					key = strings.TrimSpace(parts[0])
+					value = strings.TrimSpace(parts[1])
+				}
+				if strings.TrimSpace(key) == "" || strings.TrimSpace(value) == "" {
 					return nil, fmt.Errorf("invalid node on app %q: %q", name, node)
 				}
-
-				key := strings.TrimSpace(parts[0])
-				value := strings.TrimSpace(parts[1])
 
 				switch strings.ToLower(key) {
 				case "hostname":
