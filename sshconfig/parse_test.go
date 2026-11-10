@@ -177,6 +177,24 @@ Host zap.local
 }
 
 func TestParseReader(t *testing.T) {
+	t.Run("quoted value", func(t *testing.T) {
+		endpoints, err := ParseReader(newNamedReader(`
+Host micro
+  HostName server.example.com
+  User opc
+  IdentityFile "C:\Users\fajny\.ssh\mist-micro.key"
+		`, t.TempDir()), nil)
+		require.NoError(t, err)
+		require.Equal(t, []*wishlist.Endpoint{
+			{
+				Name:          "micro",
+				Address:       "server.example.com:22",
+				User:          "opc",
+				IdentityFiles: []string{`C:\Users\fajny\.ssh\mist-micro.key`},
+			},
+		}, endpoints)
+	})
+
 	t.Run("error", func(t *testing.T) {
 		endpoints, err := ParseReader(
 			&fakeNamedReader{
