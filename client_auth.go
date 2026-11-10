@@ -13,9 +13,10 @@ import (
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wishlist/home"
+	knownhostdb "github.com/skeema/knownhosts"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
-	"golang.org/x/crypto/ssh/knownhosts"
+	xknownhosts "golang.org/x/crypto/ssh/knownhosts"
 	"golang.org/x/term"
 )
 
@@ -316,19 +317,19 @@ func hostKeyCallback(e *Endpoint, path string) gossh.HostKeyCallback {
 		}
 		defer func() { _ = kh.Close() }()
 
-		callback, err := knownhosts.New(kh.Name())
+		knownHostsDB, err := knownhostdb.NewDB(kh.Name())
 		if err != nil {
 			return fmt.Errorf("failed to check known_hosts: %w", err)
 		}
 
-		if err := callback(hostname, remote, key); err != nil {
-			var kerr *knownhosts.KeyError
+		if err := knownHostsDB.HostKeyCallback()(hostname, remote, key); err != nil {
+			var kerr *xknownhosts.KeyError
 			if errors.As(err, &kerr) {
 				if len(kerr.Want) > 0 {
 					return fmt.Errorf("possible man-in-the-middle attack: %w - if your host's key changed, you might need to edit %q", err, kh.Name())
 				}
 				// if want is empty, it means the host was not in the known_hosts file, so lets add it there.
-				fmt.Fprintln(kh, knownhosts.Line([]string{e.Address}, key)) //nolint: errcheck
+				fmt.Fprintln(kh, xknownhosts.Line([]string{e.Address}, key)) //nolint: errcheck
 				return nil
 			}
 			return fmt.Errorf("failed to check known_hosts: %w", err)
