@@ -253,9 +253,9 @@ The config files are tried in the following order:
 - `.wishlist/config.yaml`
 - `.wishlist/config.yml`
 - `.wishlist/config`
-- `[[user config dir]]/wishlist/config.yaml`[^1]
-- `[[user config dir]]/wishlist/config.yml`[^1]
-- `[[user config dir]]/wishlist/config`[^1]
+- `[[user config dir]]/wishlist.yaml`[^1]
+- `[[user config dir]]/wishlist.yml`[^1]
+- `[[user config dir]]/wishlist`[^1]
 - `$HOME/.ssh/config`
 - `/etc/ssh/ssh_config`
 
