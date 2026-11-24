@@ -155,7 +155,7 @@ Host wishlist
 
 Wishlist can discover endpoints using Zeroconf, SRV Records, and [Tailscale][].
 
-You can find a brief explanation and examples of all of them bellow.
+You can find a brief explanation and examples of all of them below.
 
 Run `wishlist --help` to see all the options.
 
